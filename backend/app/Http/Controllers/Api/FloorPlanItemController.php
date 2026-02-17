@@ -27,6 +27,9 @@ class FloorPlanItemController extends Controller
             'items.*.y' => 'required|integer|min:0',
             'items.*.rotation' => 'sometimes|integer|in:0,90,180,270',
             'items.*.meta' => 'sometimes|array',
+            'items.*.floor_level' => 'sometimes|integer|min:1',
+            'items.*.floor_name' => 'sometimes|string|nullable',
+            'items.*.table_name' => 'sometimes|string|nullable|max:100',
         ]);
 
         // Delete all existing items for this floor plan
@@ -41,6 +44,9 @@ class FloorPlanItemController extends Controller
                 'y' => $itemData['y'],
                 'rotation' => $itemData['rotation'] ?? 0,
                 'meta' => $itemData['meta'] ?? null,
+                'floor_level' => $itemData['floor_level'] ?? 1,
+                'floor_name' => $itemData['floor_name'] ?? null,
+                'table_name' => $itemData['table_name'] ?? null,
             ]);
         }
 
@@ -67,6 +73,7 @@ class FloorPlanItemController extends Controller
             'y' => 'required|integer|min:0',
             'rotation' => 'sometimes|integer|in:0,90,180,270',
             'meta' => 'sometimes|array',
+            'table_name' => 'sometimes|string|nullable|max:100',
         ]);
 
         // Check if an item already exists at this position
