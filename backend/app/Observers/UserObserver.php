@@ -16,8 +16,8 @@ class UserObserver
         RestaurantFloorPlan::create([
             'user_id' => $user->id,
             'name' => 'Mon Restaurant',
-            'width' => 20,
-            'height' => 12,
+            'width' => 40,
+            'height' => 30,
         ]);
     }
 

@@ -6,6 +6,7 @@ import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { Dashboard } from "./pages/Dashboard";
 import { MenuPage } from "./pages/MenuPage";
+import { Home } from "./pages/Home";
 import PublicReservation from "./pages/PublicReservation";
 import { Toaster } from "react-hot-toast";
 import "./App.css";
@@ -17,7 +18,8 @@ function App() {
         <AuthProvider>
           <Toaster position="top-right" />
           <Routes>
-            <Route path="/" element={<PublicReservation />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/reservation" element={<PublicReservation />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route

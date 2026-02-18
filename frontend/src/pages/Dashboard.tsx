@@ -9,7 +9,7 @@ import toast from "react-hot-toast";
 import {
   CalendarIcon,
   ClockIcon,
-  UsersIcon,
+  BookOpenIcon,
   CheckCircleIcon,
   XCircleIcon,
   TrashIcon,
@@ -17,6 +17,9 @@ import {
   SunIcon,
   Bars3Icon,
   MapIcon,
+  ArrowRightOnRectangleIcon,
+  BuildingStorefrontIcon,
+  UsersIcon,
 } from "@heroicons/react/24/outline";
 
 type TabType = "all" | "pending" | "confirmed";
@@ -137,53 +140,73 @@ export function Dashboard() {
   ];
 
   return (
-    <div className="h-screen flex bg-gray-50 dark:bg-gray-900">
+    <div className="h-screen flex bg-gray-50 dark:bg-gray-950">
       {/* Sidebar */}
       <aside
-        className={`bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 flex flex-col ${
+        className={`bg-white dark:bg-coffee-950 border-r border-gray-200 dark:border-coffee-800 transition-all duration-300 flex flex-col ${
           sidebarOpen ? "w-64" : "w-20"
         }`}
       >
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-          {sidebarOpen && (
-            <h2 className="font-semibold text-gray-900 dark:text-white">Menu</h2>
+        {/* Logo */}
+        <div className="p-4 border-b border-gray-200 dark:border-coffee-900/20 flex items-center justify-between">
+          {sidebarOpen ? (
+            <div className="flex items-center gap-2">
+              <BuildingStorefrontIcon className="w-6 h-6 text-coffee-400" />
+              <h2 className="font-display font-bold text-gray-900 dark:text-cream-100">RR Ice</h2>
+            </div>
+          ) : (
+            <BuildingStorefrontIcon className="w-6 h-6 text-coffee-400 mx-auto" />
           )}
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            <Bars3Icon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-          </button>
+          {sidebarOpen && (
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            >
+              <Bars3Icon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            </button>
+          )}
         </div>
 
-        <nav className="flex-1 p-4 space-y-2">
+        {/* Collapse button when closed */}
+        {!sidebarOpen && (
+          <div className="p-2 flex justify-center border-b border-gray-200 dark:border-coffee-900/20">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-coffee-900 transition-colors"
+            >
+              <Bars3Icon className="w-5 h-5 text-gray-600 dark:text-cream-400" />
+            </button>
+          </div>
+        )}
+
+        <nav className="flex-1 p-3 space-y-1">
           <a
             href="/dashboard"
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg bg-coffee-100 dark:bg-coffee-600/20 text-coffee-700 dark:text-coffee-300 border border-coffee-200 dark:border-coffee-600/30 transition-colors font-medium"
           >
             <CalendarIcon className="w-5 h-5 flex-shrink-0" />
             {sidebarOpen && <span>Réservations</span>}
           </a>
           <a
             href="/dashboard/menu"
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 dark:text-cream-300 hover:bg-gray-100 dark:hover:bg-coffee-900 transition-colors"
           >
-            <UsersIcon className="w-5 h-5 flex-shrink-0" />
+            <BookOpenIcon className="w-5 h-5 flex-shrink-0" />
             {sidebarOpen && <span>Menu</span>}
           </a>
         </nav>
 
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+        <div className="p-3 border-t border-gray-200 dark:border-coffee-900/20 space-y-1">
           <button
             onClick={() => setShowFloorPlanModal(true)}
-            className="w-full flex items-center gap-3 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+            className="w-full flex items-center gap-3 px-3 py-2.5 bg-coffee-600 text-cream-50 rounded-lg hover:bg-coffee-500 transition-colors text-sm font-medium shadow-lg shadow-coffee-600/20"
           >
             <MapIcon className="w-5 h-5 flex-shrink-0" />
             {sidebarOpen && <span>Plan de salle</span>}
           </button>
           <button
             onClick={toggleTheme}
-            className="w-full flex items-center gap-3 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
+            className="w-full flex items-center gap-3 px-3 py-2.5 bg-gray-100 dark:bg-coffee-900 text-gray-700 dark:text-cream-300 rounded-lg hover:bg-gray-200 dark:hover:bg-coffee-800 transition-colors text-sm"
           >
             {theme === "light" ? (
               <>
@@ -199,9 +222,9 @@ export function Dashboard() {
           </button>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
+            className="w-full flex items-center gap-3 px-3 py-2.5 bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors text-sm border border-red-200 dark:border-red-900/20"
           >
-            <XCircleIcon className="w-5 h-5 flex-shrink-0" />
+            <ArrowRightOnRectangleIcon className="w-5 h-5 flex-shrink-0" />
             {sidebarOpen && <span>Déconnexion</span>}
           </button>
         </div>
@@ -232,7 +255,7 @@ export function Dashboard() {
                 onClick={() => setActiveTab(tab.key)}
                 className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === tab.key
-                    ? "border-blue-600 text-blue-600 dark:text-blue-400"
+                    ? "border-coffee-600 text-coffee-600 dark:text-coffee-400"
                     : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300"
                 }`}
               >
@@ -240,7 +263,7 @@ export function Dashboard() {
                 <span
                   className={`ml-2 py-0.5 px-2 rounded-full text-xs ${
                     activeTab === tab.key
-                      ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400  "
+                      ? "bg-coffee-100 dark:bg-coffee-900/30 text-coffee-600 dark:text-coffee-400  "
                       : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
                   }`}
                 >
@@ -370,7 +393,7 @@ export function Dashboard() {
                         onClick={() =>
                           handleStatusChange(reservation.id, "completed")
                         }
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                        className="flex items-center gap-2 px-4 py-2 bg-coffee-600 text-cream-50 rounded-lg hover:bg-coffee-500 transition-colors text-sm font-medium"
                       >
                         <CheckCircleIcon className="w-4 h-4" />
                         Marquer comme terminée

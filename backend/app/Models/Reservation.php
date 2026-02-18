@@ -11,6 +11,7 @@ class Reservation extends Model
         'floor_plan_item_id',
         'customer_name',
         'customer_email',
+        'customer_phone',
         'arrival_time',
         'party_size',
         'status',

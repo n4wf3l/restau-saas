@@ -21,7 +21,9 @@ import {
   MoonIcon,
   SunIcon,
   CalendarIcon,
-  UsersIcon,
+  BookOpenIcon,
+  ArrowRightOnRectangleIcon,
+  BuildingStorefrontIcon,
 } from "@heroicons/react/24/outline";
 
 export function MenuPage() {
@@ -125,46 +127,66 @@ export function MenuPage() {
   const categories = [...new Set(menuItems.map((item) => item.category).filter(Boolean))];
 
   return (
-    <div className="h-screen flex bg-gray-50 dark:bg-gray-900">
+    <div className="h-screen flex bg-gray-50 dark:bg-gray-950">
       {/* Sidebar */}
       <aside
-        className={`bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 flex flex-col ${
+        className={`bg-white dark:bg-coffee-950 border-r border-gray-200 dark:border-coffee-800 transition-all duration-300 flex flex-col ${
           sidebarOpen ? "w-64" : "w-20"
         }`}
       >
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-          {sidebarOpen && (
-            <h2 className="font-semibold text-gray-900 dark:text-white">Menu</h2>
+        {/* Logo */}
+        <div className="p-4 border-b border-gray-200 dark:border-coffee-900/20 flex items-center justify-between">
+          {sidebarOpen ? (
+            <div className="flex items-center gap-2">
+              <BuildingStorefrontIcon className="w-6 h-6 text-coffee-400" />
+              <h2 className="font-display font-bold text-gray-900 dark:text-cream-100">RR Ice</h2>
+            </div>
+          ) : (
+            <BuildingStorefrontIcon className="w-6 h-6 text-coffee-400 mx-auto" />
           )}
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            <Bars3Icon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-          </button>
+          {sidebarOpen && (
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-coffee-900 transition-colors"
+            >
+              <Bars3Icon className="w-5 h-5 text-gray-600 dark:text-cream-400" />
+            </button>
+          )}
         </div>
 
-        <nav className="flex-1 p-4 space-y-2">
+        {/* Collapse button when closed */}
+        {!sidebarOpen && (
+          <div className="p-2 flex justify-center border-b border-gray-200 dark:border-coffee-900/20">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-coffee-900 transition-colors"
+            >
+              <Bars3Icon className="w-5 h-5 text-gray-600 dark:text-cream-400" />
+            </button>
+          </div>
+        )}
+
+        <nav className="flex-1 p-3 space-y-1">
           <a
             href="/dashboard"
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           >
             <CalendarIcon className="w-5 h-5 flex-shrink-0" />
             {sidebarOpen && <span>Réservations</span>}
           </a>
           <a
             href="/dashboard/menu"
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg bg-coffee-100 dark:bg-coffee-600/20 text-coffee-700 dark:text-coffee-300 border border-coffee-200 dark:border-coffee-600/30 transition-colors font-medium"
           >
-            <UsersIcon className="w-5 h-5 flex-shrink-0" />
+            <BookOpenIcon className="w-5 h-5 flex-shrink-0" />
             {sidebarOpen && <span>Menu</span>}
           </a>
         </nav>
 
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+        <div className="p-3 border-t border-gray-200 dark:border-coffee-900/20 space-y-1">
           <button
             onClick={toggleTheme}
-            className="w-full flex items-center gap-3 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
+            className="w-full flex items-center gap-3 px-3 py-2.5 bg-gray-100 dark:bg-coffee-900 text-gray-700 dark:text-cream-300 rounded-lg hover:bg-gray-200 dark:hover:bg-coffee-800 transition-colors text-sm"
           >
             {theme === "light" ? (
               <>
@@ -180,9 +202,9 @@ export function MenuPage() {
           </button>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
+            className="w-full flex items-center gap-3 px-3 py-2.5 bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors text-sm border border-red-200 dark:border-red-900/20"
           >
-            <XCircleIcon className="w-5 h-5 flex-shrink-0" />
+            <ArrowRightOnRectangleIcon className="w-5 h-5 flex-shrink-0" />
             {sidebarOpen && <span>Déconnexion</span>}
           </button>
         </div>

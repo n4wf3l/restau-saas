@@ -79,9 +79,32 @@ export interface ReservationPayload {
   table_id: number;
   customer_name: string;
   customer_email: string;
+  customer_phone?: string;
   arrival_time: string;
   party_size: number;
   notes?: string;
+}
+
+export type OccasionType = 'romantic' | 'baby_chair' | 'birthday' | 'quiet' | 'business';
+
+export interface ReservationFormData {
+  // Créneau
+  date: string;
+  time: string;
+  partySize: number;
+  
+  // Placement
+  placementMode: 'auto' | 'manual';
+  selectedTableId: number | null;
+  
+  // Client
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  
+  // Spécial
+  occasion?: OccasionType[];
+  specialNotes?: string;
 }
 
 export interface MenuItem {

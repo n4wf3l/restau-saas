@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Route;
 
 // Public routes (no auth required)
 Route::get('/public/tables', [PublicTableController::class, 'index']);
+Route::post('/public/check-availability', [PublicTableController::class, 'checkAvailability']);
 Route::post('/public/reservations', [PublicTableController::class, 'store']);
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {

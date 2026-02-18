@@ -36,8 +36,8 @@ class FloorPlanController extends Controller
 
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'width' => 'sometimes|integer|min:5|max:50',
-            'height' => 'sometimes|integer|min:5|max:50',
+            'width' => 'sometimes|integer|min:5|max:100',
+            'height' => 'sometimes|integer|min:5|max:100',
         ]);
 
         $floorPlan->update($validated);
