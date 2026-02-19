@@ -13,11 +13,13 @@ class RestaurantFloorPlan extends Model
         'name',
         'width',
         'height',
+        'floors',
     ];
 
     protected $casts = [
         'width' => 'integer',
         'height' => 'integer',
+        'floors' => 'array',
     ];
 
     public function user(): BelongsTo

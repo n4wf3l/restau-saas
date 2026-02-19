@@ -14,12 +14,18 @@ export interface RegisterPayload {
   password_confirmation: string;
 }
 
+export interface FloorPlanFloor {
+  level: number;
+  name: string;
+}
+
 export interface FloorPlan {
   id: number;
   user_id: number;
   name: string;
   width: number;
   height: number;
+  floors: FloorPlanFloor[] | null;
   created_at: string;
   updated_at: string;
   items: FloorPlanItem[];

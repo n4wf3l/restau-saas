@@ -38,6 +38,9 @@ class FloorPlanController extends Controller
             'name' => 'sometimes|string|max:255',
             'width' => 'sometimes|integer|min:5|max:100',
             'height' => 'sometimes|integer|min:5|max:100',
+            'floors' => 'sometimes|array',
+            'floors.*.level' => 'required_with:floors|integer|min:1',
+            'floors.*.name' => 'required_with:floors|string|max:255',
         ]);
 
         $floorPlan->update($validated);

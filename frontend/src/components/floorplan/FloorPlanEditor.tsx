@@ -56,7 +56,7 @@ export function FloorPlanEditor({ floorPlan, onUpdate }: FloorPlanEditorProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
 
-  // Initialize items and floor registry from props
+  // Initialize items and floor registry from DB (floorPlan.floors)
   useEffect(() => {
     const normalizedItems = (floorPlan.items || []).map(item => ({
       ...item,
@@ -66,14 +66,22 @@ export function FloorPlanEditor({ floorPlan, onUpdate }: FloorPlanEditorProps) {
     setNewWidth(floorPlan.width);
     setNewHeight(floorPlan.height);
 
-    // Build floor registry from existing items
+    // Build floor registry from DB floors field
     const registry = new Map<number, string>();
+    if (floorPlan.floors && Array.isArray(floorPlan.floors)) {
+      for (const floor of floorPlan.floors) {
+        registry.set(floor.level, floor.name);
+      }
+    }
+
+    // Fallback: also pick up floors from existing items (in case floors field wasn't saved yet)
     for (const item of normalizedItems) {
       const level = item.floor_level || 1;
       if (item.floor_name && !registry.has(level)) {
         registry.set(level, item.floor_name);
       }
     }
+
     if (!registry.has(1)) registry.set(1, 'Étage 1');
     setFloorRegistry(registry);
 
@@ -255,6 +263,11 @@ export function FloorPlanEditor({ floorPlan, onUpdate }: FloorPlanEditorProps) {
   const handleSave = async () => {
     setSaving(true);
     try {
+      // Save floor registry to DB
+      const floorsPayload = Array.from(floorRegistry.entries()).map(([level, name]) => ({ level, name }));
+      await api.put('/api/floor-plans/current', { floors: floorsPayload });
+
+      // Save items
       const cleanedItems = items.map((item) => {
         const cleaned: any = {
           type: item.type,
@@ -269,6 +282,7 @@ export function FloorPlanEditor({ floorPlan, onUpdate }: FloorPlanEditorProps) {
         return cleaned;
       });
       await api.put('/api/floor-plans/current/items', { items: cleanedItems });
+
       toast.success('Sauvegardé !');
       setLastSaved(new Date());
       await loadPublicTables();
@@ -286,6 +300,15 @@ export function FloorPlanEditor({ floorPlan, onUpdate }: FloorPlanEditorProps) {
 
   const confirmClear = () => {
     setItems((prev) => prev.filter((item) => (item.floor_level || 1) !== currentFloor));
+    // Remove floor from registry (unless it's floor 1)
+    if (currentFloor !== 1) {
+      setFloorRegistry(prev => {
+        const next = new Map(prev);
+        next.delete(currentFloor);
+        return next;
+      });
+      setCurrentFloor(1);
+    }
     setLastSaved(null);
     setShowDeleteConfirm(false);
     toast.success('Etage effacé !');
