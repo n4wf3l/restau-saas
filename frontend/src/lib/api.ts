@@ -12,18 +12,39 @@ export const api = axios.create({
 
 // Intercepteur pour ajouter le token XSRF depuis les cookies
 api.interceptors.request.use((config) => {
-  // Récupérer le token XSRF depuis les cookies
   const token = document.cookie
     .split("; ")
     .find((row) => row.startsWith("XSRF-TOKEN="))
     ?.split("=")[1];
-  
+
   if (token) {
     config.headers["X-XSRF-TOKEN"] = decodeURIComponent(token);
   }
-  
+
   return config;
 });
+
+// Intercepteur pour gérer les sessions expirées (401)
+let onUnauthorized: (() => void) | null = null;
+
+export function setOnUnauthorized(callback: () => void) {
+  onUnauthorized = callback;
+}
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (
+      error.response?.status === 401 &&
+      !error.config?.url?.includes("/login") &&
+      !error.config?.url?.includes("/register") &&
+      !error.config?.url?.includes("/api/user")
+    ) {
+      onUnauthorized?.();
+    }
+    return Promise.reject(error);
+  }
+);
 
 export async function csrf() {
   // obligatoire avant login/register (CSRF cookie)

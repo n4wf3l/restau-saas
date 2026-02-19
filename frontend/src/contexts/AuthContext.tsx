@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import type { ReactNode } from "react";
-import { api, csrf } from "../lib/api";
+import { api, csrf, setOnUnauthorized } from "../lib/api";
 import type { User, RegisterPayload } from "../lib/types";
 
 interface AuthContextType {
@@ -18,53 +18,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const clearUser = useCallback(() => {
+    setUser(null);
+  }, []);
+
   const refreshMe = async () => {
     try {
       const { data } = await api.get<User>("/api/user");
       setUser(data);
-    } catch (error: any) {
-      // 401 est normal quand l'utilisateur n'est pas connecté
-      if (error.response?.status !== 401) {
-        console.error("RefreshMe error:", error.response?.data || error.message);
-      }
+    } catch {
       setUser(null);
     }
   };
 
   const login = async (email: string, password: string) => {
-    try {
-      await csrf();
-      await api.post("/login", { email, password });
-      await refreshMe();
-    } catch (error: any) {
-      console.error("Login error:", error.response?.data || error.message);
-      throw error;
-    }
+    await csrf();
+    await api.post("/login", { email, password });
+    await refreshMe();
   };
 
   const register = async (payload: RegisterPayload) => {
-    try {
-      console.log("Calling CSRF...");
-      await csrf();
-      console.log("CSRF done, calling register...");
-      await api.post("/register", payload);
-      console.log("Register done, fetching user...");
-      await refreshMe();
-      console.log("User fetched successfully");
-    } catch (error: any) {
-      console.error("Register error:", error.response?.data || error.message);
-      throw error;
-    }
+    await csrf();
+    await api.post("/register", payload);
+    await refreshMe();
   };
 
   const logout = async () => {
-    await api.post("/logout");
-    setUser(null);
+    try {
+      await api.post("/logout");
+    } finally {
+      setUser(null);
+    }
   };
 
   useEffect(() => {
+    setOnUnauthorized(clearUser);
     refreshMe().finally(() => setLoading(false));
-  }, []);
+  }, [clearUser]);
 
   return (
     <AuthContext.Provider value={{ user, loading, login, register, logout, refreshMe }}>
