@@ -12,26 +12,81 @@ class ReservationController extends Controller
     {
         $reservations = Reservation::with('floorPlanItem')
             ->orderBy('arrival_time', 'desc')
-            ->get()
-            ->map(function ($reservation) {
-                return [
-                    'id' => $reservation->id,
-                    'customer_name' => $reservation->customer_name,
-                    'customer_email' => $reservation->customer_email,
-                    'arrival_time' => $reservation->arrival_time->format('Y-m-d H:i'),
-                    'party_size' => $reservation->party_size,
-                    'status' => $reservation->status,
-                    'notes' => $reservation->notes,
-                    'table' => [
-                        'id' => $reservation->floorPlanItem->id,
-                        'name' => $reservation->floorPlanItem->table_name,
-                        'floor' => $reservation->floorPlanItem->floor_name ?? 'Rez-de-chaussée',
-                    ],
-                    'created_at' => $reservation->created_at->format('Y-m-d H:i'),
-                ];
-            });
+            ->get();
 
-        return response()->json($reservations);
+        // Group reservations by (customer_email, arrival_time, party_size)
+        // because the system creates 1 row per chair
+        $grouped = $reservations->groupBy(function ($r) {
+            return $r->customer_email . '|' . $r->arrival_time->format('Y-m-d H:i') . '|' . $r->party_size;
+        });
+
+        $result = $grouped->map(function ($group) {
+            $first = $group->first();
+            $ids = $group->pluck('id')->toArray();
+
+            // Event reservations have no chair assigned
+            if ($first->is_event || !$first->floorPlanItem) {
+                return [
+                    'id' => $first->id,
+                    'ids' => $ids,
+                    'customer_name' => $first->customer_name,
+                    'customer_email' => $first->customer_email,
+                    'customer_phone' => $first->customer_phone,
+                    'arrival_time' => $first->arrival_time->format('Y-m-d H:i'),
+                    'party_size' => $first->party_size,
+                    'status' => $first->status,
+                    'notes' => $first->notes,
+                    'is_event' => true,
+                    'event_details' => $first->event_details,
+                    'table' => [
+                        'id' => null,
+                        'name' => 'Événement',
+                        'floor' => '—',
+                    ],
+                    'created_at' => $first->created_at->format('Y-m-d H:i'),
+                ];
+            }
+
+            // Normal reservations — find the table name from the chair's adjacent table
+            $tableName = $first->floorPlanItem->table_name ?? 'Table';
+            $floorName = $first->floorPlanItem->floor_name ?? 'Rez-de-chaussée';
+
+            if ($first->floorPlanItem->type === 'chair') {
+                $adjacentTable = \App\Models\RestaurantFloorPlanItem::where('type', 'table')
+                    ->where('floor_plan_id', $first->floorPlanItem->floor_plan_id)
+                    ->where('floor_level', $first->floorPlanItem->floor_level)
+                    ->whereBetween('x', [$first->floorPlanItem->x - 1, $first->floorPlanItem->x + 1])
+                    ->whereBetween('y', [$first->floorPlanItem->y - 1, $first->floorPlanItem->y + 1])
+                    ->first();
+
+                if ($adjacentTable) {
+                    $tableName = $adjacentTable->table_name ?? 'Table ' . $adjacentTable->id;
+                    $floorName = $adjacentTable->floor_name ?? $floorName;
+                }
+            }
+
+            return [
+                'id' => $first->id,
+                'ids' => $ids,
+                'customer_name' => $first->customer_name,
+                'customer_email' => $first->customer_email,
+                'customer_phone' => $first->customer_phone,
+                'arrival_time' => $first->arrival_time->format('Y-m-d H:i'),
+                'party_size' => $first->party_size,
+                'status' => $first->status,
+                'notes' => $first->notes,
+                'is_event' => false,
+                'event_details' => null,
+                'table' => [
+                    'id' => $first->floorPlanItem->id,
+                    'name' => $tableName,
+                    'floor' => $floorName,
+                ],
+                'created_at' => $first->created_at->format('Y-m-d H:i'),
+            ];
+        })->values();
+
+        return response()->json($result);
     }
 
     public function update(Request $request, Reservation $reservation)
@@ -40,7 +95,15 @@ class ReservationController extends Controller
             'status' => 'required|in:pending,confirmed,cancelled,completed',
         ]);
 
-        $reservation->update($validated);
+        // Update all reservations in the same group
+        $group = Reservation::where('customer_email', $reservation->customer_email)
+            ->where('arrival_time', $reservation->arrival_time)
+            ->where('party_size', $reservation->party_size)
+            ->get();
+
+        foreach ($group as $r) {
+            $r->update($validated);
+        }
 
         return response()->json([
             'message' => 'Statut mis à jour',
@@ -50,7 +113,11 @@ class ReservationController extends Controller
 
     public function destroy(Reservation $reservation)
     {
-        $reservation->delete();
+        // Delete all reservations in the same group
+        Reservation::where('customer_email', $reservation->customer_email)
+            ->where('arrival_time', $reservation->arrival_time)
+            ->where('party_size', $reservation->party_size)
+            ->delete();
 
         return response()->json(['message' => 'Réservation supprimée']);
     }

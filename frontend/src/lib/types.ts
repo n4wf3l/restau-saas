@@ -48,14 +48,18 @@ export interface FloorPlanItem {
 
 export interface Reservation {
   id: number;
+  ids: number[];
   customer_name: string;
   customer_email: string;
+  customer_phone?: string;
   arrival_time: string;
   party_size: number;
   status: "pending" | "confirmed" | "cancelled" | "completed";
   notes?: string;
+  is_event: boolean;
+  event_details?: string;
   table: {
-    id: number;
+    id: number | null;
     name: string;
     floor: string;
   };
@@ -91,6 +95,16 @@ export interface ReservationPayload {
   notes?: string;
 }
 
+export interface EventReservationPayload {
+  customer_name: string;
+  customer_email: string;
+  customer_phone?: string;
+  arrival_time: string;
+  party_size: number;
+  notes?: string;
+  event_details: string;
+}
+
 export type OccasionType = 'romantic' | 'baby_chair' | 'birthday' | 'quiet' | 'business';
 
 export interface ReservationFormData {
@@ -100,14 +114,15 @@ export interface ReservationFormData {
   partySize: number;
   
   // Placement
-  placementMode: 'auto' | 'manual';
+  placementMode: 'auto' | 'manual' | 'event';
   selectedTableId: number | null;
-  
+  eventDetails?: string;
+
   // Client
   customerName: string;
   customerEmail: string;
   customerPhone: string;
-  
+
   // Spécial
   occasion?: OccasionType[];
   specialNotes?: string;

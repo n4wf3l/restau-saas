@@ -16,10 +16,13 @@ class Reservation extends Model
         'party_size',
         'status',
         'notes',
+        'is_event',
+        'event_details',
     ];
 
     protected $casts = [
         'arrival_time' => 'datetime',
+        'is_event' => 'boolean',
     ];
 
     public function floorPlanItem(): BelongsTo

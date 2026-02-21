@@ -1,21 +1,31 @@
 import { useEffect, useState } from 'react';
 import { Navbar } from '../components/public/Navbar';
 import { ReservationModal } from '../components/public/ReservationModal';
-import { StarIcon, ClockIcon, MapPinIcon, PhoneIcon, BuildingStorefrontIcon } from '@heroicons/react/24/solid';
-import { getMenuItems } from '../lib/api';
-import type { MenuItem } from '../lib/types';
+import { CTAButton } from '../components/public/CTAButton';
 
 const heroImages = ['/rr-ice2.png', '/rr-ice3.png', '/rr-ice4.png'];
 
+const FacebookIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+    <path d="M9.198 21.5h4v-8.01h3.604l.396-3.98h-4V7.5a1 1 0 0 1 1-1h3v-4h-3a5 5 0 0 0-5 5v2.01h-2l-.396 3.98h2.396v8.01Z" />
+  </svg>
+);
+
+const InstagramIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+    <path d="M12 2.982c2.937 0 3.285.011 4.445.064a6.087 6.087 0 0 1 2.042.379 3.408 3.408 0 0 1 1.265.823 3.408 3.408 0 0 1 .823 1.265 6.087 6.087 0 0 1 .379 2.042c.053 1.16.064 1.508.064 4.445s-.011 3.285-.064 4.445a6.087 6.087 0 0 1-.379 2.042 3.643 3.643 0 0 1-2.088 2.088 6.087 6.087 0 0 1-2.042.379c-1.16.053-1.508.064-4.445.064s-3.285-.011-4.445-.064a6.087 6.087 0 0 1-2.042-.379 3.408 3.408 0 0 1-1.265-.823 3.408 3.408 0 0 1-.823-1.265 6.087 6.087 0 0 1-.379-2.042c-.053-1.16-.064-1.508-.064-4.445s.011-3.285.064-4.445a6.087 6.087 0 0 1 .379-2.042 3.408 3.408 0 0 1 .823-1.265 3.408 3.408 0 0 1 1.265-.823 6.087 6.087 0 0 1 2.042-.379c1.16-.053 1.508-.064 4.445-.064M12 1c-2.987 0-3.362.013-4.535.066a8.074 8.074 0 0 0-2.67.511 5.392 5.392 0 0 0-1.949 1.27 5.392 5.392 0 0 0-1.269 1.948 8.074 8.074 0 0 0-.51 2.67C1.012 8.639 1 9.014 1 12s.013 3.362.066 4.535a8.074 8.074 0 0 0 .511 2.67 5.392 5.392 0 0 0 1.27 1.949 5.392 5.392 0 0 0 1.948 1.269 8.074 8.074 0 0 0 2.67.51C8.639 22.988 9.014 23 12 23s3.362-.013 4.535-.066a8.074 8.074 0 0 0 2.67-.511 5.625 5.625 0 0 0 3.218-3.218 8.074 8.074 0 0 0 .51-2.67C22.988 15.361 23 14.986 23 12s-.013-3.362-.066-4.535a8.074 8.074 0 0 0-.511-2.67 5.392 5.392 0 0 0-1.27-1.949 5.392 5.392 0 0 0-1.948-1.269 8.074 8.074 0 0 0-2.67-.51C15.361 1.012 14.986 1 12 1Zm0 5.351A5.649 5.649 0 1 0 17.649 12 5.649 5.649 0 0 0 12 6.351Zm0 9.316A3.667 3.667 0 1 1 15.667 12 3.667 3.667 0 0 1 12 15.667Zm5.872-10.859a1.32 1.32 0 1 0 1.32 1.32 1.32 1.32 0 0 0-1.32-1.32Z" />
+  </svg>
+);
+
+const TikTokIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 0 0-.79-.05A6.34 6.34 0 0 0 3.15 15a6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.75a8.18 8.18 0 0 0 4.76 1.52v-3.4a4.85 4.85 0 0 1-1-.18Z" />
+  </svg>
+);
+
 export function Home() {
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [selectedGalleryImage, setSelectedGalleryImage] = useState<string | null>(null);
-
-  useEffect(() => {
-    loadMenuItems();
-  }, []);
 
   // Auto-slider pour les images de fond
   useEffect(() => {
@@ -26,42 +36,10 @@ export function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  const loadMenuItems = async () => {
-    try {
-      const items = await getMenuItems();
-      setMenuItems(items.slice(0, 6)); // Afficher les 6 premiers
-    } catch (error) {
-      console.error('Failed to load menu items:', error);
-    }
-  };
-
   return (
     <div className="bg-black text-white min-h-screen">
       <Navbar onReservationClick={() => setIsReservationModalOpen(true)} />
       <ReservationModal isOpen={isReservationModalOpen} onClose={() => setIsReservationModalOpen(false)} />
-
-      {/* Gallery Modal */}
-      {selectedGalleryImage && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
-          onClick={() => setSelectedGalleryImage(null)}
-        >
-          <div className="relative max-w-6xl max-h-[90vh] w-full">
-            <button
-              onClick={() => setSelectedGalleryImage(null)}
-              className="absolute -top-10 right-0 text-cream-400 hover:text-cream-100 transition w-8 h-8 flex items-center justify-center bg-transparent"
-            >
-              <span className="text-2xl">×</span>
-            </button>
-            <img
-              src={selectedGalleryImage}
-              alt="Gallery Full View"
-              className="w-full h-full object-contain rounded-lg"
-              onClick={(e) => e.stopPropagation()}
-            />
-          </div>
-        </div>
-      )}
 
       {/* Hero Section */}
       <section
@@ -101,12 +79,7 @@ export function Home() {
             Découvrez une expérience culinaire exceptionnelle dans une ambiance élégante et intime
           </p>
           <div className="flex flex-col md:flex-row gap-6 justify-center">
-            <button
-              onClick={() => setIsReservationModalOpen(true)}
-              className="px-10 py-4 bg-transparent border-2 border-cream-400 text-cream-400 hover:bg-cream-400/10 font-medium transition-all text-sm tracking-[0.15em] uppercase"
-            >
-              Découvrir la carte
-            </button>
+            <CTAButton href="/menu">Découvrir la carte</CTAButton>
           </div>
         </div>
       </section>
@@ -130,41 +103,51 @@ export function Home() {
       </section>
 
       {/* Gallery Section */}
-      <section id="gallery" className="py-24 px-4 bg-black">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 text-white">
-            Notre Restaurant
-          </h2>
-          <p className="text-gray-400 text-center mb-12 text-lg">
-            Découvrez l'ambiance raffinée de nos salles
-          </p>
+      <section id="gallery" className="py-28 px-4 bg-coffee-950">
+        <div className="max-w-5xl mx-auto">
+          {/* Title block - Le Boma style */}
+          <div className="text-center mb-16">
+            <p className="text-cream-500 text-xs tracking-[0.35em] uppercase mb-4 font-body">
+              À Propos
+            </p>
+            <h2 className="text-4xl md:text-6xl font-display font-bold text-cream-100 mb-6 tracking-wide">
+              Notre Restaurant
+            </h2>
+            <p className="text-cream-400/70 font-body text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+              Situé au cœur de Ghandouri à Tanger, RR Ice vous accueille dans un cadre
+              élégant avec une terrasse panoramique offrant une vue imprenable sur la
+              corniche, du port jusqu'au cap Mnar, avec l'Espagne en toile de fond
+              depuis notre 2e étage.
+            </p>
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Images grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 mb-16">
             {[
-              'https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?auto=format&fit=crop&w=800&q=80',
-              '/rr-ice5.jpg',
-              'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=80',
-              'https://images.unsplash.com/photo-1567521464027-f127ff144326?auto=format&fit=crop&w=800&q=80',
-              '/rr-ice6.jpg',
-              'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80',
+              '/rr-ice11.png',
+              '/rr-ice13.png',
+              '/rr-ice7.png',
+              '/rr-ice8.png',
+              '/rr-ice9.png',
+              '/rr-ice10.png',
             ].map((image, idx) => (
               <div
                 key={idx}
-                onClick={() => setSelectedGalleryImage(image)}
-                className="relative group overflow-hidden rounded-lg h-64 cursor-pointer"
+                className="relative group overflow-hidden h-72"
               >
                 <img
                   src={image}
                   alt={`Gallery ${idx + 1}`}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                 />
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-center justify-center">
-                  <div className="text-white text-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <p className="text-lg font-semibold">Voir Plus</p>
-                  </div>
-                </div>
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-500" />
               </div>
             ))}
+          </div>
+
+          {/* CTA Button */}
+          <div className="text-center">
+            <CTAButton href="/gallery">Voir la galerie</CTAButton>
           </div>
         </div>
       </section>
@@ -174,7 +157,7 @@ export function Home() {
         id="menu" 
         className="py-24 px-4 relative"
         style={{
-          backgroundImage: 'linear-gradient(135deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.8) 100%), url("/rr-ice3.png")',
+          backgroundImage: 'linear-gradient(135deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.8) 100%), url("/rr-ice21.png")',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundAttachment: 'fixed',
@@ -184,207 +167,125 @@ export function Home() {
           <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 text-white">
             Notre Carte
           </h2>
-          <p className="text-gray-400 text-center mb-12 text-lg">
-            Sélection de nos plats les plus populaires
+          <p className="text-gray-400 text-center mb-12 text-lg max-w-2xl mx-auto leading-relaxed">
+            Une restauration 100% halal basée essentiellement sur le travail de la
+            viande de qualité et la viande maturée. Découvrez nos plats signatures.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {menuItems.length > 0
-              ? menuItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="bg-gray-800 rounded-lg overflow-hidden hover:shadow-2xl transition-shadow duration-300 border border-gray-700"
-                  >
-                    {item.image_url && (
-                      <div className="w-full h-48 overflow-hidden">
-                        <img
-                          src={item.image_url}
-                          alt={item.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
-                    <div className="p-4">
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <h3 className="text-lg font-semibold text-white">{item.name}</h3>
-                        {item.is_halal && (
-                          <span className="text-xs bg-green-600 text-white px-2 py-1 rounded whitespace-nowrap">
-                            Halal
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-gray-400 text-sm mb-3 line-clamp-2">
-                         'Plat délicieux de notre chef'
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-2xl font-display font-bold text-coffee-400">
-                          ${item.price.toFixed(2)}
-                        </span>
-                        <span className="text-xs text-gray-400">{item.category}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              : Array.from({ length: 6 }).map((_, idx) => (
-                  <div key={idx} className="bg-gray-800 rounded-lg h-64 animate-pulse" />
-                ))}
+          {/* Food images */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 mb-12">
+            {['/rr-ice14.png', '/rr-ice15.png', '/rr-ice16.png', '/rr-ice17.png', '/rr-ice19.png', '/rr-ice20.png'].map((image, idx) => (
+              <div key={idx} className="relative group overflow-hidden h-60">
+                <img
+                  src={image}
+                  alt={`Plat ${idx + 1}`}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-500" />
+              </div>
+            ))}
           </div>
 
           <div className="text-center mt-12">
-            <button
-              onClick={() => setIsReservationModalOpen(true)}
-              className="inline-block px-8 py-3 bg-coffee-600 hover:bg-coffee-500 text-cream-50 font-bold rounded-lg transition-colors"
-            >
-              Voir le Menu Complet
-            </button>
+            <CTAButton href="/menu">Voir le menu complet</CTAButton>
           </div>
         </div>
       </section>
 
-      {/* Reservation CTA Section */}
-      <section
-        id="reservation"
-        className="py-24 px-4 relative"
-        style={{
-          backgroundImage:
-            'linear-gradient(135deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.75) 100%), url("https://images.unsplash.com/photo-1519167758993-d3582a24de0e?auto=format&fit=crop&w=2000&q=80")',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl font-display font-bold mb-6 text-white">
-            Réservez Votre Table
-          </h2>
-          <p className="text-xl font-body text-cream-300 mb-8">
-            Accumulez des moments inoubliables au cœur de notre établissement prestigieux
-          </p>
-          <button
-            onClick={() => setIsReservationModalOpen(true)}
-            className="inline-block px-8 py-4 bg-coffee-600 hover:bg-coffee-500 text-cream-50 font-bold text-lg rounded-lg transition-all transform hover:scale-105"
-          >
-            Réserver Maintenant
-          </button>
+      {/* Reservation CTA Section - Split layout */}
+      <section id="reservation">
+        <div className="grid grid-cols-1 md:grid-cols-2 min-h-[550px]">
+          {/* Left - Image */}
+          <div className="relative overflow-hidden h-80 md:h-auto">
+            <img
+              src="/rr-ice18.png"
+              alt="Ambiance du restaurant"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          </div>
+
+          {/* Right - Content */}
+          <div className="flex items-center justify-center px-8 md:px-16 py-16 md:py-24 bg-[#0d1b2a]">
+            <div className="max-w-md text-center">
+              <p className="text-cream-500 text-xs tracking-[0.35em] uppercase mb-4 font-body">
+                Réservation
+              </p>
+              <h2 className="text-3xl md:text-5xl font-display font-bold text-cream-100 mb-6 tracking-wide leading-tight">
+                Réservez Votre Table
+              </h2>
+              <p className="text-cream-400/70 font-body text-sm md:text-base leading-relaxed mb-10">
+                Choisissez la table exacte qui vous convient grâce à notre plan de
+                salle interactif. Sélectionnez votre créneau, votre emplacement
+                préféré et vivez une expérience sur mesure dès votre arrivée.
+              </p>
+              <CTAButton onClick={() => setIsReservationModalOpen(true)}>Réserver maintenant</CTAButton>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20 px-4 bg-gray-900 border-t border-gray-800">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="text-center">
-            <div className="text-coffee-400 mb-4 flex justify-center">
-              <ClockIcon className="w-12 h-12" />
-            </div>
-            <h3 className="text-xl font-display font-semibold mb-2 text-white">Service Rapide</h3>
-            <p className="text-cream-400">Service attentif et rapide pour une meilleure expérience</p>
-          </div>
-          <div className="text-center">
-            <div className="text-coffee-400 mb-4 flex justify-center">
-              <StarIcon className="w-12 h-12" />
-            </div>
-            <h3 className="text-xl font-display font-semibold mb-2 text-white">Qualité Premium</h3>
-            <p className="text-cream-400">Ingrédients frais et plats préparés par nos chefs</p>
-          </div>
-          <div className="text-center">
-            <div className="text-coffee-400 mb-4 flex justify-center">
-              <MapPinIcon className="w-12 h-12" />
-            </div>
-            <h3 className="text-xl font-display font-semibold mb-2 text-white">Localisation Idéale</h3>
-            <p className="text-cream-400">Situé au cœur de Ghandouri, Tanger pour votre commodité</p>
-          </div>
-        </div>
+      {/* Video Ambiance Section */}
+      <section className="relative h-[400px] md:h-[500px] overflow-hidden">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        >
+          <source src="/eau.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-coffee-950/70" />
       </section>
 
       {/* Footer */}
-      <footer id="contact" className="bg-black border-t border-gray-800 py-16 px-4">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-          {/* Brand */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <BuildingStorefrontIcon className="w-8 h-8 text-coffee-400" />
-              <span className="text-2xl font-display font-bold text-cream-100">RR Ice</span>
-            </div>
-            <p className="text-cream-400">
-              Une expérience gastronomique unique à Tanger
-            </p>
-          </div>
-
-          {/* Quick Links */}
-          <div>
-            <h4 className="text-white font-semibold mb-4">Navigation</h4>
-            <ul className="space-y-2 text-gray-400">
-              <li>
-                <a href="#hero" className="hover:text-coffee-400 transition-colors">
-                  Accueil
-                </a>
-              </li>
-              <li>
-                <a href="#gallery" className="hover:text-coffee-400 transition-colors">
-                  Galerie
-                </a>
-              </li>
-              <li>
-                <a href="#menu" className="hover:text-coffee-400 transition-colors">
-                  Menu
-                </a>
-              </li>
-              <li>
-                <a href="#reservation" className="hover:text-coffee-400 transition-colors">
-                  Réserver
-                </a>
-              </li>
-            </ul>
-          </div>
+      <footer id="contact" className="bg-coffee-950 pt-24 pb-10 px-4">
+        <div className="max-w-2xl mx-auto text-center">
+          {/* Address */}
+          <p className="text-cream-400/80 font-body text-sm md:text-base mb-8">
+            Ghandouri - Tanger, Maroc
+          </p>
 
           {/* Hours */}
-          <div>
-            <h4 className="text-white font-semibold mb-4">Horaires</h4>
-            <ul className="space-y-2 text-gray-400 text-sm">
-              <li>Lun - Jeu: 11h00 - 23h00</li>
-              <li>Ven - Sam: 11h00 - 00h00</li>
-              <li>Dimanche: 12h00 - 22h00</li>
-              <li className="text-coffee-400 font-semibold mt-3">Fermé les jours fériés</li>
-            </ul>
+          <p className="text-cream-100 font-body font-semibold text-sm md:text-base mb-3">
+            Horaire d'ouverture :
+          </p>
+          <div className="text-cream-400/70 font-body text-sm md:text-base space-y-1 mb-4">
+            <p>Lun - Jeu: 11h00 - 23h00</p>
+            <p>Ven - Sam: 11h00 - 00h00</p>
+            <p>Dimanche: 12h00 - 22h00</p>
+          </div>
+          <p className="text-cream-400/70 font-body text-sm md:text-base mb-12">
+            Fermé les jours fériés
+          </p>
+
+          {/* CTA */}
+          <div className="mb-12">
+            <CTAButton onClick={() => setIsReservationModalOpen(true)}>Réserver une table</CTAButton>
           </div>
 
-          {/* Contact */}
-          <div>
-            <h4 className="text-white font-semibold mb-4">Contact</h4>
-            <ul className="space-y-3 text-gray-400">
-              <li className="flex items-center gap-2">
-                <PhoneIcon className="w-4 h-4 text-coffee-400" />
-                <span>+212 5393-01039</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <MapPinIcon className="w-4 h-4 text-coffee-400 mt-1 flex-shrink-0" />
-                <span>Ghandouri<br />Tanger, Maroc</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <span>📧</span>
-                <span>rr.restauration@gmail.com</span>
-              </li>
-            </ul>
+          {/* Social Icons */}
+          <div className="flex justify-center gap-4 mb-16">
+            {[
+              { label: 'Facebook', icon: <FacebookIcon />, href: '#' },
+              { label: 'Instagram', icon: <InstagramIcon />, href: '#' },
+              { label: 'TikTok', icon: <TikTokIcon />, href: '#' },
+            ].map((social) => (
+              <a
+                key={social.label}
+                href={social.href}
+                className="w-11 h-11 rounded-full border border-cream-400/40 flex items-center justify-center text-cream-400/70 hover:bg-cream-400/10 hover:text-cream-300 transition-all duration-300"
+                title={social.label}
+              >
+                {social.icon}
+              </a>
+            ))}
           </div>
-        </div>
 
-        {/* Bottom */}
-        <div className="border-t border-gray-800 pt-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-gray-400 text-sm">
-              © 2026 RR Ice - Ghandouri, Tanger | rr.restauration@gmail.com | +212 5393-01039
-            </p>
-            <div className="flex gap-6">
-              <a href="#" className="text-gray-400 hover:text-coffee-400 transition-colors">
-                Facebook
-              </a>
-              <a href="#" className="text-gray-400 hover:text-coffee-400 transition-colors">
-                Instagram
-              </a>
-              <a href="#" className="text-gray-400 hover:text-coffee-400 transition-colors">
-                LinkedIn
-              </a>
-            </div>
-          </div>
+          {/* Bottom credit */}
+          <p className="text-cream-400/40 font-body text-xs tracking-wide">
+            Made with passion & love by <span className="text-cream-400/60 font-semibold">NA Innovations</span>
+          </p>
         </div>
       </footer>
     </div>

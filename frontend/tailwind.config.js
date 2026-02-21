@@ -36,6 +36,49 @@ export default {
         display: ['Playfair Display', 'serif'],
         body: ['Lora', 'serif'],
       },
+      boxShadow: {
+        // Light mode — layered, soft
+        'soft': '0 1px 2px rgba(0,0,0,0.04), 0 2px 6px rgba(0,0,0,0.03)',
+        'card': '0 1px 3px rgba(0,0,0,0.06), 0 6px 16px rgba(0,0,0,0.04)',
+        'card-hover': '0 4px 12px rgba(0,0,0,0.08), 0 12px 28px rgba(0,0,0,0.06)',
+        'premium': '0 8px 24px rgba(0,0,0,0.1), 0 20px 48px rgba(0,0,0,0.05)',
+        // Dark mode — deeper, richer
+        'dark-soft': '0 1px 2px rgba(0,0,0,0.2), 0 2px 6px rgba(0,0,0,0.15)',
+        'dark-card': '0 2px 4px rgba(0,0,0,0.3), 0 6px 16px rgba(0,0,0,0.2)',
+        'dark-card-hover': '0 4px 12px rgba(0,0,0,0.4), 0 12px 28px rgba(0,0,0,0.3)',
+        'dark-premium': '0 8px 24px rgba(0,0,0,0.5), 0 20px 48px rgba(0,0,0,0.25)',
+        // Accent glows — very subtle
+        'glow-gold': '0 0 20px rgba(196,150,104,0.1), 0 0 40px rgba(196,150,104,0.05)',
+      },
+      keyframes: {
+        fadeIn: {
+          from: { opacity: '0', transform: 'translateY(8px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        slideUp: {
+          from: { opacity: '0', transform: 'translateY(4px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        pulseSoft: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.6' },
+        },
+        menuReveal: {
+          from: { opacity: '0', transform: 'translateY(24px) scale(0.96)' },
+          to: { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
+        menuLine: {
+          from: { width: '0%' },
+          to: { width: '100%' },
+        },
+      },
+      animation: {
+        'fadeIn': 'fadeIn 0.3s ease-out',
+        'slideUp': 'slideUp 0.25s ease-out',
+        'pulse-soft': 'pulseSoft 2.5s ease-in-out infinite',
+        'menu-reveal': 'menuReveal 0.5s cubic-bezier(0.16,1,0.3,1) forwards',
+        'menu-line': 'menuLine 0.6s cubic-bezier(0.16,1,0.3,1) forwards',
+      },
     },
   },
   plugins: [],

@@ -15,7 +15,7 @@ import {
   ArrowRightIcon,
   ArrowLeftIcon
 } from '@heroicons/react/24/outline';
-import { createReservation } from '../../lib/api';
+import { createReservation, createEventReservation } from '../../lib/api';
 import type { ReservationFormData, OccasionType, PublicTable } from '../../lib/types';
 import { useAvailabilityCheck } from '../../hooks/useAvailabilityCheck';
 import toast from 'react-hot-toast';
@@ -55,6 +55,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
 
   const [loading, setLoading] = useState(false);
   const [showTableList, setShowTableList] = useState(false);
+  const [previewTableId, setPreviewTableId] = useState<number | null>(null);
   
   const { availability, checking, checkAvailability } = useAvailabilityCheck();
 
@@ -76,13 +77,16 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
     }
   }, [formData.date, formData.time, formData.partySize, isOpen, checkAvailability]);
 
-  // Reset selected table si mode auto
+  // Reset selected table si mode auto ou event
   useEffect(() => {
-    if (formData.placementMode === 'auto') {
+    if (formData.placementMode === 'manual') {
+      setShowTableList(true);
+    } else {
       setFormData(prev => ({ ...prev, selectedTableId: null }));
       setShowTableList(false);
-    } else {
-      setShowTableList(true);
+    }
+    if (formData.placementMode !== 'event') {
+      setFormData(prev => ({ ...prev, eventDetails: '' }));
     }
   }, [formData.placementMode]);
 
@@ -123,9 +127,13 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
       return table?.available_seats || 20;
     }
     // En mode auto, max = plus grande table dispo
-    return availability?.tables.length 
-      ? Math.max(...availability.tables.map(t => t.available_seats))
-      : 20;
+    if (formData.placementMode === 'auto') {
+      return availability?.tables.length
+        ? Math.max(...availability.tables.map(t => t.available_seats))
+        : 20;
+    }
+    // En mode event, pas de limite de table
+    return 200;
   };
 
   const getAssignedTableName = (): string => {
@@ -133,8 +141,8 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
       const table = availability?.tables.find(t => t.id === formData.selectedTableId);
       return table?.name || '—';
     }
-    
-    // Best fit algorithm pour auto
+
+    // Best fit algorithm pour auto et event
     if (availability?.tables.length) {
       const suitableTables = availability.tables
         .filter(t => t.available_seats >= formData.partySize)
@@ -147,20 +155,22 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
   };
 
   const canSubmit = (): boolean => {
-    return !!(
-      availability?.available &&
+    const baseValid = !!(
       formData.customerName.trim() &&
       formData.customerEmail.trim() &&
       formData.customerPhone.trim() &&
       !checking &&
       !loading
     );
+    if (formData.placementMode === 'event') {
+      return baseValid && !!(formData.eventDetails && formData.eventDetails.trim());
+    }
+    return baseValid && !!availability?.available;
   };
 
   // Step validation
   const canProceedToStep2 = (): boolean => {
     return !!(
-      availability?.available &&
       !checking &&
       formData.partySize >= 1
     );
@@ -169,6 +179,9 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
   const canProceedToStep3 = (): boolean => {
     if (formData.placementMode === 'manual') {
       return !!formData.selectedTableId;
+    }
+    if (formData.placementMode === 'event') {
+      return !!(formData.eventDetails && formData.eventDetails.trim());
     }
     return true; // Auto mode always valid if we reached step 2
   };
@@ -202,38 +215,66 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!canSubmit()) {
-      console.error('Validation failed in canSubmit()');
-      return;
-    }
 
-    if (!availability || !availability.available) {
-      toast.error('Veuillez vérifier la disponibilité d\'abord');
-      console.error('availability:', availability);
+    if (!canSubmit()) {
       return;
     }
 
     setLoading(true);
     try {
       const arrivalDateTime = `${formData.date} ${formData.time}:00`;
-      
-      // Déterminer table_id
+
+      // ─── Event mode: separate API, no table needed ───
+      if (formData.placementMode === 'event') {
+        const eventPayload = {
+          customer_name: formData.customerName,
+          customer_email: formData.customerEmail,
+          customer_phone: formData.customerPhone,
+          arrival_time: arrivalDateTime,
+          party_size: formData.partySize,
+          notes: [
+            ...formData.occasion?.map(o => OCCASIONS[o].label) || [],
+            formData.specialNotes,
+          ].filter(Boolean).join(' | ') || undefined,
+          event_details: formData.eventDetails || '',
+        };
+
+        await createEventReservation(eventPayload);
+        toast.success('Demande d\'événement envoyée ! Le restaurant vous contactera.', { duration: 5000 });
+        onClose();
+
+        setCurrentStep(1);
+        setFormData({
+          date: new Date().toISOString().split('T')[0],
+          time: '19:00',
+          partySize: 2,
+          placementMode: 'auto',
+          selectedTableId: null,
+          customerName: '',
+          customerEmail: '',
+          customerPhone: '',
+          occasion: [],
+          specialNotes: '',
+        });
+        return;
+      }
+
+      // ─── Normal flow (auto/manual): unchanged ───
+      if (!availability || !availability.available) {
+        toast.error('Veuillez vérifier la disponibilité d\'abord');
+        return;
+      }
+
       let tableId = formData.selectedTableId;
       if (formData.placementMode === 'auto') {
-        // Best fit
         const suitableTables = availability.tables
           .filter(t => t.available_seats >= formData.partySize)
           .sort((a, b) => a.available_seats - b.available_seats);
         tableId = suitableTables[0]?.id || null;
-        console.log('Placement auto - Table sélectionnée:', tableId, 'Tables disponibles:', suitableTables.length);
-      } else {
-        console.log('Placement manuel - Table sélectionnée:', tableId);
       }
 
       if (!tableId) {
         toast.error('Aucune table disponible');
-        console.error('table_id is null. formData.placementMode:', formData.placementMode, 'selectedTableId:', formData.selectedTableId);
         return;
       }
 
@@ -249,8 +290,6 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
           formData.specialNotes,
         ].filter(Boolean).join(' | '),
       };
-
-      console.log('Envoi de la réservation:', payload);
 
       await createReservation(payload);
       toast.success('Réservation confirmée!');
@@ -458,17 +497,21 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
           {/* ═══════════════════════════════════════════════════ */}
           {/* STEP 2: PLACEMENT */}
           {/* ═══════════════════════════════════════════════════ */}
-          {currentStep === 2 && availability?.available && (
+          {currentStep === 2 && (
             <section className="animate-fadeIn">
               <h3 className="text-lg font-display font-semibold text-cream-100 mb-4 flex items-center gap-2">
                 <MapPinIcon className="w-5 h-5 text-cream-400" />
                 Placement
               </h3>
 
+              {(() => {
+                const hasAvailableTables = !!(availability?.available && availability.tables.some(t => t.available_seats >= formData.partySize));
+                return (
               <div className="space-y-3">
                 {/* Option Auto */}
-                <label className={`flex items-start gap-3 p-4 bg-transparent rounded-lg border cursor-pointer hover:border-cream-400 transition ${
-                  formData.placementMode === 'auto' ? 'border-cream-400' : 'border-cream-400/30'
+                <label className={`flex items-start gap-3 p-4 bg-transparent rounded-lg border transition ${
+                  !hasAvailableTables ? 'opacity-40 cursor-not-allowed border-cream-400/20' :
+                  formData.placementMode === 'auto' ? 'border-cream-400 cursor-pointer' : 'border-cream-400/30 cursor-pointer hover:border-cream-400'
                 }`}>
                   <input
                     type="radio"
@@ -476,19 +519,21 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                     value="auto"
                     checked={formData.placementMode === 'auto'}
                     onChange={() => updateField('placementMode', 'auto')}
+                    disabled={!hasAvailableTables}
                     className="mt-1 w-4 h-4 text-cream-400 focus:ring-cream-400"
                   />
                   <div className="flex-1">
-                    <div className="font-semibold text-cream-100">Placement automatique (recommandé)</div>
+                    <div className="font-semibold text-cream-100">Placement automatique {hasAvailableTables && '(recommandé)'}</div>
                     <div className="text-sm text-cream-400 mt-1">
-                      On vous attribue la meilleure table disponible
+                      {hasAvailableTables ? 'On vous attribue la meilleure table disponible' : 'Aucune table ne peut accueillir ce nombre de convives'}
                     </div>
                   </div>
                 </label>
 
                 {/* Option Manuel */}
-                <label className={`flex items-start gap-3 p-4 bg-transparent rounded-lg border cursor-pointer hover:border-cream-400 transition ${
-                  formData.placementMode === 'manual' ? 'border-cream-400' : 'border-cream-400/30'
+                <label className={`flex items-start gap-3 p-4 bg-transparent rounded-lg border transition ${
+                  !hasAvailableTables ? 'opacity-40 cursor-not-allowed border-cream-400/20' :
+                  formData.placementMode === 'manual' ? 'border-cream-400 cursor-pointer' : 'border-cream-400/30 cursor-pointer hover:border-cream-400'
                 }`}>
                   <input
                     type="radio"
@@ -496,46 +541,103 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                     value="manual"
                     checked={formData.placementMode === 'manual'}
                     onChange={() => updateField('placementMode', 'manual')}
+                    disabled={!hasAvailableTables}
                     className="mt-1 w-4 h-4 text-cream-400 focus:ring-cream-400"
                   />
                   <div className="flex-1">
                     <div className="font-semibold text-cream-100">Je veux choisir ma table</div>
                     <div className="text-sm text-cream-400 mt-1">
-                      Sélectionnez votre table préférée
+                      {hasAvailableTables ? 'Sélectionnez votre table préférée' : 'Indisponible pour ce nombre de convives'}
                     </div>
                   </div>
                 </label>
 
-                {/* Liste tables si manuel */}
-                {showTableList && availability.tables && (
-                  <div className="mt-4 space-y-2 max-h-60 overflow-y-auto">
-                    {availability.tables
-                      .filter(t => t.available_seats >= formData.partySize)
-                      .map(table => (
-                        <button
-                          key={table.id}
-                          type="button"
-                          onClick={() => updateField('selectedTableId', table.id)}
-                          className={`w-full p-3 rounded-lg text-left transition ${
-                            formData.selectedTableId === table.id
-                              ? 'bg-coffee-600 text-cream-50 border border-cream-400'
-                              : 'bg-transparent text-cream-100 border border-cream-400/30 hover:border-cream-400'
-                          }`}
-                        >
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <div className="font-semibold">{table.name}</div>
-                              <div className="text-sm opacity-75">{table.total_seats} places</div>
-                            </div>
-                            <div className="text-sm opacity-75">
-                              {table.available_seats} dispo
-                            </div>
-                          </div>
-                        </button>
-                      ))}
+                {/* Option Événement */}
+                <label className={`flex items-start gap-3 p-4 bg-transparent rounded-lg border cursor-pointer hover:border-cream-400 transition ${
+                  formData.placementMode === 'event' ? 'border-cream-400' : 'border-cream-400/30'
+                }`}>
+                  <input
+                    type="radio"
+                    name="placement"
+                    value="event"
+                    checked={formData.placementMode === 'event'}
+                    onChange={() => updateField('placementMode', 'event')}
+                    className="mt-1 w-4 h-4 text-cream-400 focus:ring-cream-400"
+                  />
+                  <div className="flex-1">
+                    <div className="font-semibold text-cream-100">Événement (anniversaire, groupe...)</div>
+                    <div className="text-sm text-cream-400 mt-1">
+                      Pour les groupes de 4+ personnes, on s'occupe du placement
+                    </div>
+                  </div>
+                </label>
+
+                {/* Textarea événement */}
+                {formData.placementMode === 'event' && (
+                  <div className="animate-fadeIn">
+                    <label className="block text-sm font-medium text-cream-300 mb-2">
+                      Décrivez votre événement *
+                    </label>
+                    <textarea
+                      value={formData.eventDetails || ''}
+                      onChange={(e) => updateField('eventDetails', e.target.value)}
+                      className="w-full px-4 py-2.5 bg-transparent border border-cream-400/30 rounded-lg text-cream-100 placeholder-cream-500 focus:ring-1 focus:ring-cream-400 transition resize-none"
+                      rows={3}
+                      placeholder="Type d'événement, nombre de personnes, besoins spéciaux..."
+                      required
+                    />
                   </div>
                 )}
+
+                {/* Liste tables si manuel */}
+                {showTableList && availability.tables && (() => {
+                  const suitableTables = availability.tables.filter(t => t.available_seats >= formData.partySize);
+                  const previewTable = suitableTables.find(t => t.id === previewTableId);
+
+                  return (
+                    <div className="space-y-3 animate-fadeIn">
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                        {suitableTables.map(table => (
+                          <div
+                            key={table.id}
+                            className={`w-full p-3 rounded-lg text-left transition ${
+                              formData.selectedTableId === table.id
+                                ? 'bg-coffee-600 text-cream-50 border border-cream-400'
+                                : 'bg-transparent text-cream-100 border border-cream-400/30 hover:border-cream-400'
+                            }`}
+                          >
+                            <div className="flex justify-between items-center cursor-pointer" onClick={() => updateField('selectedTableId', table.id)}>
+                              <div>
+                                <div className="font-semibold">{table.name}</div>
+                                <div className="text-xs opacity-75 mt-0.5">{table.floor} &middot; {table.total_seats} places</div>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); setPreviewTableId(previewTableId === table.id ? null : table.id); }}
+                                  className="text-[10px] px-2 py-0.5 border border-cream-400/30 rounded text-cream-400/70 hover:text-cream-200 hover:border-cream-400/60 bg-transparent transition whitespace-nowrap"
+                                >
+                                  {previewTableId === table.id ? 'Masquer' : 'Voir sur plan'}
+                                </button>
+                                <span className="text-sm opacity-75">
+                                  {table.available_seats} dispo
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Mini floor plan preview */}
+                      {previewTable && (
+                        <MiniTablePreview table={previewTable} allTables={suitableTables} />
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
+                );
+              })()}
 
               {/* Navigation Buttons */}
               <div className="mt-6 flex justify-between">
@@ -735,8 +837,17 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                   <div className="flex items-start gap-3">
                     <MapPinIcon className="w-5 h-5 text-cream-400 flex-shrink-0 mt-0.5" />
                     <div>
-                      <div className="font-semibold text-cream-100">Table</div>
-                      <div>{getAssignedTableName()} ({formData.placementMode === 'auto' ? 'Placement automatique' : 'Choix manuel'})</div>
+                      <div className="font-semibold text-cream-100">
+                        {formData.placementMode === 'event' ? 'Événement' : 'Table'}
+                      </div>
+                      {formData.placementMode === 'event' ? (
+                        <div className="text-cream-300">Le restaurant organisera le placement pour vous</div>
+                      ) : (
+                        <div>{getAssignedTableName()} ({formData.placementMode === 'auto' ? 'Placement automatique' : 'Choix manuel'})</div>
+                      )}
+                      {formData.placementMode === 'event' && formData.eventDetails && (
+                        <div className="text-sm text-cream-400 mt-1 italic">« {formData.eventDetails} »</div>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
@@ -772,11 +883,20 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
               </div>
 
               {/* Info message */}
-              <div className="border border-cream-400/30 rounded-lg p-4">
-                <p className="text-cream-300 text-sm">
-                  Un email de confirmation sera envoyé à <strong className="text-cream-100">{formData.customerEmail}</strong>
-                </p>
-              </div>
+              {formData.placementMode === 'event' ? (
+                <div className="border border-violet-400/30 bg-violet-500/[0.06] rounded-lg p-4 space-y-2">
+                  <p className="text-violet-300 text-sm font-semibold">Ceci est une demande d'événement</p>
+                  <p className="text-cream-400 text-sm">
+                    Aucune table n'est réservée automatiquement. Le restaurant vous contactera pour organiser le placement et confirmer les détails.
+                  </p>
+                </div>
+              ) : (
+                <div className="border border-cream-400/30 rounded-lg p-4">
+                  <p className="text-cream-300 text-sm">
+                    Un email de confirmation sera envoyé à <strong className="text-cream-100">{formData.customerEmail}</strong>
+                  </p>
+                </div>
+              )}
 
               {/* Navigation Buttons */}
               <div className="flex justify-between">
@@ -796,12 +916,12 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                   {loading ? (
                     <>
                       <ClockIcon className="animate-spin w-6 h-6" />
-                      Confirmation en cours...
+                      {formData.placementMode === 'event' ? 'Envoi en cours...' : 'Confirmation en cours...'}
                     </>
                   ) : (
                     <>
                       <CheckCircleIcon className="w-6 h-6" />
-                      Confirmer la réservation
+                      {formData.placementMode === 'event' ? 'Envoyer la demande' : 'Confirmer la réservation'}
                     </>
                   )}
                 </button>
@@ -809,6 +929,68 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
             </section>
           )}
         </form>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────
+// COMPOSANT: Mini Floor Plan Preview
+// ─────────────────────────────────────────────────────────
+interface MiniTablePreviewProps {
+  table: PublicTable;
+  allTables: PublicTable[];
+}
+
+function MiniTablePreview({ table, allTables }: MiniTablePreviewProps) {
+  // Filter tables on the same floor
+  const sameFlorTables = allTables.filter(t => t.floor === table.floor);
+
+  // Compute bounding box with padding
+  const xs = sameFlorTables.map(t => t.x);
+  const ys = sameFlorTables.map(t => t.y);
+  const minX = Math.min(...xs) - 1;
+  const maxX = Math.max(...xs) + 1;
+  const minY = Math.min(...ys) - 1;
+  const maxY = Math.max(...ys) + 1;
+  const rangeX = maxX - minX || 1;
+  const rangeY = maxY - minY || 1;
+
+  return (
+    <div className="border border-cream-400/20 rounded-lg p-4 animate-fadeIn">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-xs text-cream-400 tracking-wider uppercase font-body">
+          {table.floor}
+        </span>
+        <span className="text-xs text-cream-100 font-semibold">
+          {table.name}
+        </span>
+      </div>
+
+      {/* Mini grid */}
+      <div className="relative w-full bg-coffee-950/50 rounded border border-cream-400/10" style={{ aspectRatio: `${rangeX} / ${rangeY}` }}>
+        {sameFlorTables.map(t => {
+          const left = ((t.x - minX) / rangeX) * 100;
+          const top = ((t.y - minY) / rangeY) * 100;
+          const isSelected = t.id === table.id;
+
+          return (
+            <div
+              key={t.id}
+              className={`absolute w-3 h-3 rounded-sm -translate-x-1/2 -translate-y-1/2 transition-all ${
+                isSelected
+                  ? 'bg-cream-300 ring-2 ring-cream-400 scale-150'
+                  : 'bg-cream-400/25'
+              }`}
+              style={{ left: `${left}%`, top: `${top}%` }}
+              title={t.name}
+            />
+          );
+        })}
+      </div>
+
+      <div className="mt-2 text-center text-[10px] text-cream-400/50 font-body">
+        Position de votre table sur le plan
       </div>
     </div>
   );

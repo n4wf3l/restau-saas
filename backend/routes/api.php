@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/public/tables', [PublicTableController::class, 'index']);
 Route::post('/public/check-availability', [PublicTableController::class, 'checkAvailability']);
 Route::post('/public/reservations', [PublicTableController::class, 'store']);
+Route::post('/public/events', [PublicTableController::class, 'storeEvent']);
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();

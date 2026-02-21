@@ -33,7 +33,7 @@ class PublicTableController extends Controller
             $groupKey = $tableName . '_' . $floorLevel;
 
             // Find all tables with the same name on the same floor
-            $tablesInGroup = $tables->filter(function ($t) use ($tableName, $floorLevel, $table) {
+            $tablesInGroup = $tables->filter(function ($t) use ($tables, $tableName, $floorLevel) {
                 $tName = $t->table_name ?? "Table " . ($tables->search($t) + 1);
                 $tFloor = $t->floor_level ?? 1;
                 return $tName === $tableName && $tFloor === $floorLevel;
@@ -137,7 +137,7 @@ class PublicTableController extends Controller
             $floorLevel = $table->floor_level ?? 1;
 
             // Find all tables with same name on same floor
-            $tablesInGroup = $tables->filter(function ($t) use ($tableName, $floorLevel, $table) {
+            $tablesInGroup = $tables->filter(function ($t) use ($tables, $tableName, $floorLevel) {
                 $tName = $t->table_name ?? "Table " . ($tables->search($t) + 1);
                 $tFloor = $t->floor_level ?? 1;
                 return $tName === $tableName && $tFloor === $floorLevel;
@@ -233,7 +233,7 @@ class PublicTableController extends Controller
                     $tableName = $table->table_name ?? "Table " . ($tables->search($table) + 1);
                     $floorLevel = $table->floor_level ?? 1;
 
-                    $tablesInGroup = $tables->filter(function ($t) use ($tableName, $floorLevel, $table) {
+                    $tablesInGroup = $tables->filter(function ($t) use ($tables, $tableName, $floorLevel) {
                         $tName = $t->table_name ?? "Table " . ($tables->search($t) + 1);
                         $tFloor = $t->floor_level ?? 1;
                         return $tName === $tableName && $tFloor === $floorLevel;
@@ -402,6 +402,44 @@ class PublicTableController extends Controller
             'table_name' => $table->table_name ?? 'Table ' . $table->id,
             'seats_reserved' => $validated['party_size'],
             'reservations' => $reservations,
+        ], 201);
+    }
+
+    public function storeEvent(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'customer_name' => 'required|string|max:255',
+                'customer_email' => 'required|email|max:255',
+                'customer_phone' => 'nullable|string|max:20',
+                'arrival_time' => 'required|date|after:5 minutes ago',
+                'party_size' => 'required|integer|min:1|max:200',
+                'notes' => 'nullable|string|max:1000',
+                'event_details' => 'required|string|max:2000',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'error' => 'Validation échouée',
+                'errors' => $e->errors(),
+            ], 422);
+        }
+
+        $reservation = Reservation::create([
+            'floor_plan_item_id' => null,
+            'customer_name' => $validated['customer_name'],
+            'customer_email' => $validated['customer_email'],
+            'customer_phone' => $validated['customer_phone'] ?? null,
+            'arrival_time' => $validated['arrival_time'],
+            'party_size' => $validated['party_size'],
+            'notes' => $validated['notes'] ?? null,
+            'is_event' => true,
+            'event_details' => $validated['event_details'],
+            'status' => 'pending',
+        ]);
+
+        return response()->json([
+            'message' => 'Demande d\'événement enregistrée. Le restaurant vous contactera pour confirmer.',
+            'reservation' => $reservation,
         ], 201);
     }
 }

@@ -346,7 +346,7 @@ function MenuItemCard({
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-1 text-lg font-bold text-gray-900 dark:text-white">
             <CurrencyEuroIcon className="w-5 h-5" />
-            {item.price.toFixed(2)}
+            {Number(item.price).toFixed(2)}
           </div>
           {!item.is_available && (
             <span className="px-2 py-0.5 text-[10px] font-medium bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 rounded-full">

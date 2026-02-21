@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { Reservation, PublicTable, ReservationPayload, MenuItem, MenuItemPayload } from "./types";
+import type { Reservation, PublicTable, ReservationPayload, EventReservationPayload, MenuItem, MenuItemPayload } from "./types";
 
 export const api = axios.create({
   baseURL: "http://localhost:8000",
@@ -63,6 +63,13 @@ export async function getPublicTables(): Promise<PublicTable[]> {
 export async function createReservation(payload: ReservationPayload): Promise<{ message: string; reservation: any }> {
   await csrf(); // CSRF protection
   const response = await api.post("/api/public/reservations", payload);
+  return response.data;
+}
+
+// Public API - Create an event reservation request
+export async function createEventReservation(payload: EventReservationPayload): Promise<{ message: string; reservation: any }> {
+  await csrf();
+  const response = await api.post("/api/public/events", payload);
   return response.data;
 }
 
