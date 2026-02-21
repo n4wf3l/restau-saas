@@ -51,6 +51,10 @@ export default {
         'glow-gold': '0 0 20px rgba(196,150,104,0.1), 0 0 40px rgba(196,150,104,0.05)',
       },
       keyframes: {
+        spin: {
+          from: { transform: 'rotate(0deg)' },
+          to: { transform: 'rotate(360deg)' },
+        },
         fadeIn: {
           from: { opacity: '0', transform: 'translateY(8px)' },
           to: { opacity: '1', transform: 'translateY(0)' },
@@ -71,13 +75,24 @@ export default {
           from: { width: '0%' },
           to: { width: '100%' },
         },
+        heroFadeUp: {
+          from: { opacity: '0', transform: 'translateY(30px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        heroScale: {
+          from: { opacity: '0', transform: 'scale(0.85)' },
+          to: { opacity: '1', transform: 'scale(1)' },
+        },
       },
       animation: {
+        'spin': 'spin 1s linear infinite',
         'fadeIn': 'fadeIn 0.3s ease-out',
         'slideUp': 'slideUp 0.25s ease-out',
         'pulse-soft': 'pulseSoft 2.5s ease-in-out infinite',
         'menu-reveal': 'menuReveal 0.5s cubic-bezier(0.16,1,0.3,1) forwards',
         'menu-line': 'menuLine 0.6s cubic-bezier(0.16,1,0.3,1) forwards',
+        'hero-scale': 'heroScale 1s cubic-bezier(0.16,1,0.3,1) forwards',
+        'hero-fade-up': 'heroFadeUp 0.8s cubic-bezier(0.16,1,0.3,1) forwards',
       },
     },
   },

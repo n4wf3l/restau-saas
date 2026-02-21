@@ -54,7 +54,7 @@ export interface Reservation {
   customer_phone?: string;
   arrival_time: string;
   party_size: number;
-  status: "pending" | "confirmed" | "cancelled" | "completed";
+  status: "pending" | "confirmed" | "cancelled" | "completed" | "no_show";
   notes?: string;
   is_event: boolean;
   event_details?: string;
@@ -64,6 +64,7 @@ export interface Reservation {
     floor: string;
   };
   created_at: string;
+  deleted_at?: string | null;
 }
 
 export interface PublicTable {
@@ -148,8 +149,22 @@ export interface MenuItemPayload {
   ingredients?: string;
   price: number;
   is_halal?: boolean;
-  image_url?: string;
+  image?: File | null;
   category?: string;
   is_available?: boolean;
   order?: number;
+}
+
+export interface RestaurantSettings {
+  id: number;
+  user_id: number;
+  reservations_enabled: boolean;
+  service_duration_minutes: number;
+  buffer_minutes: number;
+  max_occupancy_pct: number;
+  auto_optimize_tables: boolean;
+  auto_confirm: boolean;
+  send_confirmation_email: boolean;
+  created_at: string;
+  updated_at: string;
 }

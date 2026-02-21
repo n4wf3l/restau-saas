@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import { getPublicTables, createReservation } from "../lib/api";
 import type { PublicTable } from "../lib/types";
 import { toast } from "react-hot-toast";
+import { Spinner } from "../components/ui/Spinner";
 
 export default function PublicReservation() {
   const [tables, setTables] = useState<PublicTable[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     customer_name: "",
@@ -24,6 +26,8 @@ export default function PublicReservation() {
       setTables(data);
     } catch (error) {
       toast.error("Erreur lors du chargement des tables");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -94,7 +98,11 @@ export default function PublicReservation() {
           {/* Liste des tables */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-2xl font-semibold mb-4">Tables disponibles</h2>
-            {tables.length === 0 ? (
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Spinner />
+              </div>
+            ) : tables.length === 0 ? (
               <p className="text-gray-500">Aucune table disponible</p>
             ) : (
               <div className="space-y-3">

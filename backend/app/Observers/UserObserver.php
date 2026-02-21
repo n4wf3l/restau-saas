@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\User;
 use App\Models\RestaurantFloorPlan;
+use App\Models\RestaurantSetting;
 
 class UserObserver
 {
@@ -18,6 +19,11 @@ class UserObserver
             'name' => 'Mon Restaurant',
             'width' => 40,
             'height' => 30,
+        ]);
+
+        // Create default settings
+        RestaurantSetting::create([
+            'user_id' => $user->id,
         ]);
     }
 

@@ -35,7 +35,7 @@ const NAV_ITEMS: NavItem[] = [
   { path: "/dashboard/menu", label: "Carte", icon: BookOpenIcon },
   { path: "/dashboard/clients", label: "Clients", icon: UsersIcon, soon: true },
   { path: "/dashboard/analytics", label: "Statistiques", icon: ChartBarIcon, soon: true },
-  { path: "/dashboard/settings", label: "Paramètres", icon: Cog6ToothIcon, soon: true },
+  { path: "/dashboard/settings", label: "Paramètres", icon: Cog6ToothIcon },
 ];
 
 export function DashboardLayout() {

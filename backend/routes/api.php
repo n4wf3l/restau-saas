@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\FloorPlanItemController;
 use App\Http\Controllers\Api\PublicTableController;
 use App\Http\Controllers\Api\ReservationController;
 use App\Http\Controllers\Api\MenuItemController;
+use App\Http\Controllers\Api\SettingsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -13,6 +14,8 @@ Route::get('/public/tables', [PublicTableController::class, 'index']);
 Route::post('/public/check-availability', [PublicTableController::class, 'checkAvailability']);
 Route::post('/public/reservations', [PublicTableController::class, 'store']);
 Route::post('/public/events', [PublicTableController::class, 'storeEvent']);
+Route::get('/public/settings', [SettingsController::class, 'publicShow']);
+Route::get('/public/menu-items', [MenuItemController::class, 'publicIndex']);
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
@@ -32,6 +35,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/reservations', [ReservationController::class, 'index']);
     Route::put('/reservations/{reservation}', [ReservationController::class, 'update']);
     Route::delete('/reservations/{reservation}', [ReservationController::class, 'destroy']);
+    Route::post('/reservations/{id}/restore', [ReservationController::class, 'restore']);
+
+    // Settings routes
+    Route::get('/settings', [SettingsController::class, 'show']);
+    Route::put('/settings', [SettingsController::class, 'update']);
 
     // Menu Items routes
     Route::get('/menu-items', [MenuItemController::class, 'index']);

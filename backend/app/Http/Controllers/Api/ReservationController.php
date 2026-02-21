@@ -8,11 +8,19 @@ use Illuminate\Http\Request;
 
 class ReservationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $reservations = Reservation::with('floorPlanItem')
-            ->orderBy('arrival_time', 'desc')
-            ->get();
+        $query = Reservation::with('floorPlanItem');
+
+        // If include_no_show=1, also include soft-deleted no-show reservations
+        if ($request->boolean('include_no_show')) {
+            $query->withTrashed()->where(function ($q) {
+                $q->whereNull('deleted_at')
+                  ->orWhere('status', 'no_show');
+            });
+        }
+
+        $reservations = $query->orderBy('arrival_time', 'desc')->get();
 
         // Group reservations by (customer_email, arrival_time, party_size)
         // because the system creates 1 row per chair
@@ -44,6 +52,7 @@ class ReservationController extends Controller
                         'floor' => '—',
                     ],
                     'created_at' => $first->created_at->format('Y-m-d H:i'),
+                    'deleted_at' => $first->deleted_at?->format('Y-m-d H:i'),
                 ];
             }
 
@@ -83,6 +92,7 @@ class ReservationController extends Controller
                     'floor' => $floorName,
                 ],
                 'created_at' => $first->created_at->format('Y-m-d H:i'),
+                'deleted_at' => $first->deleted_at?->format('Y-m-d H:i'),
             ];
         })->values();
 
@@ -92,7 +102,7 @@ class ReservationController extends Controller
     public function update(Request $request, Reservation $reservation)
     {
         $validated = $request->validate([
-            'status' => 'required|in:pending,confirmed,cancelled,completed',
+            'status' => 'required|in:pending,confirmed,cancelled,completed,no_show',
         ]);
 
         // Update all reservations in the same group
@@ -102,7 +112,19 @@ class ReservationController extends Controller
             ->get();
 
         foreach ($group as $r) {
-            $r->update($validated);
+            $r->update(['status' => $validated['status']]);
+        }
+
+        // If no_show, soft-delete the entire group
+        if ($validated['status'] === 'no_show') {
+            foreach ($group as $r) {
+                $r->delete(); // SoftDeletes — sets deleted_at
+            }
+
+            return response()->json([
+                'message' => 'Réservation marquée comme no-show',
+                'reservation' => $reservation->fresh(),
+            ]);
         }
 
         return response()->json([
@@ -111,13 +133,40 @@ class ReservationController extends Controller
         ]);
     }
 
-    public function destroy(Reservation $reservation)
+    /**
+     * POST /api/reservations/{id}/restore
+     * Restore a soft-deleted no-show reservation group.
+     */
+    public function restore(Request $request, int $id)
     {
-        // Delete all reservations in the same group
-        Reservation::where('customer_email', $reservation->customer_email)
+        $reservation = Reservation::withTrashed()->findOrFail($id);
+
+        // Find the group (all are trashed)
+        $group = Reservation::withTrashed()
+            ->where('customer_email', $reservation->customer_email)
             ->where('arrival_time', $reservation->arrival_time)
             ->where('party_size', $reservation->party_size)
-            ->delete();
+            ->get();
+
+        foreach ($group as $r) {
+            $r->restore();
+            $r->update(['status' => 'confirmed']);
+        }
+
+        return response()->json([
+            'message' => 'Réservation restaurée',
+            'reservation' => $reservation->fresh(),
+        ]);
+    }
+
+    public function destroy(Reservation $reservation)
+    {
+        // Force delete all reservations in the same group (including soft-deleted)
+        Reservation::withTrashed()
+            ->where('customer_email', $reservation->customer_email)
+            ->where('arrival_time', $reservation->arrival_time)
+            ->where('party_size', $reservation->party_size)
+            ->forceDelete();
 
         return response()->json(['message' => 'Réservation supprimée']);
     }

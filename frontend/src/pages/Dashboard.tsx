@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useOutletContext } from "react-router-dom";
-import { getReservations, updateReservationStatus, deleteReservation } from "../lib/api";
-import type { Reservation, FloorPlan } from "../lib/types";
+import { getReservations, getSettings, updateReservationStatus, deleteReservation, restoreReservation } from "../lib/api";
+import type { Reservation, FloorPlan, RestaurantSettings } from "../lib/types";
 import toast from "react-hot-toast";
 import {
   CalendarIcon,
@@ -14,9 +14,12 @@ import {
   ChatBubbleLeftIcon,
   InformationCircleIcon,
   SparklesIcon,
+  ExclamationTriangleIcon,
+  ArrowPathIcon,
 } from "@heroicons/react/24/outline";
+import { Spinner } from "../components/ui/Spinner";
 
-type TabType = "pending" | "confirmed" | "all" | "cancelled" | "events";
+type TabType = "pending" | "confirmed" | "all" | "cancelled" | "events" | "no_show";
 
 const AUTO_REFRESH_MS = 30_000;
 
@@ -26,10 +29,11 @@ export function Dashboard() {
   const [activeTab, setActiveTab] = useState<TabType>("pending");
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [settings, setSettings] = useState<RestaurantSettings | null>(null);
 
   const loadReservations = useCallback(async () => {
     try {
-      const data = await getReservations();
+      const data = await getReservations(true);
       setReservations(data);
     } catch {
       toast.error("Erreur lors du chargement");
@@ -38,17 +42,35 @@ export function Dashboard() {
     }
   }, []);
 
+  const loadSettings = useCallback(async () => {
+    try {
+      const data = await getSettings();
+      setSettings(data);
+      // If auto_confirm is on and we're on pending tab, switch to confirmed
+      if (data.auto_confirm && activeTab === "pending") {
+        setActiveTab("confirmed");
+      }
+    } catch {
+      // Non-critical
+    }
+  }, []);
+
   // Initial load + auto-refresh
   useEffect(() => {
     loadReservations();
+    loadSettings();
     const interval = setInterval(loadReservations, AUTO_REFRESH_MS);
     return () => clearInterval(interval);
-  }, [loadReservations]);
+  }, [loadReservations, loadSettings]);
 
   const handleStatus = async (id: number, status: string) => {
     try {
       await updateReservationStatus(id, status);
-      toast.success(status === "confirmed" ? "Réservation confirmée" : status === "cancelled" ? "Réservation refusée" : "Statut mis à jour");
+      if (status === "no_show") {
+        toast.success("Réservation marquée comme no-show");
+      } else {
+        toast.success(status === "confirmed" ? "Réservation confirmée" : status === "cancelled" ? "Réservation refusée" : "Statut mis à jour");
+      }
       loadReservations();
     } catch {
       toast.error("Erreur lors de la mise à jour");
@@ -65,8 +87,19 @@ export function Dashboard() {
     }
   };
 
+  const handleRestore = async (id: number) => {
+    try {
+      await restoreReservation(id);
+      toast.success("Réservation restaurée");
+      loadReservations();
+    } catch {
+      toast.error("Erreur lors de la restauration");
+    }
+  };
+
   const filtered = reservations.filter((r) => {
     if (activeTab === "events") return r.is_event;
+    if (activeTab === "no_show") return r.status === "no_show";
     if (activeTab === "all") return true;
     return r.status === activeTab;
   });
@@ -75,14 +108,19 @@ export function Dashboard() {
     pending: reservations.filter((r) => r.status === "pending").length,
     confirmed: reservations.filter((r) => r.status === "confirmed").length,
     cancelled: reservations.filter((r) => r.status === "cancelled").length,
+    no_show: reservations.filter((r) => r.status === "no_show").length,
     events: reservations.filter((r) => r.is_event).length,
     all: reservations.length,
   };
 
   const tabs: { key: TabType; label: string; count: number; color: string }[] = [
-    { key: "pending", label: "En attente", count: counts.pending, color: "text-cream-600 dark:text-cream-400" },
+    // Only show pending tab if auto_confirm is OFF
+    ...(settings?.auto_confirm
+      ? []
+      : [{ key: "pending" as TabType, label: "En attente", count: counts.pending, color: "text-cream-600 dark:text-cream-400" }]),
     { key: "confirmed", label: "Confirmées", count: counts.confirmed, color: "text-emerald-500" },
     { key: "events", label: "Événements", count: counts.events, color: "text-violet-400" },
+    { key: "no_show", label: "No-show", count: counts.no_show, color: "text-orange-400" },
     { key: "all", label: "Toutes", count: counts.all, color: "text-gray-400" },
     { key: "cancelled", label: "Annulées", count: counts.cancelled, color: "text-rose-400" },
   ];
@@ -115,6 +153,13 @@ export function Dashboard() {
       badgeText: "text-gray-500 dark:text-gray-400",
       dot: "bg-gray-400",
       label: "Terminée",
+    },
+    no_show: {
+      border: "border-l-orange-400",
+      badge: "bg-orange-50 dark:bg-orange-500/10",
+      badgeText: "text-orange-700 dark:text-orange-400",
+      dot: "bg-orange-400",
+      label: "No-show",
     },
   };
 
@@ -153,7 +198,7 @@ export function Dashboard() {
               Mise à jour auto &middot; 30s
             </p>
           </div>
-          {counts.pending > 0 && (
+          {!settings?.auto_confirm && counts.pending > 0 && (
             <div className="flex items-center gap-2.5 px-4 py-2.5 bg-cream-100/80 dark:bg-cream-500/[0.08] border border-cream-300/40 dark:border-cream-500/15 rounded-xl shadow-soft dark:shadow-glow-gold">
               <span className="relative flex h-2.5 w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cream-500 opacity-60" />
@@ -167,7 +212,7 @@ export function Dashboard() {
         </div>
 
         {/* ─── Tabs ─── */}
-        <div className="flex gap-1.5">
+        <div className="flex gap-1.5 flex-wrap">
           {tabs.map((tab) => (
             <button
               key={tab.key}
@@ -199,11 +244,23 @@ export function Dashboard() {
         </div>
       )}
 
+      {/* ─── No-show explanation banner ─── */}
+      {activeTab === "no_show" && (
+        <div className="mx-6 mb-4 p-4 bg-orange-50/60 dark:bg-orange-500/[0.05] border border-orange-200/40 dark:border-orange-500/10 rounded-xl flex gap-3 animate-fadeIn">
+          <ExclamationTriangleIcon className="w-5 h-5 text-orange-500 dark:text-orange-400 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+            <span className="font-semibold text-gray-900 dark:text-cream-50">Réservations no-show</span>
+            <br />
+            Les réservations marquées comme no-show sont archivées ici. Vous pouvez les restaurer à tout moment pour conserver l'historique.
+          </div>
+        </div>
+      )}
+
       {/* ─── Reservation Cards ─── */}
       <div className="flex-1 overflow-auto px-6 pb-6">
         {loading ? (
           <div className="flex items-center justify-center py-24">
-            <div className="w-8 h-8 rounded-full border-2 border-cream-200 dark:border-[#2a2724] border-t-cream-500 animate-spin" />
+            <Spinner />
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24">
@@ -214,7 +271,7 @@ export function Dashboard() {
               Aucune réservation
             </p>
             <p className="text-sm text-gray-300 dark:text-gray-600 mt-1.5">
-              Les nouvelles demandes apparaîtront ici
+              {activeTab === "no_show" ? "Aucune réservation no-show" : "Les nouvelles demandes apparaîtront ici"}
             </p>
           </div>
         ) : (
@@ -353,10 +410,39 @@ export function Dashboard() {
                       </button>
                       <div className="w-px bg-gray-100 dark:bg-[#2a2724]" />
                       <button
+                        onClick={(e) => { e.stopPropagation(); handleStatus(res.id, "no_show"); }}
+                        className="flex-1 flex items-center justify-center gap-2 py-3.5 text-gray-400 dark:text-gray-500 hover:bg-orange-50 dark:hover:bg-orange-500/10 hover:text-orange-600 dark:hover:text-orange-400 active:scale-[0.98] transition-all duration-200 font-medium text-sm"
+                      >
+                        <ExclamationTriangleIcon className="w-4 h-4" />
+                        No-show
+                      </button>
+                      <div className="w-px bg-gray-100 dark:bg-[#2a2724]" />
+                      <button
                         onClick={(e) => { e.stopPropagation(); handleDelete(res.id); }}
                         className="flex items-center justify-center gap-2 px-6 py-3.5 text-gray-400 dark:text-gray-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500 dark:hover:text-rose-400 active:scale-[0.98] transition-all duration-200 rounded-br-2xl text-sm"
                       >
                         <TrashIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* ─── Actions: No-show ─── */}
+                  {res.status === "no_show" && (
+                    <div className="flex border-t border-gray-100 dark:border-[#2a2724]">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleRestore(res.id); }}
+                        className="flex-1 flex items-center justify-center gap-2 py-3.5 text-gray-500 dark:text-gray-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400 active:scale-[0.98] transition-all duration-200 rounded-bl-2xl font-medium text-sm"
+                      >
+                        <ArrowPathIcon className="w-4 h-4" />
+                        Restaurer
+                      </button>
+                      <div className="w-px bg-gray-100 dark:bg-[#2a2724]" />
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDelete(res.id); }}
+                        className="flex-1 flex items-center justify-center gap-2 py-3.5 text-gray-400 dark:text-gray-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500 dark:hover:text-rose-400 active:scale-[0.98] transition-all duration-200 rounded-br-2xl text-sm"
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                        Supprimer
                       </button>
                     </div>
                   )}

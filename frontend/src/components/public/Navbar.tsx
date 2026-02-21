@@ -24,17 +24,18 @@ const LANGUAGES = [
 export function Navbar({ onReservationClick }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeLang, setActiveLang] = useState('FR');
+  const [langPickerOpen, setLangPickerOpen] = useState(false);
   const location = useLocation();
 
-  // Lock body scroll when mobile menu is open
+  // Lock body scroll when mobile menu or lang picker is open
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen || langPickerOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
     }
     return () => { document.body.style.overflow = ''; };
-  }, [isOpen]);
+  }, [isOpen, langPickerOpen]);
 
   // Close menu on route change
   useEffect(() => {
@@ -79,33 +80,20 @@ export function Navbar({ onReservationClick }: NavbarProps) {
             </div>
 
             <div className="flex-1 flex justify-center items-center gap-6 px-8">
-              {/* Language Selector — Desktop */}
-              <div className="flex items-center gap-1">
-                {LANGUAGES.map((lang, i) => (
-                  <span key={lang.code} className="flex items-center gap-1">
-                    <button
-                      onClick={() => setActiveLang(lang.code)}
-                      className={`text-[11px] tracking-[0.15em] uppercase transition-colors ${
-                        activeLang === lang.code
-                          ? 'text-cream-300 font-semibold'
-                          : 'text-cream-400/40 hover:text-cream-400/70'
-                      }`}
-                    >
-                      {lang.label}
-                    </button>
-                    {i < LANGUAGES.length - 1 && (
-                      <span className="text-cream-400/20 text-[10px] mx-0.5">/</span>
-                    )}
-                  </span>
-                ))}
-              </div>
+              {/* Language Trigger — Desktop */}
+              <button
+                onClick={() => setLangPickerOpen(true)}
+                className="w-9 h-9 rounded-full border border-cream-400/30 flex items-center justify-center text-[11px] tracking-[0.15em] uppercase text-cream-300 font-semibold hover:border-cream-400/60 hover:bg-cream-400/5 transition-all duration-300"
+              >
+                {activeLang}
+              </button>
 
               <CTAButton onClick={onReservationClick}>Réserver</CTAButton>
             </div>
           </div>
 
           {/* Mobile Header */}
-          <div className="md:hidden flex items-center justify-between h-20 px-5">
+          <div className="md:hidden flex items-center justify-between h-16 px-5">
             <Link to="/" className="flex items-center gap-2 z-50">
               <img src="/logo.png" alt="RR Ice" className="w-12 h-12 object-contain" />
             </Link>
@@ -113,7 +101,7 @@ export function Navbar({ onReservationClick }: NavbarProps) {
             {/* Hamburger / Close */}
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="relative z-50 w-10 h-10 flex items-center justify-center"
+              className="relative z-50 w-12 h-12 flex items-center justify-center"
               aria-label={isOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
             >
               <div className="w-6 h-5 flex flex-col justify-between">
@@ -211,26 +199,78 @@ export function Navbar({ onReservationClick }: NavbarProps) {
             </CTAButton>
           </div>
 
-          {/* Language Selector — Mobile */}
+          {/* Language Trigger — Mobile */}
           <div
             className={`opacity-0 ${isOpen ? 'animate-menu-reveal' : ''}`}
             style={{ animationDelay: `${navLinks.length * 80 + 200}ms` }}
           >
-            <div className="flex items-center gap-3">
-              {LANGUAGES.map((lang) => (
-                <button
-                  key={lang.code}
-                  onClick={() => setActiveLang(lang.code)}
-                  className={`w-10 h-10 rounded-full border text-xs tracking-[0.15em] font-body transition-all duration-300 ${
-                    activeLang === lang.code
-                      ? 'border-cream-400/60 text-cream-300 bg-cream-400/10'
-                      : 'border-cream-400/20 text-cream-400/40 hover:border-cream-400/40 hover:text-cream-400/70'
-                  }`}
-                >
-                  {lang.label}
-                </button>
-              ))}
-            </div>
+            <button
+              onClick={() => { setIsOpen(false); setTimeout(() => setLangPickerOpen(true), 300); }}
+              className="w-14 h-14 rounded-full border border-cream-400/30 flex items-center justify-center text-sm tracking-[0.15em] uppercase text-cream-300 font-semibold font-body hover:border-cream-400/60 hover:bg-cream-400/5 transition-all duration-300"
+            >
+              {activeLang}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════ */}
+      {/* FULLSCREEN LANGUAGE PICKER                         */}
+      {/* ═══════════════════════════════════════════════════ */}
+      <div
+        className={`fixed inset-0 z-[60] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          langPickerOpen
+            ? 'opacity-100 pointer-events-auto'
+            : 'opacity-0 pointer-events-none'
+        }`}
+      >
+        {/* Blurred backdrop */}
+        <div
+          className={`absolute inset-0 backdrop-blur-2xl bg-black/70 transition-all duration-700 ${
+            langPickerOpen ? 'opacity-100' : 'opacity-0'
+          }`}
+          onClick={() => setLangPickerOpen(false)}
+        />
+
+        {/* Close button */}
+        <button
+          onClick={() => setLangPickerOpen(false)}
+          className="absolute top-5 right-5 md:top-8 md:right-8 z-10 w-12 h-12 flex items-center justify-center text-cream-400/60 hover:text-cream-200 transition-colors"
+          aria-label="Fermer"
+        >
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        {/* Content */}
+        <div className="relative h-full flex flex-col items-center justify-center">
+          <p className="text-cream-500 text-xs tracking-[0.35em] uppercase mb-10 font-body">
+            Langue
+          </p>
+
+          <div className="flex flex-col items-center gap-4">
+            {LANGUAGES.map((lang, index) => (
+              <button
+                key={lang.code}
+                onClick={() => { setActiveLang(lang.code); setLangPickerOpen(false); }}
+                className={`group flex items-center gap-5 px-10 py-4 rounded-none border transition-all duration-300 min-w-[200px] md:min-w-[260px] justify-center ${
+                  langPickerOpen ? 'animate-menu-reveal' : 'opacity-0'
+                } ${
+                  activeLang === lang.code
+                    ? 'border-cream-400/50 bg-cream-400/10 text-cream-200'
+                    : 'border-cream-400/15 text-cream-400/60 hover:border-cream-400/40 hover:text-cream-300 hover:bg-cream-400/5'
+                }`}
+                style={{ animationDelay: `${index * 80 + 100}ms` }}
+              >
+                <span className="text-2xl md:text-3xl font-display font-bold tracking-wider">
+                  {lang.code === 'FR' ? 'Français' : lang.code === 'EN' ? 'English' : 'العربية'}
+                </span>
+                {activeLang === lang.code && (
+                  <span className="w-2 h-2 rounded-full bg-cream-400 shrink-0" />
+                )}
+              </button>
+            ))}
           </div>
         </div>
       </div>

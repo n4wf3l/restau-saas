@@ -1,3 +1,23 @@
+/* Custom scrollbar — brun background, beige thumb */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #e3ccad #2d201a;
+}
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #2d201a;
+}
+::-webkit-scrollbar-thumb {
+  background: #e3ccad;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #d4b18a;
+}
+
 #root {
   width: 100%;
   min-height: 100vh;

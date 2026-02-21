@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   getMenuItems,
   createMenuItem,
@@ -15,17 +15,21 @@ import {
   CurrencyEuroIcon,
   PhotoIcon,
 } from "@heroicons/react/24/outline";
+import { Spinner } from "../components/ui/Spinner";
 
 export function MenuPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<MenuItemPayload>({
     name: "",
     ingredients: "",
     price: 0,
     is_halal: false,
-    image_url: "",
+    image: null,
     category: "",
     is_available: true,
     order: 0,
@@ -41,6 +45,8 @@ export function MenuPage() {
       setMenuItems(data);
     } catch {
       toast.error("Erreur lors du chargement du menu");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -64,12 +70,13 @@ export function MenuPage() {
 
   const handleEdit = (item: MenuItem) => {
     setEditingItem(item);
+    setImagePreview(item.image_url ? (item.image_url.startsWith('http') ? item.image_url : `http://localhost:8000${item.image_url}`) : null);
     setFormData({
       name: item.name,
       ingredients: item.ingredients || "",
       price: item.price,
       is_halal: item.is_halal,
-      image_url: item.image_url || "",
+      image: null,
       category: item.category || "",
       is_available: item.is_available,
       order: item.order,
@@ -90,12 +97,14 @@ export function MenuPage() {
 
   const resetForm = () => {
     setEditingItem(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
     setFormData({
       name: "",
       ingredients: "",
       price: 0,
       is_halal: false,
-      image_url: "",
+      image: null,
       category: "",
       is_available: true,
       order: 0,
@@ -127,7 +136,11 @@ export function MenuPage() {
 
       {/* Menu Items Grid */}
       <div className="flex-1 overflow-auto p-6">
-        {menuItems.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-24">
+            <Spinner />
+          </div>
+        ) : menuItems.length === 0 ? (
           <div className="text-center py-16">
             <PhotoIcon className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">
@@ -248,15 +261,43 @@ export function MenuPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  URL de l'image
+                  Image du plat
                 </label>
-                <input
-                  type="url"
-                  value={formData.image_url}
-                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-coffee-500/50 focus:border-coffee-500 text-sm"
-                  placeholder="https://example.com/image.jpg"
-                />
+                {imagePreview && (
+                  <div className="relative mb-2 w-full h-36 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
+                    <img src={imagePreview} alt="Aperçu" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImagePreview(null);
+                        setFormData({ ...formData, image: null });
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                      }}
+                      className="absolute top-2 right-2 p-1 bg-black/50 rounded-full text-white hover:bg-black/70 transition-colors"
+                    >
+                      <XCircleIcon className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+                <label className="flex items-center justify-center gap-2 w-full px-3 py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/50 cursor-pointer hover:border-coffee-500/50 transition-colors">
+                  <PhotoIcon className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                    {formData.image ? formData.image.name : "Choisir une image..."}
+                  </span>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      setFormData({ ...formData, image: file });
+                      if (file) {
+                        setImagePreview(URL.createObjectURL(file));
+                      }
+                    }}
+                  />
+                </label>
               </div>
 
               <div className="flex items-center gap-6">
@@ -317,7 +358,7 @@ function MenuItemCard({
       {item.image_url ? (
         <div className="relative h-44 bg-gray-100 dark:bg-gray-800">
           <img
-            src={item.image_url}
+            src={item.image_url.startsWith('http') ? item.image_url : `http://localhost:8000${item.image_url}`}
             alt={item.name}
             className="w-full h-full object-cover"
             onError={(e) => { e.currentTarget.style.display = "none"; }}

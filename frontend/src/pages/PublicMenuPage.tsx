@@ -1,9 +1,47 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Navbar } from '../components/public/Navbar';
+import { Footer } from '../components/public/Footer';
 import { ReservationModal } from '../components/public/ReservationModal';
-import { getMenuItems } from '../lib/api';
+import { getPublicMenuItems } from '../lib/api';
 import type { MenuItem } from '../lib/types';
 import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
+
+// ─── Scroll Reveal ───
+function ScrollReveal({
+  children,
+  className = '',
+  delay = 0,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.unobserve(el); } },
+      { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={`transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+      } ${className}`}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      {children}
+    </div>
+  );
+}
 
 export function PublicMenuPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -23,7 +61,7 @@ export function PublicMenuPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const items = await getMenuItems();
+        const items = await getPublicMenuItems();
         const available = items
           .filter(item => item.is_available)
           .sort((a, b) => a.order - b.order);
@@ -128,40 +166,48 @@ export function PublicMenuPage() {
 
       {/* Hero */}
       <section className="pt-32 pb-12 px-4 text-center">
-        <p className="text-cream-500 text-xs tracking-[0.35em] uppercase mb-4 font-body">
-          La Carte
-        </p>
-        <h1 className="text-4xl md:text-6xl font-display font-bold text-cream-100 mb-6 tracking-wide">
-          Notre Menu
-        </h1>
-        <p className="text-cream-400/70 font-body text-base md:text-lg max-w-xl mx-auto leading-relaxed">
-          Une restauration 100% halal basée sur des produits frais et de qualité
-        </p>
+        <ScrollReveal>
+          <p className="text-cream-500 text-xs tracking-[0.35em] uppercase mb-4 font-body">
+            La Carte
+          </p>
+        </ScrollReveal>
+        <ScrollReveal delay={100}>
+          <h1 className="text-4xl md:text-6xl font-display font-bold text-cream-100 mb-6 tracking-wide">
+            Notre Menu
+          </h1>
+        </ScrollReveal>
+        <ScrollReveal delay={200}>
+          <p className="text-cream-400/70 font-body text-base md:text-lg max-w-xl mx-auto leading-relaxed">
+            Une restauration 100% halal basée sur des produits frais et de qualité
+          </p>
+        </ScrollReveal>
       </section>
 
       {/* Search */}
-      <div className="max-w-4xl mx-auto px-4 mb-8">
-        <div className="relative">
-          <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-cream-400/50" />
-          <input
-            type="text"
-            placeholder="Rechercher un plat..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-transparent border border-cream-400/20 text-cream-100 text-sm font-body placeholder-cream-400/40 focus:outline-none focus:border-cream-400/50 transition-colors"
-          />
+      <ScrollReveal delay={300}>
+        <div className="max-w-4xl mx-auto px-4 mb-8">
+          <div className="relative">
+            <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-cream-400/50" />
+            <input
+              type="text"
+              placeholder="Rechercher un plat..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 bg-transparent border border-cream-400/20 text-cream-100 text-sm font-body placeholder-cream-400/40 focus:outline-none focus:border-cream-400/50 transition-colors"
+            />
+          </div>
         </div>
-      </div>
+      </ScrollReveal>
 
       {/* Mobile Category Chips */}
-      <div className="md:hidden sticky top-20 z-30 bg-coffee-950/95 backdrop-blur-sm border-b border-cream-400/10 px-4 py-3">
+      <div className="md:hidden sticky top-16 z-30 bg-coffee-950/95 backdrop-blur-sm border-b border-cream-400/10 px-4 py-3">
         <div ref={chipContainerRef} className="flex gap-2 overflow-x-auto scrollbar-hide">
           {filteredCategories.map(cat => (
             <button
               key={cat}
               ref={el => { if (el) chipRefs.current.set(cat, el); }}
               onClick={() => scrollToCategory(cat)}
-              className={`whitespace-nowrap px-4 py-2 text-xs tracking-[0.15em] uppercase font-body border transition-all shrink-0 ${
+              className={`whitespace-nowrap px-4 py-2.5 text-xs tracking-[0.15em] uppercase font-body border transition-all shrink-0 min-h-[40px] ${
                 activeCategory === cat
                   ? 'border-cream-400/60 text-cream-300 bg-cream-400/10'
                   : 'border-cream-400/20 text-cream-400/50 hover:border-cream-400/40'
@@ -218,20 +264,23 @@ export function PublicMenuPage() {
                   className="mb-16"
                 >
                   {/* Category Header */}
-                  <div className="mb-6 pb-3 border-b border-cream-400/15">
-                    <h2 className="text-2xl md:text-3xl font-display font-bold text-cream-100 tracking-wide">
-                      {cat}
-                    </h2>
-                  </div>
+                  <ScrollReveal>
+                    <div className="mb-6 pb-3 border-b border-cream-400/15">
+                      <h2 className="text-2xl md:text-3xl font-display font-bold text-cream-100 tracking-wide">
+                        {cat}
+                      </h2>
+                    </div>
+                  </ScrollReveal>
 
                   {/* Items List */}
                   <div className="divide-y divide-cream-400/10">
-                    {itemsByCategory.get(cat)?.map(item => (
-                      <MenuItemRow
-                        key={item.id}
-                        item={item}
-                        onDetailClick={() => setDetailItem(item)}
-                      />
+                    {itemsByCategory.get(cat)?.map((item, idx) => (
+                      <ScrollReveal key={item.id} delay={idx * 60}>
+                        <MenuItemRow
+                          item={item}
+                          onDetailClick={() => setDetailItem(item)}
+                        />
+                      </ScrollReveal>
                     ))}
                   </div>
                 </section>
@@ -240,6 +289,8 @@ export function PublicMenuPage() {
           </main>
         </div>
       </div>
+
+      <Footer onReservationClick={() => setIsReservationModalOpen(true)} />
 
       {/* Detail Drawer */}
       {detailItem && (
@@ -271,7 +322,7 @@ function MenuItemRow({ item, onDetailClick }: MenuItemRowProps) {
 
   return (
     <div
-      className="group py-4 px-2 -mx-2 hover:bg-cream-400/[0.03] transition-colors duration-200 cursor-default"
+      className="group py-4 px-2 -mx-2 hover:bg-cream-400/[0.03] active:bg-cream-400/[0.06] transition-colors duration-200 cursor-default"
       onClick={item.ingredients ? onDetailClick : undefined}
     >
       {/* Name ........ Price */}
@@ -306,7 +357,7 @@ function MenuItemRow({ item, onDetailClick }: MenuItemRowProps) {
           {isClamped && (
             <button
               onClick={(e) => { e.stopPropagation(); onDetailClick(); }}
-              className="shrink-0 text-cream-500/60 hover:text-cream-400 text-xs font-body underline underline-offset-2 transition-colors mt-0.5"
+              className="shrink-0 text-cream-500/60 hover:text-cream-400 active:text-cream-300 text-sm font-body underline underline-offset-2 transition-colors py-1 px-2"
             >
               voir plus
             </button>
@@ -349,7 +400,7 @@ function ItemDetailDrawer({ item, onClose }: ItemDetailDrawerProps) {
         {/* Image */}
         {item.image_url && (
           <div className="w-full h-48 md:h-56 overflow-hidden">
-            <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+            <img src={item.image_url.startsWith('http') ? item.image_url : `http://localhost:8000${item.image_url}`} alt={item.name} className="w-full h-full object-cover" />
           </div>
         )}
 
@@ -357,7 +408,7 @@ function ItemDetailDrawer({ item, onClose }: ItemDetailDrawerProps) {
         <div className="p-6">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-cream-400/60 hover:text-cream-200 transition-colors bg-coffee-950/80 rounded-full p-1.5"
+            className="absolute top-3 right-3 text-cream-400/60 hover:text-cream-200 active:text-cream-100 transition-colors bg-coffee-950/80 rounded-full p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center"
           >
             <XMarkIcon className="w-5 h-5" />
           </button>

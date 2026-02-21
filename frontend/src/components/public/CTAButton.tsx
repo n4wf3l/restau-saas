@@ -1,5 +1,5 @@
 const baseClass =
-  "inline-block px-12 py-4 bg-transparent rounded-none border border-cream-400/60 text-cream-400 hover:bg-cream-400/10 transition-all duration-300 text-xs tracking-[0.2em] uppercase font-body text-center cursor-pointer";
+  "inline-flex px-8 py-4 md:px-12 bg-transparent rounded-none border border-cream-400/60 text-cream-400 hover:bg-cream-400/10 active:bg-cream-400/20 transition-all duration-300 text-sm md:text-xs tracking-[0.15em] md:tracking-[0.2em] uppercase font-body text-center cursor-pointer min-h-[48px] items-center justify-center";
 
 type CTAButtonProps = {
   children: React.ReactNode;

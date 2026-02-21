@@ -338,14 +338,14 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
       onClick={onClose}
     >
       <div 
-        className="bg-coffee-950 rounded-xl shadow-2xl w-full max-w-3xl border border-cream-400/30 my-8"
+        className="bg-coffee-950 rounded-xl shadow-2xl w-full max-w-2xl md:max-w-3xl border border-cream-400/30 my-4 md:my-8 max-h-[95vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         
         {/* Header with close button */}
         <div className="sticky top-0 bg-transparent border-b border-cream-400/20 p-6 flex items-center justify-between z-10">
           <h2 className="text-2xl font-display font-bold text-cream-100">Réserver une Table</h2>
-          <button onClick={onClose} className="text-cream-400 hover:text-cream-100 transition bg-transparent">
+          <button onClick={onClose} className="text-cream-400 hover:text-cream-100 transition bg-transparent p-2 -mr-2 min-w-[44px] min-h-[44px] flex items-center justify-center">
             <XMarkIcon className="w-6 h-6" />
           </button>
         </div>
@@ -396,7 +396,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                     value={formData.date}
                     onChange={(e) => updateField('date', e.target.value)}
                     min={new Date().toISOString().split('T')[0]}
-                    className="w-full px-4 py-2.5 bg-transparent border border-cream-400/30 rounded-lg text-cream-100 focus:ring-1 focus:ring-cream-400 transition cursor-pointer"
+                    className="w-full px-4 py-3 bg-transparent border border-cream-400/30 rounded-lg text-cream-100 focus:ring-1 focus:ring-cream-400 transition cursor-pointer"
                     style={{ colorScheme: 'dark' }}
                     required
                   />
@@ -412,7 +412,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                     <select
                       value={formData.time}
                       onChange={(e) => updateField('time', e.target.value)}
-                      className="w-full px-4 py-2.5 bg-coffee-950 border border-cream-400/30 rounded-lg text-cream-100 focus:ring-1 focus:ring-cream-400 transition cursor-pointer [&>option]:bg-coffee-950 [&>option]:text-cream-100 [&>option:disabled]:text-gray-500 [&>option:disabled]:opacity-60 [&>option:disabled]:cursor-not-allowed"
+                      className="w-full px-4 py-3 bg-coffee-950 border border-cream-400/30 rounded-lg text-cream-100 focus:ring-1 focus:ring-cream-400 transition cursor-pointer [&>option]:bg-coffee-950 [&>option]:text-cream-100 [&>option:disabled]:text-gray-500 [&>option:disabled]:opacity-60 [&>option:disabled]:cursor-not-allowed"
                       style={{ colorScheme: 'dark' }}
                       required
                     >
@@ -445,7 +445,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                       <button
                         type="button"
                         onClick={() => updateField('partySize', Math.max(1, formData.partySize - 1))}
-                        className="px-3 py-2.5 bg-transparent border border-cream-400/30 rounded-lg text-cream-100 hover:border-cream-400 transition disabled:opacity-50"
+                        className="px-4 py-3 bg-transparent border border-cream-400/30 rounded-lg text-cream-100 hover:border-cream-400 active:bg-cream-400/10 transition disabled:opacity-50 min-w-[44px] min-h-[44px]"
                         disabled={formData.partySize <= 1}
                       >
                         −
@@ -454,14 +454,14 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                         type="number"
                         value={formData.partySize}
                         onChange={(e) => updateField('partySize', Math.max(1, Math.min(getMaxGuests(), parseInt(e.target.value) || 1)))}
-                        className="flex-1 px-4 py-2.5 bg-transparent border border-cream-400/30 rounded-lg text-cream-100 text-center focus:ring-1 focus:ring-cream-400 transition"
+                        className="flex-1 px-4 py-3 bg-transparent border border-cream-400/30 rounded-lg text-cream-100 text-center focus:ring-1 focus:ring-cream-400 transition"
                         min="1"
                         max={getMaxGuests()}
                       />
                       <button
                         type="button"
                         onClick={() => updateField('partySize', Math.min(getMaxGuests(), formData.partySize + 1))}
-                        className="px-3 py-2.5 bg-transparent border border-cream-400/30 rounded-lg text-cream-100 hover:border-cream-400 transition disabled:opacity-50"
+                        className="px-4 py-3 bg-transparent border border-cream-400/30 rounded-lg text-cream-100 hover:border-cream-400 active:bg-cream-400/10 transition disabled:opacity-50 min-w-[44px] min-h-[44px]"
                         disabled={formData.partySize >= getMaxGuests()}
                       >
                         +
@@ -485,7 +485,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                   type="button"
                   onClick={goToNextStep}
                   disabled={!canProceedToStep2()}
-                  className="px-6 py-3 bg-coffee-600 hover:bg-coffee-500 disabled:opacity-30 disabled:cursor-not-allowed text-cream-50 font-bold rounded-lg transition flex items-center gap-2"
+                  className="px-6 py-3.5 bg-coffee-600 hover:bg-coffee-500 active:bg-coffee-700 disabled:opacity-30 disabled:cursor-not-allowed text-cream-50 font-bold rounded-lg transition flex items-center gap-2 min-h-[48px]"
                 >
                   Continuer
                   <ArrowRightIcon className="w-5 h-5" />
@@ -581,7 +581,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                     <textarea
                       value={formData.eventDetails || ''}
                       onChange={(e) => updateField('eventDetails', e.target.value)}
-                      className="w-full px-4 py-2.5 bg-transparent border border-cream-400/30 rounded-lg text-cream-100 placeholder-cream-500 focus:ring-1 focus:ring-cream-400 transition resize-none"
+                      className="w-full px-4 py-3 bg-transparent border border-cream-400/30 rounded-lg text-cream-100 placeholder-cream-500 focus:ring-1 focus:ring-cream-400 transition resize-none"
                       rows={3}
                       placeholder="Type d'événement, nombre de personnes, besoins spéciaux..."
                       required
@@ -644,7 +644,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                 <button
                   type="button"
                   onClick={goToPreviousStep}
-                  className="px-6 py-3 bg-transparent border border-cream-400/30 hover:border-cream-400 text-cream-100 font-bold rounded-lg transition flex items-center gap-2"
+                  className="px-6 py-3.5 bg-transparent border border-cream-400/30 hover:border-cream-400 active:bg-cream-400/10 text-cream-100 font-bold rounded-lg transition flex items-center gap-2 min-h-[48px]"
                 >
                   <ArrowLeftIcon className="w-5 h-5" />
                   Retour
@@ -653,7 +653,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                   type="button"
                   onClick={goToNextStep}
                   disabled={!canProceedToStep3()}
-                  className="px-6 py-3 bg-coffee-600 hover:bg-coffee-500 disabled:opacity-30 disabled:cursor-not-allowed text-cream-50 font-bold rounded-lg transition flex items-center gap-2"
+                  className="px-6 py-3.5 bg-coffee-600 hover:bg-coffee-500 active:bg-coffee-700 disabled:opacity-30 disabled:cursor-not-allowed text-cream-50 font-bold rounded-lg transition flex items-center gap-2 min-h-[48px]"
                 >
                   Continuer
                   <ArrowRightIcon className="w-5 h-5" />
@@ -681,7 +681,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                     type="text"
                     value={formData.customerName}
                     onChange={(e) => updateField('customerName', e.target.value)}
-                    className="w-full px-4 py-2.5 bg-transparent border border-cream-400/30 rounded-lg text-cream-100 placeholder-cream-500 focus:ring-1 focus:ring-cream-400 transition"
+                    className="w-full px-4 py-3 bg-transparent border border-cream-400/30 rounded-lg text-cream-100 placeholder-cream-500 focus:ring-1 focus:ring-cream-400 transition"
                     placeholder="Jean Dupont"
                     required
                   />
@@ -695,7 +695,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                     type="email"
                     value={formData.customerEmail}
                     onChange={(e) => updateField('customerEmail', e.target.value)}
-                    className="w-full px-4 py-2.5 bg-transparent border border-cream-400/30 rounded-lg text-cream-100 placeholder-cream-500 focus:ring-1 focus:ring-cream-400 transition"
+                    className="w-full px-4 py-3 bg-transparent border border-cream-400/30 rounded-lg text-cream-100 placeholder-cream-500 focus:ring-1 focus:ring-cream-400 transition"
                     placeholder="jean@example.com"
                     required
                   />
@@ -709,7 +709,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                     type="tel"
                     value={formData.customerPhone}
                     onChange={(e) => updateField('customerPhone', e.target.value)}
-                    className="w-full px-4 py-2.5 bg-transparent border border-cream-400/30 rounded-lg text-cream-100 placeholder-cream-500 focus:ring-1 focus:ring-cream-400 transition"
+                    className="w-full px-4 py-3 bg-transparent border border-cream-400/30 rounded-lg text-cream-100 placeholder-cream-500 focus:ring-1 focus:ring-cream-400 transition"
                     placeholder="+33 1 23 45 67 89"
                     required
                   />
@@ -721,7 +721,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                 <button
                   type="button"
                   onClick={goToPreviousStep}
-                  className="px-6 py-3 bg-transparent border border-cream-400/30 hover:border-cream-400 text-cream-100 font-bold rounded-lg transition flex items-center gap-2"
+                  className="px-6 py-3.5 bg-transparent border border-cream-400/30 hover:border-cream-400 active:bg-cream-400/10 text-cream-100 font-bold rounded-lg transition flex items-center gap-2 min-h-[48px]"
                 >
                   <ArrowLeftIcon className="w-5 h-5" />
                   Retour
@@ -730,7 +730,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                   type="button"
                   onClick={goToNextStep}
                   disabled={!canProceedToStep4()}
-                  className="px-6 py-3 bg-coffee-600 hover:bg-coffee-500 disabled:opacity-30 disabled:cursor-not-allowed text-cream-50 font-bold rounded-lg transition flex items-center gap-2"
+                  className="px-6 py-3.5 bg-coffee-600 hover:bg-coffee-500 active:bg-coffee-700 disabled:opacity-30 disabled:cursor-not-allowed text-cream-50 font-bold rounded-lg transition flex items-center gap-2 min-h-[48px]"
                 >
                   Continuer
                   <ArrowRightIcon className="w-5 h-5" />
@@ -759,10 +759,10 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                       key={occasion}
                       type="button"
                       onClick={() => toggleOccasion(occasion)}
-                      className={`px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${
+                      className={`px-4 py-3 rounded-lg text-sm font-medium transition flex items-center gap-2 min-h-[44px] ${
                         isSelected
                           ? 'bg-coffee-600 text-cream-50 border border-cream-400'
-                          : 'bg-transparent text-cream-300 border border-cream-400/30 hover:border-cream-400'
+                          : 'bg-transparent text-cream-300 border border-cream-400/30 hover:border-cream-400 active:bg-cream-400/10'
                       }`}
                     >
                       <IconComponent className="w-4 h-4" />
@@ -780,7 +780,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                 <textarea
                   value={formData.specialNotes}
                   onChange={(e) => updateField('specialNotes', e.target.value)}
-                  className="w-full px-4 py-2.5 bg-transparent border border-cream-400/30 rounded-lg text-cream-100 placeholder-cream-500 focus:ring-1 focus:ring-cream-400 transition resize-none"
+                  className="w-full px-4 py-3 bg-transparent border border-cream-400/30 rounded-lg text-cream-100 placeholder-cream-500 focus:ring-1 focus:ring-cream-400 transition resize-none"
                   rows={3}
                   placeholder="Déco spéciale, allergie, etc."
                 />
@@ -791,7 +791,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                 <button
                   type="button"
                   onClick={goToPreviousStep}
-                  className="px-6 py-3 bg-transparent border border-cream-400/30 hover:border-cream-400 text-cream-100 font-bold rounded-lg transition flex items-center gap-2"
+                  className="px-6 py-3.5 bg-transparent border border-cream-400/30 hover:border-cream-400 active:bg-cream-400/10 text-cream-100 font-bold rounded-lg transition flex items-center gap-2 min-h-[48px]"
                 >
                   <ArrowLeftIcon className="w-5 h-5" />
                   Retour
@@ -799,7 +799,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                 <button
                   type="button"
                   onClick={goToNextStep}
-                  className="px-6 py-3 bg-coffee-600 hover:bg-coffee-500 text-cream-50 font-bold rounded-lg transition flex items-center gap-2"
+                  className="px-6 py-3.5 bg-coffee-600 hover:bg-coffee-500 active:bg-coffee-700 text-cream-50 font-bold rounded-lg transition flex items-center gap-2 min-h-[48px]"
                 >
                   Continuer
                   <ArrowRightIcon className="w-5 h-5" />
@@ -903,7 +903,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                 <button
                   type="button"
                   onClick={goToPreviousStep}
-                  className="px-6 py-3 bg-transparent border border-cream-400/30 hover:border-cream-400 text-cream-100 font-bold rounded-lg transition flex items-center gap-2"
+                  className="px-6 py-3.5 bg-transparent border border-cream-400/30 hover:border-cream-400 active:bg-cream-400/10 text-cream-100 font-bold rounded-lg transition flex items-center gap-2 min-h-[48px]"
                 >
                   <ArrowLeftIcon className="w-5 h-5" />
                   Retour

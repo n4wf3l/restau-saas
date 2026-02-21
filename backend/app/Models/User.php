@@ -54,4 +54,9 @@ class User extends Authenticatable
     {
         return $this->hasOne(RestaurantFloorPlan::class);
     }
+
+    public function settings()
+    {
+        return $this->hasOne(RestaurantSetting::class);
+    }
 }
