@@ -39,7 +39,8 @@ export default function Dashboard() {
   const [dateFilter, setDateFilter] = useState<"all" | "today" | "tomorrow" | "week" | "custom">("all");
   const [customDate, setCustomDate] = useState("");
 
-  // Delete confirmation
+  // Action loading & delete confirmation
+  const [actionInProgress, setActionInProgress] = useState<number | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: number; name: string } | null>(null);
 
   // Create / Edit reservation panel
@@ -92,6 +93,8 @@ export default function Dashboard() {
   }, [loadReservations, loadSettings]);
 
   const handleStatus = async (id: number, status: string) => {
+    if (actionInProgress) return;
+    setActionInProgress(id);
     const res = reservations.find((r) => r.id === id);
     const name = res?.customer_name || "";
     try {
@@ -106,20 +109,28 @@ export default function Dashboard() {
       loadReservations();
     } catch {
       toast.error("Erreur lors de la mise à jour du statut");
+    } finally {
+      setActionInProgress(null);
     }
   };
 
   const handleDelete = async (id: number) => {
+    if (actionInProgress) return;
+    setActionInProgress(id);
     try {
       await deleteReservation(id);
       toast.success("Réservation supprimée");
       loadReservations();
     } catch {
       toast.error("Erreur lors de la suppression");
+    } finally {
+      setActionInProgress(null);
     }
   };
 
   const handleRestore = async (id: number) => {
+    if (actionInProgress) return;
+    setActionInProgress(id);
     const res = reservations.find((r) => r.id === id);
     try {
       await restoreReservation(id);
@@ -127,6 +138,8 @@ export default function Dashboard() {
       loadReservations();
     } catch {
       toast.error("Erreur lors de la restauration");
+    } finally {
+      setActionInProgress(null);
     }
   };
 
@@ -646,70 +659,94 @@ export default function Dashboard() {
                   {/* ─── Actions: Pending ─── */}
                   {res.status === "pending" && (
                     <div className="flex border-t border-gray-100 dark:border-surface-border-light">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleStatus(res.id, "confirmed"); }}
-                        className="flex-1 flex items-center justify-center gap-2 py-4 bg-emerald-50/50 dark:bg-emerald-500/[0.06] text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-500 dark:hover:text-white active:bg-emerald-600 active:scale-[0.98] transition-all duration-200 rounded-bl-2xl font-semibold text-sm"
-                      >
-                        <CheckIcon className="w-5 h-5" />
-                        Confirmer
-                      </button>
-                      <div className="w-px bg-gray-100 dark:bg-[#2a2724]" />
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleStatus(res.id, "cancelled"); }}
-                        className="flex-1 flex items-center justify-center gap-2 py-4 text-gray-400 dark:text-gray-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400 active:scale-[0.98] transition-all duration-200 rounded-br-2xl font-medium text-sm"
-                      >
-                        <XMarkIcon className="w-5 h-5" />
-                        Refuser
-                      </button>
+                      {actionInProgress === res.id ? (
+                        <div className="flex-1 flex items-center justify-center py-4">
+                          <Spinner size="xs" className="text-gray-400" />
+                        </div>
+                      ) : (
+                        <>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleStatus(res.id, "confirmed"); }}
+                            className="flex-1 flex items-center justify-center gap-2 py-4 bg-emerald-50/50 dark:bg-emerald-500/[0.06] text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-500 dark:hover:text-white active:bg-emerald-600 active:scale-[0.98] transition-all duration-200 rounded-bl-2xl font-semibold text-sm"
+                          >
+                            <CheckIcon className="w-5 h-5" />
+                            Confirmer
+                          </button>
+                          <div className="w-px bg-gray-100 dark:bg-[#2a2724]" />
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleStatus(res.id, "cancelled"); }}
+                            className="flex-1 flex items-center justify-center gap-2 py-4 text-gray-400 dark:text-gray-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400 active:scale-[0.98] transition-all duration-200 rounded-br-2xl font-medium text-sm"
+                          >
+                            <XMarkIcon className="w-5 h-5" />
+                            Refuser
+                          </button>
+                        </>
+                      )}
                     </div>
                   )}
 
                   {/* ─── Actions: Confirmed ─── */}
                   {res.status === "confirmed" && (
                     <div className="flex border-t border-gray-100 dark:border-surface-border-light">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleStatus(res.id, "completed"); }}
-                        className="flex-1 flex items-center justify-center gap-2 py-3.5 text-gray-500 dark:text-gray-400 hover:bg-cream-50 dark:hover:bg-surface-card-hover hover:text-gray-700 dark:hover:text-cream-200 active:scale-[0.98] transition-all duration-200 rounded-bl-2xl font-medium text-sm"
-                      >
-                        <CheckIcon className="w-4 h-4" />
-                        Terminer
-                      </button>
-                      <div className="w-px bg-gray-100 dark:bg-[#2a2724]" />
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleStatus(res.id, "no_show"); }}
-                        className="flex-1 flex items-center justify-center gap-2 py-3.5 text-gray-400 dark:text-gray-500 hover:bg-orange-50 dark:hover:bg-orange-500/10 hover:text-orange-600 dark:hover:text-orange-400 active:scale-[0.98] transition-all duration-200 font-medium text-sm"
-                      >
-                        <ExclamationTriangleIcon className="w-4 h-4" />
-                        No-show
-                      </button>
-                      <div className="w-px bg-gray-100 dark:bg-[#2a2724]" />
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ id: res.id, name: res.customer_name }); }}
-                        className="flex items-center justify-center gap-2 px-6 py-3.5 text-gray-400 dark:text-gray-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500 dark:hover:text-rose-400 active:scale-[0.98] transition-all duration-200 rounded-br-2xl text-sm"
-                      >
-                        <TrashIcon className="w-4 h-4" />
-                      </button>
+                      {actionInProgress === res.id ? (
+                        <div className="flex-1 flex items-center justify-center py-3.5">
+                          <Spinner size="xs" className="text-gray-400" />
+                        </div>
+                      ) : (
+                        <>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleStatus(res.id, "completed"); }}
+                            className="flex-1 flex items-center justify-center gap-2 py-3.5 text-gray-500 dark:text-gray-400 hover:bg-cream-50 dark:hover:bg-surface-card-hover hover:text-gray-700 dark:hover:text-cream-200 active:scale-[0.98] transition-all duration-200 rounded-bl-2xl font-medium text-sm"
+                          >
+                            <CheckIcon className="w-4 h-4" />
+                            Terminer
+                          </button>
+                          <div className="w-px bg-gray-100 dark:bg-[#2a2724]" />
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleStatus(res.id, "no_show"); }}
+                            className="flex-1 flex items-center justify-center gap-2 py-3.5 text-gray-400 dark:text-gray-500 hover:bg-orange-50 dark:hover:bg-orange-500/10 hover:text-orange-600 dark:hover:text-orange-400 active:scale-[0.98] transition-all duration-200 font-medium text-sm"
+                          >
+                            <ExclamationTriangleIcon className="w-4 h-4" />
+                            No-show
+                          </button>
+                          <div className="w-px bg-gray-100 dark:bg-[#2a2724]" />
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ id: res.id, name: res.customer_name }); }}
+                            className="flex items-center justify-center gap-2 px-6 py-3.5 text-gray-400 dark:text-gray-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500 dark:hover:text-rose-400 active:scale-[0.98] transition-all duration-200 rounded-br-2xl text-sm"
+                          >
+                            <TrashIcon className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
                     </div>
                   )}
 
                   {/* ─── Actions: No-show ─── */}
                   {res.status === "no_show" && (
                     <div className="flex border-t border-gray-100 dark:border-surface-border-light">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleRestore(res.id); }}
-                        className="flex-1 flex items-center justify-center gap-2 py-3.5 text-gray-500 dark:text-gray-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400 active:scale-[0.98] transition-all duration-200 rounded-bl-2xl font-medium text-sm"
-                      >
-                        <ArrowPathIcon className="w-4 h-4" />
-                        Restaurer
-                      </button>
-                      <div className="w-px bg-gray-100 dark:bg-[#2a2724]" />
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ id: res.id, name: res.customer_name }); }}
-                        className="flex-1 flex items-center justify-center gap-2 py-3.5 text-gray-400 dark:text-gray-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500 dark:hover:text-rose-400 active:scale-[0.98] transition-all duration-200 rounded-br-2xl text-sm"
-                      >
-                        <TrashIcon className="w-4 h-4" />
-                        Supprimer
-                      </button>
+                      {actionInProgress === res.id ? (
+                        <div className="flex-1 flex items-center justify-center py-3.5">
+                          <Spinner size="xs" className="text-gray-400" />
+                        </div>
+                      ) : (
+                        <>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleRestore(res.id); }}
+                            className="flex-1 flex items-center justify-center gap-2 py-3.5 text-gray-500 dark:text-gray-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400 active:scale-[0.98] transition-all duration-200 rounded-bl-2xl font-medium text-sm"
+                          >
+                            <ArrowPathIcon className="w-4 h-4" />
+                            Restaurer
+                          </button>
+                          <div className="w-px bg-gray-100 dark:bg-[#2a2724]" />
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ id: res.id, name: res.customer_name }); }}
+                            className="flex-1 flex items-center justify-center gap-2 py-3.5 text-gray-400 dark:text-gray-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500 dark:hover:text-rose-400 active:scale-[0.98] transition-all duration-200 rounded-br-2xl text-sm"
+                          >
+                            <TrashIcon className="w-4 h-4" />
+                            Supprimer
+                          </button>
+                        </>
+                      )}
                     </div>
                   )}
 

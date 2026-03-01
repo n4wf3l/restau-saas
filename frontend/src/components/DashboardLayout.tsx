@@ -6,6 +6,7 @@ import { FloorPlanEditor } from "./floorplan/FloorPlanEditor";
 import { api } from "../lib/api";
 import type { FloorPlan } from "../lib/types";
 import toast from "react-hot-toast";
+import { Spinner } from "./ui/Spinner";
 import {
   CalendarIcon,
   BookOpenIcon,
@@ -53,6 +54,7 @@ export function DashboardLayout() {
   const [showFloorPlanModal, setShowFloorPlanModal] = useState(false);
   const [floorPlanDirty, setFloorPlanDirty] = useState(false);
   const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+  const [loadingFloorPlan, setLoadingFloorPlan] = useState(false);
 
   // Close mobile menu on route change
   const closeMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
@@ -284,11 +286,14 @@ export function DashboardLayout() {
           </div>
           <div className="flex items-center gap-2">
             <button
+              disabled={loadingFloorPlan}
               onClick={async () => {
                 if (floorPlan) {
                   setShowFloorPlanModal(true);
                 } else {
+                  setLoadingFloorPlan(true);
                   const loaded = await loadFloorPlan();
+                  setLoadingFloorPlan(false);
                   if (loaded) {
                     setShowFloorPlanModal(true);
                   } else {
@@ -296,9 +301,9 @@ export function DashboardLayout() {
                   }
                 }
               }}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl border border-cream-200/50 dark:border-surface-border-light text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-cream-200 hover:bg-cream-50 dark:hover:bg-surface-card text-sm font-medium transition-all duration-200 shadow-soft dark:shadow-dark-soft"
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl border border-cream-200/50 dark:border-surface-border-light text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-cream-200 hover:bg-cream-50 dark:hover:bg-surface-card text-sm font-medium transition-all duration-200 shadow-soft dark:shadow-dark-soft ${loadingFloorPlan ? "opacity-60 cursor-not-allowed" : ""}`}
             >
-              <MapIcon className="w-4 h-4" />
+              {loadingFloorPlan ? <Spinner size="xs" className="text-current" /> : <MapIcon className="w-4 h-4" />}
               <span className="hidden sm:inline">Plan de salle</span>
             </button>
           </div>
