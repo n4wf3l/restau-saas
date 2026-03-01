@@ -85,8 +85,10 @@ export function DashboardLayout() {
     try {
       const { data } = await api.get<FloorPlan>("/api/floor-plans/current");
       setFloorPlan(data);
+      return true;
     } catch {
-      // Floor plan might not exist yet
+      setFloorPlan(null);
+      return false;
     }
   };
 
@@ -282,11 +284,22 @@ export function DashboardLayout() {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowFloorPlanModal(true)}
+              onClick={async () => {
+                if (floorPlan) {
+                  setShowFloorPlanModal(true);
+                } else {
+                  const loaded = await loadFloorPlan();
+                  if (loaded) {
+                    setShowFloorPlanModal(true);
+                  } else {
+                    toast.error("Impossible de charger le plan de salle");
+                  }
+                }
+              }}
               className="flex items-center gap-2 px-4 py-2 rounded-xl border border-cream-200/50 dark:border-surface-border-light text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-cream-200 hover:bg-cream-50 dark:hover:bg-surface-card text-sm font-medium transition-all duration-200 shadow-soft dark:shadow-dark-soft"
             >
               <MapIcon className="w-4 h-4" />
-              {<span className="hidden sm:inline">Plan de salle</span>}
+              <span className="hidden sm:inline">Plan de salle</span>
             </button>
           </div>
         </header>

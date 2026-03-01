@@ -40,7 +40,7 @@ class MenuItemControllerTest extends TestCase
         $this->assertEquals('Tiramisu', $data[0]['name']);
     }
 
-    public function test_index_does_not_return_other_users_items(): void
+    public function test_index_returns_all_items_regardless_of_creator(): void
     {
         $otherUser = User::factory()->create();
         MenuItem::create([
@@ -51,7 +51,10 @@ class MenuItemControllerTest extends TestCase
 
         $response = $this->actingAs($this->user)->getJson('/api/menu-items');
 
-        $response->assertOk()->assertJson([]);
+        $response->assertOk();
+        $data = $response->json();
+        $this->assertCount(1, $data);
+        $this->assertEquals('Pizza', $data[0]['name']);
     }
 
     public function test_store_creates_menu_item(): void
@@ -128,20 +131,21 @@ class MenuItemControllerTest extends TestCase
         ]);
     }
 
-    public function test_update_rejects_other_users_item(): void
+    public function test_update_allows_any_admin_to_edit(): void
     {
         $otherUser = User::factory()->create();
         $item = MenuItem::create([
             'user_id' => $otherUser->id,
-            'name' => 'Not Mine',
+            'name' => 'Shared Item',
             'price' => 10.00,
         ]);
 
         $response = $this->actingAs($this->user)->putJson("/api/menu-items/{$item->id}", [
-            'name' => 'Hacked',
+            'name' => 'Updated by other admin',
         ]);
 
-        $response->assertStatus(403);
+        $response->assertOk();
+        $this->assertDatabaseHas('menu_items', ['id' => $item->id, 'name' => 'Updated by other admin']);
     }
 
     public function test_destroy_deletes_menu_item(): void
@@ -159,18 +163,19 @@ class MenuItemControllerTest extends TestCase
         $this->assertDatabaseMissing('menu_items', ['id' => $item->id]);
     }
 
-    public function test_destroy_rejects_other_users_item(): void
+    public function test_destroy_allows_any_admin_to_delete(): void
     {
         $otherUser = User::factory()->create();
         $item = MenuItem::create([
             'user_id' => $otherUser->id,
-            'name' => 'Not Mine',
+            'name' => 'Shared Item',
             'price' => 10.00,
         ]);
 
         $response = $this->actingAs($this->user)->deleteJson("/api/menu-items/{$item->id}");
 
-        $response->assertStatus(403);
+        $response->assertOk();
+        $this->assertDatabaseMissing('menu_items', ['id' => $item->id]);
     }
 
     public function test_public_index_returns_available_items_only(): void

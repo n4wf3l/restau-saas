@@ -11,10 +11,9 @@ use Illuminate\Support\Facades\Cache;
 
 class MenuItemController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $menuItems = MenuItem::where('user_id', $request->user()->id)
-            ->orderBy('order')
+        $menuItems = MenuItem::orderBy('order')
             ->orderBy('category')
             ->orderBy('name')
             ->get();
@@ -76,10 +75,6 @@ class MenuItemController extends Controller
 
     public function destroy(Request $request, MenuItem $menuItem)
     {
-        if ($menuItem->user_id !== $request->user()->id) {
-            return response()->json(['error' => 'Non autorisé'], 403);
-        }
-
         // Delete image file if exists
         $this->deleteStorageFile($menuItem->image_url, 'menu-images/');
 

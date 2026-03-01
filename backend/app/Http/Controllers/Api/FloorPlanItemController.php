@@ -14,7 +14,7 @@ class FloorPlanItemController extends Controller
      */
     public function bulkUpsert(Request $request)
     {
-        $floorPlan = RestaurantFloorPlan::where('user_id', $request->user()->id)->first();
+        $floorPlan = RestaurantFloorPlan::first();
 
         if (!$floorPlan) {
             return response()->json(['message' => 'No floor plan found'], 404);
@@ -62,7 +62,7 @@ class FloorPlanItemController extends Controller
      */
     public function store(Request $request)
     {
-        $floorPlan = RestaurantFloorPlan::where('user_id', $request->user()->id)->first();
+        $floorPlan = RestaurantFloorPlan::first();
 
         if (!$floorPlan) {
             return response()->json(['message' => 'No floor plan found'], 404);
@@ -100,7 +100,7 @@ class FloorPlanItemController extends Controller
      */
     public function destroy(Request $request, $id)
     {
-        $floorPlan = RestaurantFloorPlan::where('user_id', $request->user()->id)->first();
+        $floorPlan = RestaurantFloorPlan::first();
 
         if (!$floorPlan) {
             return response()->json(['message' => 'No floor plan found'], 404);

@@ -10,9 +10,9 @@ use Illuminate\Support\Facades\Cache;
 
 class SettingsController extends Controller
 {
-    private function settingsForUser(Request $request): RestaurantSetting
+    private function getSettings(): RestaurantSetting
     {
-        return RestaurantSetting::firstOrCreate(['user_id' => $request->user()->id]);
+        return RestaurantSetting::firstOrCreate([]);
     }
 
     /**
@@ -21,7 +21,7 @@ class SettingsController extends Controller
      */
     public function show(Request $request)
     {
-        return response()->json($this->settingsForUser($request));
+        return response()->json($this->getSettings());
     }
 
     /**
@@ -30,7 +30,7 @@ class SettingsController extends Controller
      */
     public function update(UpdateSettingsRequest $request)
     {
-        $settings = $this->settingsForUser($request);
+        $settings = $this->getSettings();
         $settings->update($request->validated());
 
         Cache::forget('public_settings');
@@ -85,7 +85,7 @@ class SettingsController extends Controller
             'pdf' => 'required|file|mimes:pdf|max:10240',
         ]);
 
-        $settings = $this->settingsForUser($request);
+        $settings = $this->getSettings();
 
         // Delete old PDF if exists
         $this->deleteStorageFile($settings->menu_pdf_url, 'menu-pdfs/');
@@ -104,7 +104,7 @@ class SettingsController extends Controller
      */
     public function deleteMenuPdf(Request $request)
     {
-        $settings = $this->settingsForUser($request);
+        $settings = $this->getSettings();
 
         if ($settings->menu_pdf_url) {
             $this->deleteStorageFile($settings->menu_pdf_url, 'menu-pdfs/');

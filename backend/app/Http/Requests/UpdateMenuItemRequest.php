@@ -8,7 +8,7 @@ class UpdateMenuItemRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->id === $this->route('menuItem')->user_id;
+        return true; // All authenticated admins can manage menu items
     }
 
     public function rules(): array

@@ -15,8 +15,8 @@ class ReservationController extends Controller
 {
     public function index(Request $request)
     {
-        // Scope reservations to the authenticated user's floor plan
-        $floorPlan = RestaurantFloorPlan::where('user_id', $request->user()->id)->first();
+        // Scope reservations to the shared floor plan
+        $floorPlan = RestaurantFloorPlan::first();
 
         if (!$floorPlan) {
             return response()->json([]);
@@ -129,13 +129,11 @@ class ReservationController extends Controller
 
         $table = RestaurantFloorPlanItem::findOrFail($validated['table_id']);
 
-        // Verify the table belongs to the authenticated user's floor plan
-        $floorPlan = RestaurantFloorPlan::where('user_id', $request->user()->id)
-            ->where('id', $table->floor_plan_id)
-            ->first();
+        // Verify the table belongs to the shared floor plan
+        $floorPlan = RestaurantFloorPlan::where('id', $table->floor_plan_id)->first();
 
         if (!$floorPlan) {
-            return response()->json(['error' => 'Non autorisé'], 403);
+            return response()->json(['error' => 'Plan de salle introuvable'], 404);
         }
 
         if ($table->type !== 'table') {

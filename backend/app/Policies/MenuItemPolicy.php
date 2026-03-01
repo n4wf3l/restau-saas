@@ -9,11 +9,11 @@ class MenuItemPolicy
 {
     public function update(User $user, MenuItem $menuItem): bool
     {
-        return $user->id === $menuItem->user_id;
+        return true; // All authenticated admins can manage menu items
     }
 
     public function delete(User $user, MenuItem $menuItem): bool
     {
-        return $user->id === $menuItem->user_id;
+        return true; // All authenticated admins can manage menu items
     }
 }
