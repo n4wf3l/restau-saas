@@ -27,11 +27,13 @@ const TOAST_OPTIONS: ToasterProps['toastOptions'] = {
 
 export function AppToaster() {
   return (
-    <Toaster
-      position="bottom-right"
-      gutter={8}
-      toastOptions={TOAST_OPTIONS}
-      containerStyle={{ bottom: 24, right: 24 }}
-    />
+    <div role="status" aria-live="polite" aria-atomic="true">
+      <Toaster
+        position="bottom-right"
+        gutter={8}
+        toastOptions={TOAST_OPTIONS}
+        containerStyle={{ bottom: 24, right: 24 }}
+      />
+    </div>
   );
 }

@@ -22,6 +22,7 @@ import {
   PencilSquareIcon,
 } from "@heroicons/react/24/outline";
 import { Spinner } from "../components/ui/Spinner";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 
 type TabType = "pending" | "confirmed" | "all" | "cancelled" | "events" | "no_show";
 
@@ -37,6 +38,9 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [dateFilter, setDateFilter] = useState<"all" | "today" | "tomorrow" | "week" | "custom">("all");
   const [customDate, setCustomDate] = useState("");
+
+  // Delete confirmation
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: number; name: string } | null>(null);
 
   // Create / Edit reservation panel
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -88,33 +92,38 @@ export default function Dashboard() {
   }, [loadReservations, loadSettings]);
 
   const handleStatus = async (id: number, status: string) => {
+    const res = reservations.find((r) => r.id === id);
+    const name = res?.customer_name || "";
     try {
       await updateReservationStatus(id, status);
-      if (status === "no_show") {
-        toast.success("Réservation marquée comme no-show");
-      } else {
-        toast.success(status === "confirmed" ? "Réservation confirmée" : status === "cancelled" ? "Réservation refusée" : "Statut mis à jour");
-      }
+      const msgs: Record<string, string> = {
+        confirmed: `Réservation de ${name} confirmée`,
+        cancelled: `Réservation de ${name} refusée`,
+        no_show: `${name} marqué comme no-show`,
+        completed: `Réservation de ${name} terminée`,
+      };
+      toast.success(msgs[status] || "Statut mis à jour");
       loadReservations();
     } catch {
-      toast.error("Erreur lors de la mise à jour");
+      toast.error("Erreur lors de la mise à jour du statut");
     }
   };
 
   const handleDelete = async (id: number) => {
     try {
       await deleteReservation(id);
-      toast.success("Supprimée");
+      toast.success("Réservation supprimée");
       loadReservations();
     } catch {
-      toast.error("Erreur");
+      toast.error("Erreur lors de la suppression");
     }
   };
 
   const handleRestore = async (id: number) => {
+    const res = reservations.find((r) => r.id === id);
     try {
       await restoreReservation(id);
-      toast.success("Réservation restaurée");
+      toast.success(`Réservation de ${res?.customer_name || ""} restaurée`);
       loadReservations();
     } catch {
       toast.error("Erreur lors de la restauration");
@@ -141,6 +150,9 @@ export default function Dashboard() {
     }, 300);
   };
 
+  const isEmailValid = (email: string) => !email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const canSubmitRes = newRes.customer_name.trim() && newRes.customer_email.trim() && isEmailValid(newRes.customer_email) && newRes.date && newRes.time && (editingRes || newRes.table_id > 0);
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newRes.table_id) { toast.error("Veuillez sélectionner une table"); return; }
@@ -157,7 +169,7 @@ export default function Dashboard() {
         table_id: newRes.table_id,
         notes: newRes.notes || undefined,
       });
-      toast.success("Réservation créée");
+      toast.success(`Réservation créée pour ${newRes.customer_name}`);
       closeCreateModal();
       loadReservations();
     } catch (error: any) {
@@ -203,7 +215,7 @@ export default function Dashboard() {
         party_size: newRes.party_size,
         notes: newRes.notes || null,
       });
-      toast.success("Réservation modifiée");
+      toast.success(`Réservation de ${newRes.customer_name} modifiée`);
       closeCreateModal();
       loadReservations();
     } catch (error: any) {
@@ -412,6 +424,7 @@ export default function Dashboard() {
               <button
                 onClick={() => setSearchQuery("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                aria-label="Effacer la recherche"
               >
                 <XMarkIcon className="w-4 h-4" />
               </button>
@@ -671,7 +684,7 @@ export default function Dashboard() {
                       </button>
                       <div className="w-px bg-gray-100 dark:bg-[#2a2724]" />
                       <button
-                        onClick={(e) => { e.stopPropagation(); handleDelete(res.id); }}
+                        onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ id: res.id, name: res.customer_name }); }}
                         className="flex items-center justify-center gap-2 px-6 py-3.5 text-gray-400 dark:text-gray-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500 dark:hover:text-rose-400 active:scale-[0.98] transition-all duration-200 rounded-br-2xl text-sm"
                       >
                         <TrashIcon className="w-4 h-4" />
@@ -691,7 +704,7 @@ export default function Dashboard() {
                       </button>
                       <div className="w-px bg-gray-100 dark:bg-[#2a2724]" />
                       <button
-                        onClick={(e) => { e.stopPropagation(); handleDelete(res.id); }}
+                        onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ id: res.id, name: res.customer_name }); }}
                         className="flex-1 flex items-center justify-center gap-2 py-3.5 text-gray-400 dark:text-gray-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500 dark:hover:text-rose-400 active:scale-[0.98] transition-all duration-200 rounded-br-2xl text-sm"
                       >
                         <TrashIcon className="w-4 h-4" />
@@ -704,7 +717,7 @@ export default function Dashboard() {
                   {(res.status === "cancelled" || res.status === "completed") && (
                     <div className="flex border-t border-gray-100 dark:border-surface-border-light">
                       <button
-                        onClick={(e) => { e.stopPropagation(); handleDelete(res.id); }}
+                        onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ id: res.id, name: res.customer_name }); }}
                         className="flex-1 flex items-center justify-center gap-2 py-3.5 text-gray-400 dark:text-gray-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500 dark:hover:text-rose-400 active:scale-[0.98] transition-all duration-200 rounded-b-2xl text-sm"
                       >
                         <TrashIcon className="w-4 h-4" />
@@ -721,7 +734,7 @@ export default function Dashboard() {
 
       {/* ─── Create Reservation Slide Panel ─── */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50">
+        <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-labelledby="reservation-panel-title">
           <div
             className={`absolute inset-0 bg-black transition-opacity duration-300 ${createPanelReady ? "opacity-50" : "opacity-0"}`}
             onClick={closeCreateModal}
@@ -733,10 +746,10 @@ export default function Dashboard() {
           >
             {/* Panel Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-surface-border-light">
-              <h2 className="text-lg font-display font-bold text-gray-900 dark:text-cream-50">
+              <h2 id="reservation-panel-title" className="text-lg font-display font-bold text-gray-900 dark:text-cream-50">
                 {editingRes ? "Modifier la réservation" : "Nouvelle réservation"}
               </h2>
-              <button onClick={closeCreateModal} className="p-2 -mr-2 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-surface-card-hover transition-colors">
+              <button onClick={closeCreateModal} className="p-2 -mr-2 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-surface-card-hover transition-colors" aria-label="Fermer le panneau">
                 <XMarkIcon className="w-5 h-5" />
               </button>
             </div>
@@ -761,8 +774,15 @@ export default function Dashboard() {
                     placeholder="Email *"
                     value={newRes.customer_email}
                     onChange={(e) => setNewRes({ ...newRes, customer_email: e.target.value })}
-                    className="w-full px-3.5 py-2.5 text-sm border border-gray-200 dark:border-surface-border-light rounded-xl bg-white dark:bg-surface-bg text-gray-800 dark:text-cream-100 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-coffee-500/30 focus:border-coffee-500/50"
+                    className={`w-full px-3.5 py-2.5 text-sm border rounded-xl bg-white dark:bg-surface-bg text-gray-800 dark:text-cream-100 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-coffee-500/30 focus:border-coffee-500/50 ${
+                      newRes.customer_email && !isEmailValid(newRes.customer_email)
+                        ? "border-red-300 dark:border-red-500/40"
+                        : "border-gray-200 dark:border-surface-border-light"
+                    }`}
                   />
+                  {newRes.customer_email && !isEmailValid(newRes.customer_email) && (
+                    <p className="text-xs text-red-500 dark:text-red-400 mt-1">Format d'email invalide</p>
+                  )}
                   <input
                     type="tel"
                     placeholder="Téléphone"
@@ -858,7 +878,7 @@ export default function Dashboard() {
               </button>
               <button
                 onClick={editingRes ? handleEdit : handleCreate}
-                disabled={creating}
+                disabled={creating || !canSubmitRes}
                 className="flex-1 py-2.5 text-sm font-semibold text-cream-50 bg-coffee-600 rounded-xl hover:bg-coffee-500 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
               >
                 {creating ? <Spinner size="sm" /> : <CheckIcon className="w-4 h-4" />}
@@ -870,6 +890,20 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation */}
+      <ConfirmDialog
+        open={!!deleteConfirm}
+        title="Supprimer la réservation"
+        message={`Supprimer la réservation de ${deleteConfirm?.name || ""} ? Cette action est irréversible.`}
+        confirmLabel="Supprimer"
+        cancelLabel="Annuler"
+        onConfirm={() => {
+          if (deleteConfirm) handleDelete(deleteConfirm.id);
+          setDeleteConfirm(null);
+        }}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </div>
   );
 }

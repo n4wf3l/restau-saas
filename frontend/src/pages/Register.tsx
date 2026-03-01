@@ -17,9 +17,16 @@ export default function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();
 
+  const passwordTooShort = password.length > 0 && password.length < 8;
+  const passwordMismatch = passwordConfirmation.length > 0 && password !== passwordConfirmation;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (password.length < 8) {
+      toast.error("Le mot de passe doit contenir au moins 8 caractères");
+      return;
+    }
     if (password !== passwordConfirmation) {
       toast.error("Les mots de passe ne correspondent pas");
       return;
@@ -120,7 +127,7 @@ export default function Register() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={8}
-                  className={`${inputClass} pr-12`}
+                  className={`${inputClass} pr-12 ${passwordTooShort ? "border-red-400/50" : ""}`}
                   placeholder="••••••••"
                 />
                 <button
@@ -141,6 +148,11 @@ export default function Register() {
                   )}
                 </button>
               </div>
+              {passwordTooShort && (
+                <p className="mt-1.5 text-xs text-red-400/80 font-body">
+                  Minimum 8 caractères ({password.length}/8)
+                </p>
+              )}
             </div>
 
             <div>
@@ -155,7 +167,7 @@ export default function Register() {
                   onChange={(e) => setPasswordConfirmation(e.target.value)}
                   required
                   minLength={8}
-                  className={`${inputClass} pr-12`}
+                  className={`${inputClass} pr-12 ${passwordMismatch ? "border-red-400/50" : ""}`}
                   placeholder="••••••••"
                 />
                 <button
@@ -176,6 +188,11 @@ export default function Register() {
                   )}
                 </button>
               </div>
+              {passwordMismatch && (
+                <p className="mt-1.5 text-xs text-red-400/80 font-body">
+                  Les mots de passe ne correspondent pas
+                </p>
+              )}
             </div>
 
             <button

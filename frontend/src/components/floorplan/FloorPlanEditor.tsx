@@ -321,6 +321,7 @@ export function FloorPlanEditor({ floorPlan, onUpdate, onDirtyChange }: FloorPla
   };
 
   const handleSave = async () => {
+    if (saving) return; // Guard against double-save
     setSaving(true);
     try {
       // Save floor registry to DB

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Outlet, useLocation, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
@@ -17,6 +17,7 @@ import {
   SunIcon,
   SwatchIcon,
   Bars3Icon,
+  XMarkIcon,
   ArrowRightOnRectangleIcon,
   ArrowRightIcon,
   BuildingStorefrontIcon,
@@ -47,10 +48,14 @@ export function DashboardLayout() {
   const navigate = useNavigate();
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [floorPlan, setFloorPlan] = useState<FloorPlan | null>(null);
   const [showFloorPlanModal, setShowFloorPlanModal] = useState(false);
   const [floorPlanDirty, setFloorPlanDirty] = useState(false);
   const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+
+  // Close mobile menu on route change
+  const closeMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
 
   const handleCloseFloorPlan = () => {
     if (floorPlanDirty) {
@@ -66,6 +71,11 @@ export function DashboardLayout() {
     setShowFloorPlanModal(false);
     setFloorPlanDirty(false);
   };
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    closeMobileMenu();
+  }, [location.pathname, closeMobileMenu]);
 
   useEffect(() => {
     loadFloorPlan();
@@ -97,11 +107,21 @@ export function DashboardLayout() {
 
   return (
     <div className="h-screen flex bg-gray-50 dark:bg-surface-bg">
+      {/* ─── Mobile Sidebar Overlay ─── */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={closeMobileMenu}
+        />
+      )}
+
       {/* ─── Sidebar ─── */}
       <aside
-        className={`bg-white dark:bg-surface-sidebar border-r border-cream-200/30 dark:border-surface-border transition-all duration-300 flex flex-col flex-shrink-0 ${
-          sidebarOpen ? "w-64" : "w-[68px]"
-        }`}
+        className={`bg-white dark:bg-surface-sidebar border-r border-cream-200/30 dark:border-surface-border transition-all duration-300 flex flex-col flex-shrink-0
+          ${sidebarOpen ? "w-64" : "w-[68px]"}
+          fixed inset-y-0 left-0 z-50 md:static md:z-auto
+          ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0
+        `}
       >
         {/* ─── Logo ─── */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-cream-200/20 dark:border-surface-border flex-shrink-0">
@@ -113,14 +133,23 @@ export function DashboardLayout() {
                   RR Ice
                 </span>
               </Link>
-              <Link
-                to="/"
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-gray-400 dark:text-gray-500 hover:text-coffee-600 dark:hover:text-cream-400 hover:bg-cream-50 dark:hover:bg-surface-card transition-all duration-200 text-xs font-medium"
-                title="Voir le site"
-              >
-                <span>Site</span>
-                <ArrowRightIcon className="w-3 h-3" />
-              </Link>
+              <div className="flex items-center gap-1">
+                <Link
+                  to="/"
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-gray-400 dark:text-gray-500 hover:text-coffee-600 dark:hover:text-cream-400 hover:bg-cream-50 dark:hover:bg-surface-card transition-all duration-200 text-xs font-medium"
+                  title="Voir le site"
+                >
+                  <span>Site</span>
+                  <ArrowRightIcon className="w-3 h-3" />
+                </Link>
+                <button
+                  onClick={closeMobileMenu}
+                  className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 hover:bg-cream-50 dark:hover:bg-surface-card transition-all md:hidden"
+                  aria-label="Fermer le menu"
+                >
+                  <XMarkIcon className="w-5 h-5" />
+                </button>
+              </div>
             </>
           ) : (
             <Link
@@ -134,7 +163,7 @@ export function DashboardLayout() {
         </div>
 
         {/* ─── Navigation ─── */}
-        <nav className="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
+        <nav className="flex-1 px-3 py-5 space-y-1 overflow-y-auto" aria-label="Navigation principale">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const active = isActive(item);
@@ -192,6 +221,7 @@ export function DashboardLayout() {
               sidebarOpen ? "" : "justify-center"
             }`}
             title={sidebarOpen ? undefined : (theme === "light" ? "Clair" : theme === "dark" ? "Sombre" : "Design")}
+            aria-label={`Changer le thème (actuel : ${theme === "light" ? "Clair" : theme === "dark" ? "Sombre" : "Design"})`}
           >
             {theme === "light" ? (
               <SunIcon className="w-5 h-5 flex-shrink-0" />
@@ -210,19 +240,21 @@ export function DashboardLayout() {
               sidebarOpen ? "" : "justify-center"
             }`}
             title={sidebarOpen ? undefined : "Déconnexion"}
+            aria-label="Se déconnecter"
           >
             <ArrowRightOnRectangleIcon className="w-5 h-5 flex-shrink-0" />
             {sidebarOpen && <span>Déconnexion</span>}
           </button>
         </div>
 
-        {/* ─── Collapse Toggle ─── */}
-        <div className="px-3 py-2 border-t border-cream-200/20 dark:border-surface-border">
+        {/* ─── Collapse Toggle (desktop only) ─── */}
+        <div className="px-3 py-2 border-t border-cream-200/20 dark:border-surface-border hidden md:block">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className={`w-full flex items-center gap-3 px-3 py-1.5 rounded-xl text-gray-300 dark:text-gray-600 hover:bg-cream-50 dark:hover:bg-surface-card hover:text-gray-500 dark:hover:text-gray-400 transition-all duration-200 ${
               sidebarOpen ? "" : "justify-center"
             }`}
+            aria-label={sidebarOpen ? "Réduire la barre latérale" : "Ouvrir la barre latérale"}
           >
             <Bars3Icon className="w-5 h-5 flex-shrink-0" />
             {sidebarOpen && <span className="text-xs">Réduire</span>}
@@ -233,8 +265,15 @@ export function DashboardLayout() {
       {/* ─── Main Area ─── */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="flex items-center justify-between px-6 h-14 flex-shrink-0 border-b border-cream-200/20 dark:border-surface-border">
+        <header className="flex items-center justify-between px-4 md:px-6 h-14 flex-shrink-0 border-b border-cream-200/20 dark:border-surface-border">
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="p-2 -ml-2 rounded-xl text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-cream-50 dark:hover:bg-surface-card transition-all md:hidden"
+              aria-label="Ouvrir le menu"
+            >
+              <Bars3Icon className="w-5 h-5" />
+            </button>
             {user && (
               <p className="text-sm text-gray-400 dark:text-gray-500">
                 Bienvenue, <span className="text-gray-700 dark:text-cream-200 font-medium">{user.name}</span>
@@ -260,15 +299,16 @@ export function DashboardLayout() {
 
       {/* ─── Floor Plan Modal ─── */}
       {showFloorPlanModal && floorPlan && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-overlay-fade-in" onClick={handleCloseFloorPlan}>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-overlay-fade-in" onClick={handleCloseFloorPlan} role="dialog" aria-modal="true" aria-labelledby="floorplan-modal-title">
           <div className="bg-white dark:bg-surface-bg rounded-2xl w-full h-full max-w-7xl max-h-[90vh] flex flex-col overflow-hidden shadow-premium dark:shadow-dark-premium border border-cream-200/30 dark:border-surface-border-light animate-modal-slide-in" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-cream-200/30 dark:border-surface-border bg-cream-50/50 dark:bg-surface-sidebar">
-              <h2 className="text-lg font-display font-semibold text-gray-900 dark:text-cream-100">
+              <h2 id="floorplan-modal-title" className="text-lg font-display font-semibold text-gray-900 dark:text-cream-100">
                 {floorPlan.name}
               </h2>
               <button
                 onClick={handleCloseFloorPlan}
                 className="p-2 rounded-xl text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-cream-100 dark:hover:bg-surface-card transition-all duration-200"
+                aria-label="Fermer le plan de salle"
               >
                 <XCircleIcon className="w-5 h-5" />
               </button>

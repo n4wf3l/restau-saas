@@ -62,14 +62,14 @@ export async function getPublicTables(): Promise<PublicTable[]> {
 }
 
 // Public API - Create a reservation
-export async function createReservation(payload: ReservationPayload): Promise<{ message: string; reservation: any }> {
+export async function createReservation(payload: ReservationPayload): Promise<{ message: string; reservation: Reservation }> {
   await csrf(); // CSRF protection
   const response = await api.post("/api/public/reservations", payload);
   return response.data;
 }
 
 // Public API - Create an event reservation request
-export async function createEventReservation(payload: EventReservationPayload): Promise<{ message: string; reservation: any }> {
+export async function createEventReservation(payload: EventReservationPayload): Promise<{ message: string; reservation: Reservation }> {
   await csrf();
   const response = await api.post("/api/public/events", payload);
   return response.data;
@@ -83,7 +83,7 @@ export async function getReservations(includeNoShow = false): Promise<Reservatio
 }
 
 // Admin API - Update reservation (status and/or other fields)
-export async function updateReservationStatus(id: number, status: string): Promise<any> {
+export async function updateReservationStatus(id: number, status: string): Promise<{ message: string; reservation: Reservation }> {
   const response = await api.put(`/api/reservations/${id}`, { status });
   return response.data;
 }
@@ -95,7 +95,7 @@ export async function updateReservation(id: number, payload: {
   arrival_time?: string;
   party_size?: number;
   notes?: string | null;
-}): Promise<any> {
+}): Promise<{ message: string; reservation: Reservation }> {
   const response = await api.put(`/api/reservations/${id}`, payload);
   return response.data;
 }
@@ -109,7 +109,7 @@ export async function createAdminReservation(payload: {
   party_size: number;
   table_id: number;
   notes?: string;
-}): Promise<any> {
+}): Promise<{ message: string; reservation: Reservation }> {
   const response = await api.post("/api/reservations", payload);
   return response.data;
 }
@@ -188,7 +188,7 @@ export async function updateSettings(
 }
 
 // Restore a no-show reservation
-export async function restoreReservation(id: number): Promise<any> {
+export async function restoreReservation(id: number): Promise<{ message: string; reservation: Reservation }> {
   const response = await api.post(`/api/reservations/${id}/restore`);
   return response.data;
 }

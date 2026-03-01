@@ -17,6 +17,7 @@ import {
   GlobeAltIcon,
 } from "@heroicons/react/24/outline";
 import { Spinner } from "../components/ui/Spinner";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 
 const DAYS: { key: string; label: string }[] = [
   { key: "monday", label: "Lundi" },
@@ -291,6 +292,7 @@ export default function SettingsPage() {
   // Closure dates helpers
   const [newClosureDate, setNewClosureDate] = useState("");
   const [newClosureReason, setNewClosureReason] = useState("");
+  const [closureDeleteConfirm, setClosureDeleteConfirm] = useState<string | null>(null);
 
   const closureDates: ClosureDate[] = settings?.closure_dates || [];
 
@@ -419,14 +421,14 @@ export default function SettingsPage() {
                               type="time"
                               value={dh.open}
                               onChange={(e) => updateDay(day.key, "open", e.target.value)}
-                              className="px-2.5 py-1.5 text-sm border border-gray-200 dark:border-surface-input-border rounded-lg bg-white dark:bg-surface-input text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:border-cream-500 tabular-nums"
+                              className="px-2.5 py-2 text-sm border border-gray-200 dark:border-surface-input-border rounded-lg bg-white dark:bg-surface-input text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:border-cream-500 tabular-nums min-h-[44px]"
                             />
                             <span className="text-xs text-gray-400">—</span>
                             <input
                               type="time"
                               value={dh.close}
                               onChange={(e) => updateDay(day.key, "close", e.target.value)}
-                              className="px-2.5 py-1.5 text-sm border border-gray-200 dark:border-surface-input-border rounded-lg bg-white dark:bg-surface-input text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:border-cream-500 tabular-nums"
+                              className="px-2.5 py-2 text-sm border border-gray-200 dark:border-surface-input-border rounded-lg bg-white dark:bg-surface-input text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:border-cream-500 tabular-nums min-h-[44px]"
                             />
                           </div>
                         )}
@@ -482,6 +484,11 @@ export default function SettingsPage() {
                 </div>
 
                 {/* List of closure dates */}
+                {closureDates.length === 0 && (
+                  <p className="mt-4 ml-8 text-xs text-gray-400 dark:text-gray-500 italic">
+                    Aucune date de fermeture programmée
+                  </p>
+                )}
                 {closureDates.length > 0 && (
                   <div className="mt-4 ml-8 space-y-1.5">
                     {closureDates.map((c) => {
@@ -507,8 +514,9 @@ export default function SettingsPage() {
                           </div>
                           <button
                             type="button"
-                            onClick={() => removeClosureDate(c.date)}
+                            onClick={() => setClosureDeleteConfirm(c.date)}
                             className="p-1 text-gray-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors rounded-md hover:bg-rose-50 dark:hover:bg-rose-500/10"
+                            aria-label="Supprimer cette date de fermeture"
                           >
                             <XMarkIcon className="w-4 h-4" />
                           </button>
@@ -621,6 +629,21 @@ export default function SettingsPage() {
           </div>
         ) : null}
       </div>
+
+      {/* Closure Date Delete Confirmation */}
+      <ConfirmDialog
+        open={!!closureDeleteConfirm}
+        title="Supprimer cette fermeture"
+        message="Les clients pourront de nouveau réserver à cette date. Les modifications ne seront appliquées qu'après avoir sauvegardé."
+        confirmLabel="Supprimer"
+        cancelLabel="Annuler"
+        variant="warning"
+        onConfirm={() => {
+          if (closureDeleteConfirm) removeClosureDate(closureDeleteConfirm);
+          setClosureDeleteConfirm(null);
+        }}
+        onCancel={() => setClosureDeleteConfirm(null)}
+      />
     </div>
   );
 }

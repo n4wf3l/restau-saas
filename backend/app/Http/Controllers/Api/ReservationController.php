@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreReservationRequest;
+use App\Http\Requests\UpdateReservationRequest;
 use App\Models\Reservation;
 use App\Models\RestaurantFloorPlan;
 use App\Models\RestaurantFloorPlanItem;
@@ -42,7 +44,12 @@ class ReservationController extends Controller
             return $r->customer_email . '|' . $r->arrival_time->format('Y-m-d H:i') . '|' . $r->party_size;
         });
 
-        $result = $grouped->map(function ($group) {
+        // Pre-load all tables for this floor plan to avoid N+1 queries
+        $allTables = RestaurantFloorPlanItem::where('type', 'table')
+            ->where('floor_plan_id', $floorPlan->id)
+            ->get();
+
+        $result = $grouped->map(function ($group) use ($allTables) {
             $first = $group->first();
             $ids = $group->pluck('id')->toArray();
 
@@ -75,12 +82,12 @@ class ReservationController extends Controller
             $floorName = $first->floorPlanItem->floor_name ?? 'Rez-de-chaussée';
 
             if ($first->floorPlanItem->type === 'chair') {
-                $adjacentTable = \App\Models\RestaurantFloorPlanItem::where('type', 'table')
-                    ->where('floor_plan_id', $first->floorPlanItem->floor_plan_id)
-                    ->where('floor_level', $first->floorPlanItem->floor_level)
-                    ->whereBetween('x', [$first->floorPlanItem->x - 1, $first->floorPlanItem->x + 1])
-                    ->whereBetween('y', [$first->floorPlanItem->y - 1, $first->floorPlanItem->y + 1])
-                    ->first();
+                $chair = $first->floorPlanItem;
+                $adjacentTable = $allTables->first(function ($table) use ($chair) {
+                    return $table->floor_level === $chair->floor_level
+                        && abs($table->x - $chair->x) <= 1
+                        && abs($table->y - $chair->y) <= 1;
+                });
 
                 if ($adjacentTable) {
                     $tableName = $adjacentTable->table_name ?? 'Table ' . $adjacentTable->id;
@@ -116,17 +123,9 @@ class ReservationController extends Controller
     /**
      * POST /api/reservations — Admin creates a reservation (always confirmed).
      */
-    public function store(Request $request)
+    public function store(StoreReservationRequest $request)
     {
-        $validated = $request->validate([
-            'customer_name' => 'required|string|max:255',
-            'customer_email' => 'required|email|max:255',
-            'customer_phone' => 'nullable|string|max:20',
-            'arrival_time' => 'required|date',
-            'party_size' => 'required|integer|min:1|max:50',
-            'table_id' => 'required|exists:restaurant_floor_plan_items,id',
-            'notes' => 'nullable|string|max:1000',
-        ]);
+        $validated = $request->validated();
 
         $table = RestaurantFloorPlanItem::findOrFail($validated['table_id']);
 
@@ -193,17 +192,9 @@ class ReservationController extends Controller
         ], 201);
     }
 
-    public function update(Request $request, Reservation $reservation)
+    public function update(UpdateReservationRequest $request, Reservation $reservation)
     {
-        $validated = $request->validate([
-            'status' => 'sometimes|in:pending,confirmed,cancelled,completed,no_show',
-            'customer_name' => 'sometimes|string|max:255',
-            'customer_email' => 'sometimes|email|max:255',
-            'customer_phone' => 'nullable|string|max:20',
-            'arrival_time' => 'sometimes|date',
-            'party_size' => 'sometimes|integer|min:1|max:50',
-            'notes' => 'nullable|string|max:1000',
-        ]);
+        $validated = $request->validated();
 
         // Update all reservations in the same group
         $group = Reservation::where('customer_email', $reservation->customer_email)

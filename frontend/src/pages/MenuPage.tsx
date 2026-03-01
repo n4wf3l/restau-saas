@@ -26,6 +26,7 @@ import {
   CodeBracketIcon,
 } from "@heroicons/react/24/outline";
 import { Spinner } from "../components/ui/Spinner";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 
 type MenuTab = "manual" | "pdf" | "api";
 
@@ -79,6 +80,10 @@ export default function MenuPage() {
   const [loadingPdf, setLoadingPdf] = useState(true);
   const pdfInputRef = useRef<HTMLInputElement>(null);
 
+  // Delete confirmation
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: number; name: string } | null>(null);
+  const [pdfDeleteConfirm, setPdfDeleteConfirm] = useState(false);
+
   // Visibility toggles
   const [manualVisible, setManualVisible] = useState(true);
   const [pdfVisible, setPdfVisible] = useState(false);
@@ -129,8 +134,12 @@ export default function MenuPage() {
   };
 
   /* ─── Form handlers ─── */
+  const canSubmitItem = formData.name.trim().length > 0 && formData.price >= 0;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.name.trim()) { toast.error("Le nom du plat est requis"); return; }
+    if (formData.price < 0) { toast.error("Le prix ne peut pas être négatif"); return; }
     try {
       if (editingItem) {
         await updateMenuItem(editingItem.id, formData);
@@ -168,8 +177,11 @@ export default function MenuPage() {
     setShowModal(true);
   };
 
+  const handleDeleteRequest = (item: MenuItem) => {
+    setDeleteConfirm({ id: item.id, name: item.name });
+  };
+
   const handleDelete = async (id: number) => {
-    if (!confirm("Supprimer ce plat ?")) return;
     try {
       await deleteMenuItem(id);
       toast.success("Plat supprimé");
@@ -227,7 +239,6 @@ export default function MenuPage() {
   };
 
   const handlePdfDelete = async () => {
-    if (!confirm("Supprimer le menu PDF ?")) return;
     setPdfDeleting(true);
     try {
       await deleteMenuPdf();
@@ -511,7 +522,7 @@ export default function MenuPage() {
                           key={item.id}
                           item={item}
                           onEdit={handleEdit}
-                          onDelete={handleDelete}
+                          onDelete={handleDeleteRequest}
                         />
                       ))}
                   </div>
@@ -524,7 +535,7 @@ export default function MenuPage() {
                     key={item.id}
                     item={item}
                     onEdit={handleEdit}
-                    onDelete={handleDelete}
+                    onDelete={handleDeleteRequest}
                   />
                 ))}
               </div>
@@ -546,7 +557,7 @@ export default function MenuPage() {
                           key={item.id}
                           item={item}
                           onEdit={handleEdit}
-                          onDelete={handleDelete}
+                          onDelete={handleDeleteRequest}
                         />
                       ))}
                   </div>
@@ -559,7 +570,7 @@ export default function MenuPage() {
                     key={item.id}
                     item={item}
                     onEdit={handleEdit}
-                    onDelete={handleDelete}
+                    onDelete={handleDeleteRequest}
                   />
                 ))}
               </div>
@@ -604,7 +615,7 @@ export default function MenuPage() {
                         Voir
                       </a>
                       <button
-                        onClick={handlePdfDelete}
+                        onClick={() => setPdfDeleteConfirm(true)}
                         disabled={pdfDeleting}
                         className="px-3 py-1.5 text-sm font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
                       >
@@ -986,7 +997,8 @@ export default function MenuPage() {
               <div className="sticky bottom-0 bg-white dark:bg-surface-card border-t border-gray-100 dark:border-gray-800 p-6 space-y-3">
                 <button
                   type="submit"
-                  className="w-full py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-semibold text-sm hover:bg-gray-800 dark:hover:bg-gray-100 active:scale-[0.98] transition-all"
+                  disabled={!canSubmitItem}
+                  className="w-full py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-semibold text-sm hover:bg-gray-800 dark:hover:bg-gray-100 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {editingItem ? "Mettre à jour" : "Ajouter le plat"}
                 </button>
@@ -1002,6 +1014,34 @@ export default function MenuPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Menu Item Confirmation */}
+      <ConfirmDialog
+        open={!!deleteConfirm}
+        title="Supprimer ce plat"
+        message={`Supprimer « ${deleteConfirm?.name || ""} » de votre carte ? Cette action est irréversible.`}
+        confirmLabel="Supprimer"
+        cancelLabel="Annuler"
+        onConfirm={() => {
+          if (deleteConfirm) handleDelete(deleteConfirm.id);
+          setDeleteConfirm(null);
+        }}
+        onCancel={() => setDeleteConfirm(null)}
+      />
+
+      {/* Delete PDF Confirmation */}
+      <ConfirmDialog
+        open={pdfDeleteConfirm}
+        title="Supprimer le menu PDF"
+        message="Le fichier PDF sera supprimé définitivement. Cette action est irréversible."
+        confirmLabel="Supprimer"
+        cancelLabel="Annuler"
+        onConfirm={() => {
+          setPdfDeleteConfirm(false);
+          handlePdfDelete();
+        }}
+        onCancel={() => setPdfDeleteConfirm(false)}
+      />
     </div>
   );
 }
@@ -1011,7 +1051,7 @@ export default function MenuPage() {
 interface AdminMenuItemProps {
   item: MenuItem;
   onEdit: (item: MenuItem) => void;
-  onDelete: (id: number) => void;
+  onDelete: (item: MenuItem) => void;
 }
 
 function AdminMenuCard({ item, onEdit, onDelete }: AdminMenuItemProps) {
@@ -1072,7 +1112,7 @@ function AdminMenuCard({ item, onEdit, onDelete }: AdminMenuItemProps) {
               <PencilIcon className="w-4 h-4" />
             </button>
             <button
-              onClick={() => onDelete(item.id)}
+              onClick={() => onDelete(item)}
               className="p-1.5 text-gray-400 dark:text-gray-500 hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-600 dark:hover:text-red-400 rounded-lg transition-colors"
               title="Supprimer"
             >
@@ -1147,7 +1187,7 @@ function AdminMenuRow({ item, onEdit, onDelete }: AdminMenuItemProps) {
           <PencilIcon className="w-4 h-4" />
         </button>
         <button
-          onClick={() => onDelete(item.id)}
+          onClick={() => onDelete(item)}
           className="p-1.5 text-gray-400 dark:text-gray-500 hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-600 dark:hover:text-red-400 rounded-lg transition-colors"
           title="Supprimer"
         >

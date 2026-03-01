@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UpdateSettingsRequest;
 use App\Models\RestaurantSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -29,27 +30,9 @@ class SettingsController extends Controller
      * PUT /api/settings
      * Update the authenticated user's restaurant settings.
      */
-    public function update(Request $request)
+    public function update(UpdateSettingsRequest $request)
     {
-        $validated = $request->validate([
-            'reservations_enabled'     => 'sometimes|boolean',
-            'service_duration_minutes' => 'sometimes|integer|min:15|max:480',
-            'buffer_minutes'           => 'sometimes|integer|min:0|max:120',
-            'max_occupancy_pct'        => 'sometimes|integer|min:10|max:100',
-            'auto_optimize_tables'     => 'sometimes|boolean',
-            'auto_confirm'             => 'sometimes|boolean',
-            'send_confirmation_email'  => 'sometimes|boolean',
-            'opening_hours'            => 'sometimes|nullable|array',
-            'opening_hours.*.open'     => 'required_with:opening_hours|string',
-            'opening_hours.*.close'    => 'required_with:opening_hours|string',
-            'opening_hours.*.closed'   => 'required_with:opening_hours|boolean',
-            'closure_dates'            => 'sometimes|nullable|array',
-            'closure_dates.*.date'     => 'required_with:closure_dates|date',
-            'closure_dates.*.reason'   => 'nullable|string|max:255',
-            'menu_manual_visible'      => 'sometimes|boolean',
-            'menu_pdf_visible'         => 'sometimes|boolean',
-            'social_links'             => 'sometimes|nullable|array',
-        ]);
+        $validated = $request->validated();
 
         $settings = RestaurantSetting::where('user_id', $request->user()->id)->first();
 

@@ -8,6 +8,7 @@ use App\Models\RestaurantFloorPlan;
 use App\Models\RestaurantSetting;
 use App\Models\Reservation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class PublicTableController extends Controller
@@ -487,7 +488,7 @@ class PublicTableController extends Controller
             $chairIds = $adjacentChairs->pluck('id')->toArray();
 
             // Time-range conflict check
-            $conflictingIds = $this->getConflictingChairIds($chairIds, $arrivalTime, $duration, $buffer);
+            $conflictingIds = $this->getBatchConflictingChairIds($chairIds, $arrivalTime, $duration, $buffer);
             $availableChairIds = array_values(array_diff($chairIds, $conflictingIds));
             $tableName = $table->table_name ?? 'Table ' . $table->id;
         }
@@ -498,23 +499,24 @@ class PublicTableController extends Controller
             ], 422);
         }
 
-        // Create reservations for the required number of seats
-        $reservations = [];
-
+        // Create reservations for the required number of seats (atomic)
         try {
-            for ($i = 0; $i < $validated['party_size']; $i++) {
-                $reservation = Reservation::create([
-                    'floor_plan_item_id' => $availableChairIds[$i],
-                    'customer_name' => $validated['customer_name'],
-                    'customer_email' => $validated['customer_email'],
-                    'customer_phone' => $validated['customer_phone'] ?? null,
-                    'arrival_time' => $validated['arrival_time'],
-                    'party_size' => $validated['party_size'],
-                    'notes' => $validated['notes'] ?? null,
-                    'status' => $initialStatus,
-                ]);
-                $reservations[] = $reservation;
-            }
+            $reservations = DB::transaction(function () use ($validated, $availableChairIds, $initialStatus) {
+                $created = [];
+                for ($i = 0; $i < $validated['party_size']; $i++) {
+                    $created[] = Reservation::create([
+                        'floor_plan_item_id' => $availableChairIds[$i],
+                        'customer_name' => $validated['customer_name'],
+                        'customer_email' => $validated['customer_email'],
+                        'customer_phone' => $validated['customer_phone'] ?? null,
+                        'arrival_time' => $validated['arrival_time'],
+                        'party_size' => $validated['party_size'],
+                        'notes' => $validated['notes'] ?? null,
+                        'status' => $initialStatus,
+                    ]);
+                }
+                return $created;
+            });
         } catch (\Exception $e) {
             \Log::error('Failed to create reservations', [
                 'error' => $e->getMessage(),

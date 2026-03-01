@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreMenuItemRequest;
+use App\Http\Requests\UpdateMenuItemRequest;
 use App\Models\MenuItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -34,18 +36,9 @@ class MenuItemController extends Controller
         });
     }
 
-    public function store(Request $request)
+    public function store(StoreMenuItemRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'ingredients' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'is_halal' => 'boolean',
-            'image' => 'nullable|image|max:5120',
-            'category' => 'nullable|string|max:255',
-            'is_available' => 'boolean',
-            'order' => 'integer',
-        ]);
+        $validated = $request->validated();
 
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('menu-images', 'public');
@@ -62,22 +55,10 @@ class MenuItemController extends Controller
         return response()->json($menuItem, 201);
     }
 
-    public function update(Request $request, MenuItem $menuItem)
+    public function update(UpdateMenuItemRequest $request, MenuItem $menuItem)
     {
-        if ($menuItem->user_id !== $request->user()->id) {
-            return response()->json(['error' => 'Non autorisé'], 403);
-        }
-
-        $validated = $request->validate([
-            'name' => 'string|max:255',
-            'ingredients' => 'nullable|string',
-            'price' => 'numeric|min:0',
-            'is_halal' => 'boolean',
-            'image' => 'nullable|image|max:5120',
-            'category' => 'nullable|string|max:255',
-            'is_available' => 'boolean',
-            'order' => 'integer',
-        ]);
+        // Authorization handled by UpdateMenuItemRequest::authorize()
+        $validated = $request->validated();
 
         if ($request->hasFile('image')) {
             // Delete old image if it exists
