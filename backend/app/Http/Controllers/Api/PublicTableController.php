@@ -464,22 +464,7 @@ class PublicTableController extends Controller
             }
 
             // Find adjacent chairs
-            $adjacentChairs = RestaurantFloorPlanItem::where('type', 'chair')
-                ->where('floor_plan_id', $table->floor_plan_id)
-                ->where(function ($query) use ($table) {
-                    $query->where(function ($q) use ($table) {
-                        $q->where('y', $table->y)
-                          ->whereBetween('x', [$table->x - 1, $table->x + 1]);
-                    })->orWhere(function ($q) use ($table) {
-                        $q->where('x', $table->x)
-                          ->whereBetween('y', [$table->y - 1, $table->y + 1]);
-                    });
-                })
-                ->where(function ($query) use ($table) {
-                    $query->where('x', '!=', $table->x)
-                          ->orWhere('y', '!=', $table->y);
-                })
-                ->get();
+            $adjacentChairs = RestaurantFloorPlanItem::adjacentChairs($table);
 
             if ($adjacentChairs->isEmpty()) {
                 return response()->json(['error' => 'Aucune chaise disponible autour de cette table.'], 422);

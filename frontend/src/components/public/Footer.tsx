@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { CTAButton } from './CTAButton';
 import { usePublicSettings } from '../../contexts/PublicSettingsContext';
+import { Spinner } from '../ui/Spinner';
 import type { OpeningHours } from '../../lib/types';
 
 // ─── Scroll Reveal ───
@@ -163,10 +164,7 @@ export function Footer({ onReservationClick, hideReservation }: FooterProps) {
           {/* Hours */}
           {loadingHours ? (
             <div className="flex justify-center mb-12">
-              <svg className="animate-spin w-5 h-5 text-cream-400/50" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
-                <path className="opacity-80" d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-              </svg>
+              <Spinner size="sm" className="text-cream-400/50" />
             </div>
           ) : hoursLines.length > 0 ? (
             <>

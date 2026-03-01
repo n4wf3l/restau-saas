@@ -13,6 +13,7 @@ import {
   BuildingOfficeIcon,
   ChevronDownIcon
 } from '@heroicons/react/24/outline';
+import { ModalOverlay } from '../ui/ModalOverlay';
 
 interface FloorPlanEditorProps {
   floorPlan: FloorPlan;
@@ -726,8 +727,7 @@ export function FloorPlanEditor({ floorPlan, onUpdate, onDirtyChange }: FloorPla
 
         {/* Floor Name Modal */}
         {showFloorNameModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-overlay-fade-in">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-96 border border-gray-200 dark:border-gray-700 animate-modal-slide-in">
+          <ModalOverlay onClose={() => setShowFloorNameModal(false)}>
               <h3 className="text-lg font-semibold text-gray-800 dark:text-cream-100 flex items-center gap-2 mb-1">
                 <BuildingOfficeIcon className="w-5 h-5 text-coffee-500" />
                 Nommer l'étage
@@ -760,14 +760,12 @@ export function FloorPlanEditor({ floorPlan, onUpdate, onDirtyChange }: FloorPla
                   Enregistrer
                 </button>
               </div>
-            </div>
-          </div>
+          </ModalOverlay>
         )}
 
         {/* Table Name Modal */}
         {showTableNameModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-overlay-fade-in">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-96 border border-gray-200 dark:border-gray-700 animate-modal-slide-in">
+          <ModalOverlay onClose={() => setShowTableNameModal(false)}>
               <h3 className="text-lg font-semibold text-gray-800 dark:text-cream-100 mb-4">Nommer la table</h3>
               <input
                 type="text"
@@ -795,14 +793,12 @@ export function FloorPlanEditor({ floorPlan, onUpdate, onDirtyChange }: FloorPla
                   Enregistrer
                 </button>
               </div>
-            </div>
-          </div>
+          </ModalOverlay>
         )}
 
         {/* Resize Modal */}
         {showResizeModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-overlay-fade-in">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-96 border border-gray-200 dark:border-gray-700 animate-modal-slide-in">
+          <ModalOverlay onClose={() => { setShowResizeModal(false); setNewWidth(floorPlan.width); setNewHeight(floorPlan.height); }}>
               <h3 className="text-lg font-semibold text-gray-800 dark:text-cream-100 mb-1">Redimensionner le plan</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Dimensions entre 5 et 100m</p>
               <div className="space-y-3">
@@ -831,14 +827,12 @@ export function FloorPlanEditor({ floorPlan, onUpdate, onDirtyChange }: FloorPla
                   Appliquer
                 </button>
               </div>
-            </div>
-          </div>
+          </ModalOverlay>
         )}
 
         {/* Delete Confirm Modal */}
         {showDeleteConfirm && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-overlay-fade-in">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-96 border border-gray-200 dark:border-gray-700 animate-modal-slide-in">
+          <ModalOverlay onClose={() => setShowDeleteConfirm(false)}>
               <h3 className="text-lg font-semibold text-gray-800 dark:text-cream-100 flex items-center gap-2 mb-2">
                 <ExclamationTriangleIcon className="w-5 h-5 text-red-500" />
                 Confirmer la suppression
@@ -857,8 +851,7 @@ export function FloorPlanEditor({ floorPlan, onUpdate, onDirtyChange }: FloorPla
                   Effacer
                 </button>
               </div>
-            </div>
-          </div>
+          </ModalOverlay>
         )}
         {/* Table Delete Confirm Modal (has reservations) */}
         {showTableDeleteConfirm && (

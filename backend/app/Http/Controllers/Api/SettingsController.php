@@ -7,23 +7,21 @@ use App\Http\Requests\UpdateSettingsRequest;
 use App\Models\RestaurantSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Storage;
 
 class SettingsController extends Controller
 {
+    private function settingsForUser(Request $request): RestaurantSetting
+    {
+        return RestaurantSetting::firstOrCreate(['user_id' => $request->user()->id]);
+    }
+
     /**
      * GET /api/settings
      * Return the authenticated user's restaurant settings.
      */
     public function show(Request $request)
     {
-        $settings = RestaurantSetting::where('user_id', $request->user()->id)->first();
-
-        if (!$settings) {
-            $settings = RestaurantSetting::create(['user_id' => $request->user()->id]);
-        }
-
-        return response()->json($settings);
+        return response()->json($this->settingsForUser($request));
     }
 
     /**
@@ -32,15 +30,8 @@ class SettingsController extends Controller
      */
     public function update(UpdateSettingsRequest $request)
     {
-        $validated = $request->validated();
-
-        $settings = RestaurantSetting::where('user_id', $request->user()->id)->first();
-
-        if (!$settings) {
-            $settings = RestaurantSetting::create(array_merge($validated, ['user_id' => $request->user()->id]));
-        } else {
-            $settings->update($validated);
-        }
+        $settings = $this->settingsForUser($request);
+        $settings->update($request->validated());
 
         Cache::forget('public_settings');
 
@@ -94,19 +85,10 @@ class SettingsController extends Controller
             'pdf' => 'required|file|mimes:pdf|max:10240',
         ]);
 
-        $settings = RestaurantSetting::where('user_id', $request->user()->id)->first();
+        $settings = $this->settingsForUser($request);
 
-        if (!$settings) {
-            $settings = RestaurantSetting::create(['user_id' => $request->user()->id]);
-        }
-
-        // Delete old PDF if exists (validate path prefix)
-        if ($settings->menu_pdf_url) {
-            $oldPath = str_replace('/storage/', '', $settings->menu_pdf_url);
-            if (str_starts_with($oldPath, 'menu-pdfs/')) {
-                Storage::disk('public')->delete($oldPath);
-            }
-        }
+        // Delete old PDF if exists
+        $this->deleteStorageFile($settings->menu_pdf_url, 'menu-pdfs/');
 
         $path = $request->file('pdf')->store('menu-pdfs', 'public');
         $settings->update(['menu_pdf_url' => '/storage/' . $path]);
@@ -122,13 +104,10 @@ class SettingsController extends Controller
      */
     public function deleteMenuPdf(Request $request)
     {
-        $settings = RestaurantSetting::where('user_id', $request->user()->id)->first();
+        $settings = $this->settingsForUser($request);
 
-        if ($settings && $settings->menu_pdf_url) {
-            $oldPath = str_replace('/storage/', '', $settings->menu_pdf_url);
-            if (str_starts_with($oldPath, 'menu-pdfs/')) {
-                Storage::disk('public')->delete($oldPath);
-            }
+        if ($settings->menu_pdf_url) {
+            $this->deleteStorageFile($settings->menu_pdf_url, 'menu-pdfs/');
             $settings->update(['menu_pdf_url' => null]);
         }
 

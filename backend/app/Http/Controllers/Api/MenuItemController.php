@@ -8,7 +8,6 @@ use App\Http\Requests\UpdateMenuItemRequest;
 use App\Models\MenuItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Storage;
 
 class MenuItemController extends Controller
 {
@@ -62,12 +61,7 @@ class MenuItemController extends Controller
 
         if ($request->hasFile('image')) {
             // Delete old image if it exists
-            if ($menuItem->image_url) {
-                $oldPath = str_replace('/storage/', '', $menuItem->image_url);
-                if (str_starts_with($oldPath, 'menu-images/')) {
-                    Storage::disk('public')->delete($oldPath);
-                }
-            }
+            $this->deleteStorageFile($menuItem->image_url, 'menu-images/');
             $path = $request->file('image')->store('menu-images', 'public');
             $validated['image_url'] = '/storage/' . $path;
         }
@@ -87,10 +81,7 @@ class MenuItemController extends Controller
         }
 
         // Delete image file if exists
-        if ($menuItem->image_url) {
-            $oldPath = str_replace('/storage/', '', $menuItem->image_url);
-            Storage::disk('public')->delete($oldPath);
-        }
+        $this->deleteStorageFile($menuItem->image_url, 'menu-images/');
 
         $menuItem->delete();
 

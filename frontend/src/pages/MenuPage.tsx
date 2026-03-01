@@ -27,35 +27,9 @@ import {
 } from "@heroicons/react/24/outline";
 import { Spinner } from "../components/ui/Spinner";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { ToggleSwitch } from "../components/ui/ToggleSwitch";
 
 type MenuTab = "manual" | "pdf" | "api";
-
-/* ─── Toggle Switch ─── */
-function ToggleSwitch({
-  checked,
-  onChange,
-}: {
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-coffee-500 focus-visible:ring-offset-2 ${
-        checked ? "bg-coffee-600" : "bg-gray-300 dark:bg-surface-input-border"
-      }`}
-    >
-      <span
-        className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-          checked ? "translate-x-6" : "translate-x-1"
-        }`}
-      />
-    </button>
-  );
-}
 
 /* ═══════════════════════ MenuPage ═══════════════════════ */
 
@@ -727,10 +701,7 @@ export default function MenuPage() {
                     >
                       {pdfUploading ? (
                         <>
-                          <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
-                            <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
-                            <path className="opacity-80" d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-                          </svg>
+                          <Spinner size="xs" className="text-current" />
                           Import en cours...
                         </>
                       ) : (

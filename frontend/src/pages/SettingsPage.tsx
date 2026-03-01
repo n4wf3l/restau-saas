@@ -17,6 +17,7 @@ import {
   GlobeAltIcon,
 } from "@heroicons/react/24/outline";
 import { Spinner } from "../components/ui/Spinner";
+import { ToggleSwitch } from "../components/ui/ToggleSwitch";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 
 const DAYS: { key: string; label: string }[] = [
@@ -39,38 +40,6 @@ const SOCIAL_NETWORKS: { key: string; label: string; placeholder: string }[] = [
   { key: "snapchat", label: "Snapchat", placeholder: "https://snapchat.com/add/..." },
   { key: "linkedin", label: "LinkedIn", placeholder: "https://linkedin.com/company/..." },
 ];
-
-// ─── Toggle Switch ───
-function ToggleSwitch({
-  enabled,
-  onChange,
-  disabled = false,
-}: {
-  enabled: boolean;
-  onChange: (val: boolean) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={enabled}
-      disabled={disabled}
-      onClick={() => onChange(!enabled)}
-      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-surface-card ${
-        enabled
-          ? "bg-cream-600 dark:bg-cream-500"
-          : "bg-gray-200 dark:bg-surface-input-border"
-      } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-    >
-      <span
-        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-200 ${
-          enabled ? "translate-x-6" : "translate-x-1"
-        }`}
-      />
-    </button>
-  );
-}
 
 // ─── Toggle Row ───
 function ToggleRow({
@@ -108,7 +77,7 @@ function ToggleRow({
           </p>
         </div>
       </div>
-      <ToggleSwitch enabled={enabled} onChange={onChange} disabled={disabled} />
+      <ToggleSwitch checked={enabled} onChange={onChange} disabled={disabled} />
     </div>
   );
 }
@@ -410,7 +379,7 @@ export default function SettingsPage() {
                           {day.label}
                         </span>
                         <ToggleSwitch
-                          enabled={!dh.closed}
+                          checked={!dh.closed}
                           onChange={(open) => updateDay(day.key, "closed", !open)}
                         />
                         {dh.closed ? (
@@ -606,7 +575,7 @@ export default function SettingsPage() {
                         {net.label}
                       </span>
                       <ToggleSwitch
-                        enabled={link.enabled}
+                        checked={link.enabled}
                         onChange={(v) => updateSocialLink(net.key, "enabled", v)}
                       />
                       {link.enabled && (
