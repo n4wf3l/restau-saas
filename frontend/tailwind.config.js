@@ -31,6 +31,17 @@ export default {
           800: '#8f6544',
           900: '#74523a',
         },
+        surface: {
+          bg: 'var(--surface-bg)',
+          sidebar: 'var(--surface-sidebar)',
+          card: 'var(--surface-card)',
+          'card-alt': 'var(--surface-card-alt)',
+          'card-hover': 'var(--surface-card-hover)',
+          border: 'var(--surface-border)',
+          'border-light': 'var(--surface-border-light)',
+          input: 'var(--surface-input)',
+          'input-border': 'var(--surface-input-border)',
+        },
       },
       fontFamily: {
         display: ['Playfair Display', 'serif'],

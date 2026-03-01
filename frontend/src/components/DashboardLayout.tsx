@@ -15,6 +15,7 @@ import {
   MapIcon,
   MoonIcon,
   SunIcon,
+  SwatchIcon,
   Bars3Icon,
   ArrowRightOnRectangleIcon,
   ArrowRightIcon,
@@ -95,15 +96,15 @@ export function DashboardLayout() {
   };
 
   return (
-    <div className="h-screen flex bg-gray-50 dark:bg-[#141311]">
+    <div className="h-screen flex bg-gray-50 dark:bg-surface-bg">
       {/* ─── Sidebar ─── */}
       <aside
-        className={`bg-white dark:bg-[#0e0d0c] border-r border-cream-200/30 dark:border-[#1e1b18] transition-all duration-300 flex flex-col flex-shrink-0 ${
+        className={`bg-white dark:bg-surface-sidebar border-r border-cream-200/30 dark:border-surface-border transition-all duration-300 flex flex-col flex-shrink-0 ${
           sidebarOpen ? "w-64" : "w-[68px]"
         }`}
       >
         {/* ─── Logo ─── */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-cream-200/20 dark:border-[#1e1b18] flex-shrink-0">
+        <div className="h-16 flex items-center justify-between px-4 border-b border-cream-200/20 dark:border-surface-border flex-shrink-0">
           {sidebarOpen ? (
             <>
               <Link to="/dashboard" className="flex items-center gap-2.5">
@@ -114,7 +115,7 @@ export function DashboardLayout() {
               </Link>
               <Link
                 to="/"
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-gray-400 dark:text-gray-500 hover:text-coffee-600 dark:hover:text-cream-400 hover:bg-cream-50 dark:hover:bg-[#1c1a17] transition-all duration-200 text-xs font-medium"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-gray-400 dark:text-gray-500 hover:text-coffee-600 dark:hover:text-cream-400 hover:bg-cream-50 dark:hover:bg-surface-card transition-all duration-200 text-xs font-medium"
                 title="Voir le site"
               >
                 <span>Site</span>
@@ -124,7 +125,7 @@ export function DashboardLayout() {
           ) : (
             <Link
               to="/"
-              className="mx-auto p-2 rounded-lg text-gray-400 dark:text-gray-500 hover:text-cream-600 dark:hover:text-cream-400 hover:bg-cream-50 dark:hover:bg-[#1c1a17] transition-all duration-200"
+              className="mx-auto p-2 rounded-lg text-gray-400 dark:text-gray-500 hover:text-cream-600 dark:hover:text-cream-400 hover:bg-cream-50 dark:hover:bg-surface-card transition-all duration-200"
               title="Voir le site"
             >
               <ArrowRightIcon className="w-5 h-5" />
@@ -152,7 +153,7 @@ export function DashboardLayout() {
                     <span className="flex-1 text-sm">{item.label}</span>
                   )}
                   {sidebarOpen && (
-                    <span className="text-[10px] bg-cream-100 dark:bg-[#1c1a17] text-gray-400 dark:text-gray-600 px-1.5 py-0.5 rounded-md font-semibold tracking-wide">
+                    <span className="text-[10px] bg-cream-100 dark:bg-surface-card text-gray-400 dark:text-gray-600 px-1.5 py-0.5 rounded-md font-semibold tracking-wide">
                       bientôt
                     </span>
                   )}
@@ -169,7 +170,7 @@ export function DashboardLayout() {
                 } ${
                   active
                     ? "bg-cream-100/70 dark:bg-cream-500/[0.08] text-coffee-800 dark:text-cream-200 shadow-soft dark:shadow-none"
-                    : "text-gray-500 dark:text-gray-400 hover:bg-cream-50 dark:hover:bg-[#1c1a17] hover:text-gray-800 dark:hover:text-gray-200"
+                    : "text-gray-500 dark:text-gray-400 hover:bg-cream-50 dark:hover:bg-surface-card hover:text-gray-800 dark:hover:text-gray-200"
                 }`}
                 title={sidebarOpen ? undefined : item.label}
               >
@@ -184,21 +185,23 @@ export function DashboardLayout() {
         </nav>
 
         {/* ─── Bottom Actions ─── */}
-        <div className="px-3 py-3 border-t border-cream-200/20 dark:border-[#1e1b18] space-y-0.5">
+        <div className="px-3 py-3 border-t border-cream-200/20 dark:border-surface-border space-y-0.5">
           <button
             onClick={toggleTheme}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-400 dark:text-gray-500 hover:bg-cream-50 dark:hover:bg-[#1c1a17] hover:text-gray-600 dark:hover:text-gray-300 transition-all duration-200 text-sm ${
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-400 dark:text-gray-500 hover:bg-cream-50 dark:hover:bg-surface-card hover:text-gray-600 dark:hover:text-gray-300 transition-all duration-200 text-sm ${
               sidebarOpen ? "" : "justify-center"
             }`}
-            title={sidebarOpen ? undefined : (theme === "light" ? "Dark mode" : "Light mode")}
+            title={sidebarOpen ? undefined : (theme === "light" ? "Clair" : theme === "dark" ? "Sombre" : "Design")}
           >
             {theme === "light" ? (
+              <SunIcon className="w-5 h-5 flex-shrink-0" />
+            ) : theme === "dark" ? (
               <MoonIcon className="w-5 h-5 flex-shrink-0" />
             ) : (
-              <SunIcon className="w-5 h-5 flex-shrink-0" />
+              <SwatchIcon className="w-5 h-5 flex-shrink-0" />
             )}
             {sidebarOpen && (
-              <span>{theme === "light" ? "Dark mode" : "Light mode"}</span>
+              <span>{theme === "light" ? "Clair" : theme === "dark" ? "Sombre" : "Design"}</span>
             )}
           </button>
           <button
@@ -214,10 +217,10 @@ export function DashboardLayout() {
         </div>
 
         {/* ─── Collapse Toggle ─── */}
-        <div className="px-3 py-2 border-t border-cream-200/20 dark:border-[#1e1b18]">
+        <div className="px-3 py-2 border-t border-cream-200/20 dark:border-surface-border">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className={`w-full flex items-center gap-3 px-3 py-1.5 rounded-xl text-gray-300 dark:text-gray-600 hover:bg-cream-50 dark:hover:bg-[#1c1a17] hover:text-gray-500 dark:hover:text-gray-400 transition-all duration-200 ${
+            className={`w-full flex items-center gap-3 px-3 py-1.5 rounded-xl text-gray-300 dark:text-gray-600 hover:bg-cream-50 dark:hover:bg-surface-card hover:text-gray-500 dark:hover:text-gray-400 transition-all duration-200 ${
               sidebarOpen ? "" : "justify-center"
             }`}
           >
@@ -230,7 +233,7 @@ export function DashboardLayout() {
       {/* ─── Main Area ─── */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="flex items-center justify-between px-6 h-14 flex-shrink-0 border-b border-cream-200/20 dark:border-[#1e1b18]">
+        <header className="flex items-center justify-between px-6 h-14 flex-shrink-0 border-b border-cream-200/20 dark:border-surface-border">
           <div className="flex items-center gap-3">
             {user && (
               <p className="text-sm text-gray-400 dark:text-gray-500">
@@ -241,7 +244,7 @@ export function DashboardLayout() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowFloorPlanModal(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl border border-cream-200/50 dark:border-[#2a2724] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-cream-200 hover:bg-cream-50 dark:hover:bg-[#1c1a17] text-sm font-medium transition-all duration-200 shadow-soft dark:shadow-dark-soft"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl border border-cream-200/50 dark:border-surface-border-light text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-cream-200 hover:bg-cream-50 dark:hover:bg-surface-card text-sm font-medium transition-all duration-200 shadow-soft dark:shadow-dark-soft"
             >
               <MapIcon className="w-4 h-4" />
               {<span className="hidden sm:inline">Plan de salle</span>}
@@ -258,14 +261,14 @@ export function DashboardLayout() {
       {/* ─── Floor Plan Modal ─── */}
       {showFloorPlanModal && floorPlan && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-overlay-fade-in" onClick={handleCloseFloorPlan}>
-          <div className="bg-white dark:bg-[#141311] rounded-2xl w-full h-full max-w-7xl max-h-[90vh] flex flex-col overflow-hidden shadow-premium dark:shadow-dark-premium border border-cream-200/30 dark:border-[#2a2724] animate-modal-slide-in" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-cream-200/30 dark:border-[#1e1b18] bg-cream-50/50 dark:bg-[#0e0d0c]">
+          <div className="bg-white dark:bg-surface-bg rounded-2xl w-full h-full max-w-7xl max-h-[90vh] flex flex-col overflow-hidden shadow-premium dark:shadow-dark-premium border border-cream-200/30 dark:border-surface-border-light animate-modal-slide-in" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-cream-200/30 dark:border-surface-border bg-cream-50/50 dark:bg-surface-sidebar">
               <h2 className="text-lg font-display font-semibold text-gray-900 dark:text-cream-100">
                 {floorPlan.name}
               </h2>
               <button
                 onClick={handleCloseFloorPlan}
-                className="p-2 rounded-xl text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-cream-100 dark:hover:bg-[#1c1a17] transition-all duration-200"
+                className="p-2 rounded-xl text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-cream-100 dark:hover:bg-surface-card transition-all duration-200"
               >
                 <XCircleIcon className="w-5 h-5" />
               </button>
@@ -280,7 +283,7 @@ export function DashboardLayout() {
       {/* ─── Unsaved Changes Modal ─── */}
       {showUnsavedModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-overlay-fade-in">
-          <div className="bg-white dark:bg-[#1c1a17] rounded-2xl w-full max-w-sm shadow-2xl border border-cream-200/30 dark:border-[#2a2724] overflow-hidden animate-modal-slide-in">
+          <div className="bg-white dark:bg-surface-card rounded-2xl w-full max-w-sm shadow-2xl border border-cream-200/30 dark:border-surface-border-light overflow-hidden animate-modal-slide-in">
             <div className="p-6 text-center">
               <div className="w-12 h-12 rounded-full bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center mx-auto mb-4">
                 <ExclamationTriangleIcon className="w-6 h-6 text-amber-500" />

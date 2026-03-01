@@ -56,10 +56,10 @@ function ToggleSwitch({
       aria-checked={enabled}
       disabled={disabled}
       onClick={() => onChange(!enabled)}
-      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-[#1c1a17] ${
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-surface-card ${
         enabled
           ? "bg-cream-600 dark:bg-cream-500"
-          : "bg-gray-200 dark:bg-gray-600"
+          : "bg-gray-200 dark:bg-surface-input-border"
       } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
     >
       <span
@@ -160,7 +160,7 @@ function NumberSetting({
           min={min}
           max={max}
           step={step}
-          className="w-20 px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm text-center focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:border-cream-500 tabular-nums"
+          className="w-20 px-3 py-2 border border-gray-200 dark:border-surface-input-border rounded-lg bg-white dark:bg-surface-input text-gray-900 dark:text-white text-sm text-center focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:border-cream-500 tabular-nums"
         />
         <span className="text-sm text-gray-400 dark:text-gray-500 min-w-[32px]">
           {suffix}
@@ -181,14 +181,14 @@ function SettingsSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white dark:bg-[#1c1a17] rounded-2xl ring-1 ring-gray-200/40 dark:ring-[#2a2724] shadow-card dark:shadow-dark-card">
-      <div className="px-5 py-4 border-b border-gray-100 dark:border-[#2a2724] flex items-center gap-2.5">
+    <div className="bg-white dark:bg-surface-card rounded-2xl ring-1 ring-gray-200/40 dark:ring-surface-border-light shadow-card dark:shadow-dark-card">
+      <div className="px-5 py-4 border-b border-gray-100 dark:border-surface-border-light flex items-center gap-2.5">
         <Icon className="w-5 h-5 text-cream-600 dark:text-cream-500" />
         <h2 className="text-base font-display font-semibold text-gray-900 dark:text-cream-50">
           {title}
         </h2>
       </div>
-      <div className="px-5 divide-y divide-gray-100 dark:divide-[#2a2724]">
+      <div className="px-5 divide-y divide-gray-100 dark:divide-surface-border-light">
         {children}
       </div>
     </div>
@@ -346,7 +346,7 @@ export default function SettingsPage() {
             className={`flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl transition-colors shadow-sm ${
               isDirty
                 ? "text-cream-50 bg-coffee-600 hover:bg-coffee-500"
-                : "text-gray-400 dark:text-gray-500 bg-gray-200 dark:bg-gray-700 cursor-not-allowed"
+                : "text-gray-400 dark:text-gray-500 bg-gray-200 dark:bg-surface-input cursor-not-allowed"
             } ${saving ? "opacity-60 cursor-not-allowed" : ""}`}
           >
             {saving && <Spinner size="sm" />}
@@ -419,14 +419,14 @@ export default function SettingsPage() {
                               type="time"
                               value={dh.open}
                               onChange={(e) => updateDay(day.key, "open", e.target.value)}
-                              className="px-2.5 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:border-cream-500 tabular-nums"
+                              className="px-2.5 py-1.5 text-sm border border-gray-200 dark:border-surface-input-border rounded-lg bg-white dark:bg-surface-input text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:border-cream-500 tabular-nums"
                             />
                             <span className="text-xs text-gray-400">—</span>
                             <input
                               type="time"
                               value={dh.close}
                               onChange={(e) => updateDay(day.key, "close", e.target.value)}
-                              className="px-2.5 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:border-cream-500 tabular-nums"
+                              className="px-2.5 py-1.5 text-sm border border-gray-200 dark:border-surface-input-border rounded-lg bg-white dark:bg-surface-input text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:border-cream-500 tabular-nums"
                             />
                           </div>
                         )}
@@ -458,7 +458,7 @@ export default function SettingsPage() {
                       value={newClosureDate}
                       onChange={(e) => setNewClosureDate(e.target.value)}
                       min={new Date().toISOString().slice(0, 10)}
-                      className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:border-cream-500"
+                      className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-surface-input-border rounded-lg bg-white dark:bg-surface-input text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:border-cream-500"
                     />
                   </div>
                   <div className="flex-1">
@@ -467,7 +467,7 @@ export default function SettingsPage() {
                       value={newClosureReason}
                       onChange={(e) => setNewClosureReason(e.target.value)}
                       placeholder="Raison (optionnel)"
-                      className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:border-cream-500"
+                      className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-surface-input-border rounded-lg bg-white dark:bg-surface-input text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:border-cream-500"
                     />
                   </div>
                   <button
@@ -493,7 +493,7 @@ export default function SettingsPage() {
                           key={c.date}
                           className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl border ${
                             isPast
-                              ? "border-gray-100 dark:border-[#2a2724] bg-gray-50/50 dark:bg-[#141311] opacity-60"
+                              ? "border-gray-100 dark:border-surface-border-light bg-gray-50/50 dark:bg-surface-bg opacity-60"
                               : "border-rose-200/40 dark:border-rose-500/15 bg-rose-50/30 dark:bg-rose-500/[0.04]"
                           }`}
                         >
@@ -607,7 +607,7 @@ export default function SettingsPage() {
                           value={link.url}
                           onChange={(e) => updateSocialLink(net.key, "url", e.target.value)}
                           placeholder={net.placeholder}
-                          className="flex-1 px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:border-cream-500"
+                          className="flex-1 px-3 py-1.5 text-sm border border-gray-200 dark:border-surface-input-border rounded-lg bg-white dark:bg-surface-input text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:border-cream-500"
                         />
                       )}
                       {!link.enabled && (

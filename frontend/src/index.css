@@ -41,3 +41,28 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* ─── Surface tokens (admin theme) ─── */
+.dark {
+  --surface-bg: #141311;
+  --surface-sidebar: #0e0d0c;
+  --surface-card: #1c1a17;
+  --surface-card-alt: #0e0d0c;
+  --surface-card-hover: #242220;
+  --surface-border: #1e1b18;
+  --surface-border-light: #2a2724;
+  --surface-input: #374151;
+  --surface-input-border: #4b5563;
+}
+
+.dark.design {
+  --surface-bg: #1a130d;
+  --surface-sidebar: #140f0a;
+  --surface-card: #241a12;
+  --surface-card-alt: #140f0a;
+  --surface-card-hover: #302218;
+  --surface-border: #3a2a1c;
+  --surface-border-light: #4d3825;
+  --surface-input: #2e2117;
+  --surface-input-border: #4d3825;
+}

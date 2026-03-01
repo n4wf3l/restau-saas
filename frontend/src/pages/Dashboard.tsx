@@ -406,7 +406,7 @@ export default function Dashboard() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Rechercher par nom, email, téléphone..."
-              className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200/60 dark:border-[#2a2724] rounded-xl bg-white dark:bg-[#1c1a17] text-gray-800 dark:text-cream-100 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-coffee-500/30 focus:border-coffee-500/50 transition-all"
+              className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200/60 dark:border-surface-border-light rounded-xl bg-white dark:bg-surface-card text-gray-800 dark:text-cream-100 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-coffee-500/30 focus:border-coffee-500/50 transition-all"
             />
             {searchQuery && (
               <button
@@ -433,7 +433,7 @@ export default function Dashboard() {
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
                   dateFilter === f.key
                     ? "bg-coffee-600 text-cream-50 shadow-sm"
-                    : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#242220] hover:text-gray-700 dark:hover:text-gray-200"
+                    : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-surface-card-hover hover:text-gray-700 dark:hover:text-gray-200"
                 }`}
               >
                 {f.label}
@@ -449,7 +449,7 @@ export default function Dashboard() {
               className={`px-2 py-1.5 rounded-lg text-xs font-medium border transition-all duration-200 cursor-pointer ${
                 dateFilter === "custom"
                   ? "border-coffee-500/50 bg-coffee-50 dark:bg-coffee-900/20 text-coffee-700 dark:text-cream-300"
-                  : "border-gray-200/60 dark:border-[#2a2724] bg-white dark:bg-[#1c1a17] text-gray-500 dark:text-gray-400"
+                  : "border-gray-200/60 dark:border-surface-border-light bg-white dark:bg-surface-card text-gray-500 dark:text-gray-400"
               } focus:outline-none focus:ring-2 focus:ring-coffee-500/30`}
             />
           </div>
@@ -463,7 +463,7 @@ export default function Dashboard() {
               onClick={() => setActiveTab(tab.key)}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
                 activeTab === tab.key
-                  ? "bg-white dark:bg-[#1c1a17] shadow-card dark:shadow-dark-card border border-cream-200/50 dark:border-[#2a2724] text-gray-900 dark:text-cream-50"
+                  ? "bg-white dark:bg-surface-card shadow-card dark:shadow-dark-card border border-cream-200/50 dark:border-surface-border-light text-gray-900 dark:text-cream-50"
                   : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-white/50 dark:hover:bg-[#1c1a17]/50"
               }`}
             >
@@ -527,7 +527,7 @@ export default function Dashboard() {
                 <div
                   key={res.id}
                   onClick={() => setExpandedId(isExpanded ? null : res.id)}
-                  className={`bg-white dark:bg-[#1c1a17] rounded-2xl ring-1 ring-gray-200/40 dark:ring-[#2a2724] border-l-[3px] ${st.border} shadow-card dark:shadow-dark-card hover:shadow-card-hover dark:hover:shadow-dark-card-hover hover:-translate-y-[1px] transition-all duration-200 cursor-pointer select-none`}
+                  className={`bg-white dark:bg-surface-card rounded-2xl ring-1 ring-gray-200/40 dark:ring-surface-border-light border-l-[3px] ${st.border} shadow-card dark:shadow-dark-card hover:shadow-card-hover dark:hover:shadow-dark-card-hover hover:-translate-y-[1px] transition-all duration-200 cursor-pointer select-none`}
                 >
                   {/* ─── Card Header ─── */}
                   <div className="px-5 pt-5 pb-3">
@@ -585,7 +585,7 @@ export default function Dashboard() {
 
                   {/* ─── Expanded Details ─── */}
                   {isExpanded && (
-                    <div className="px-5 pb-5 border-t border-gray-100/80 dark:border-[#2a2724] pt-4 animate-slideUp" onClick={(e) => e.stopPropagation()}>
+                    <div className="px-5 pb-5 border-t border-gray-100/80 dark:border-surface-border-light pt-4 animate-slideUp" onClick={(e) => e.stopPropagation()}>
                       <div className="grid grid-cols-2 gap-3 text-sm mb-4">
                         <div>
                           <div className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-widest font-semibold mb-1">Email</div>
@@ -632,7 +632,7 @@ export default function Dashboard() {
 
                   {/* ─── Actions: Pending ─── */}
                   {res.status === "pending" && (
-                    <div className="flex border-t border-gray-100 dark:border-[#2a2724]">
+                    <div className="flex border-t border-gray-100 dark:border-surface-border-light">
                       <button
                         onClick={(e) => { e.stopPropagation(); handleStatus(res.id, "confirmed"); }}
                         className="flex-1 flex items-center justify-center gap-2 py-4 bg-emerald-50/50 dark:bg-emerald-500/[0.06] text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-500 dark:hover:text-white active:bg-emerald-600 active:scale-[0.98] transition-all duration-200 rounded-bl-2xl font-semibold text-sm"
@@ -653,10 +653,10 @@ export default function Dashboard() {
 
                   {/* ─── Actions: Confirmed ─── */}
                   {res.status === "confirmed" && (
-                    <div className="flex border-t border-gray-100 dark:border-[#2a2724]">
+                    <div className="flex border-t border-gray-100 dark:border-surface-border-light">
                       <button
                         onClick={(e) => { e.stopPropagation(); handleStatus(res.id, "completed"); }}
-                        className="flex-1 flex items-center justify-center gap-2 py-3.5 text-gray-500 dark:text-gray-400 hover:bg-cream-50 dark:hover:bg-[#242220] hover:text-gray-700 dark:hover:text-cream-200 active:scale-[0.98] transition-all duration-200 rounded-bl-2xl font-medium text-sm"
+                        className="flex-1 flex items-center justify-center gap-2 py-3.5 text-gray-500 dark:text-gray-400 hover:bg-cream-50 dark:hover:bg-surface-card-hover hover:text-gray-700 dark:hover:text-cream-200 active:scale-[0.98] transition-all duration-200 rounded-bl-2xl font-medium text-sm"
                       >
                         <CheckIcon className="w-4 h-4" />
                         Terminer
@@ -681,7 +681,7 @@ export default function Dashboard() {
 
                   {/* ─── Actions: No-show ─── */}
                   {res.status === "no_show" && (
-                    <div className="flex border-t border-gray-100 dark:border-[#2a2724]">
+                    <div className="flex border-t border-gray-100 dark:border-surface-border-light">
                       <button
                         onClick={(e) => { e.stopPropagation(); handleRestore(res.id); }}
                         className="flex-1 flex items-center justify-center gap-2 py-3.5 text-gray-500 dark:text-gray-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400 active:scale-[0.98] transition-all duration-200 rounded-bl-2xl font-medium text-sm"
@@ -702,7 +702,7 @@ export default function Dashboard() {
 
                   {/* ─── Actions: Done/Cancelled ─── */}
                   {(res.status === "cancelled" || res.status === "completed") && (
-                    <div className="flex border-t border-gray-100 dark:border-[#2a2724]">
+                    <div className="flex border-t border-gray-100 dark:border-surface-border-light">
                       <button
                         onClick={(e) => { e.stopPropagation(); handleDelete(res.id); }}
                         className="flex-1 flex items-center justify-center gap-2 py-3.5 text-gray-400 dark:text-gray-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500 dark:hover:text-rose-400 active:scale-[0.98] transition-all duration-200 rounded-b-2xl text-sm"
@@ -727,16 +727,16 @@ export default function Dashboard() {
             onClick={closeCreateModal}
           />
           <div
-            className={`absolute top-0 right-0 bottom-0 w-full max-w-lg bg-white dark:bg-[#1c1a17] shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
+            className={`absolute top-0 right-0 bottom-0 w-full max-w-lg bg-white dark:bg-surface-card shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
               createPanelReady ? "translate-x-0" : "translate-x-full"
             }`}
           >
             {/* Panel Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-[#2a2724]">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-surface-border-light">
               <h2 className="text-lg font-display font-bold text-gray-900 dark:text-cream-50">
                 {editingRes ? "Modifier la réservation" : "Nouvelle réservation"}
               </h2>
-              <button onClick={closeCreateModal} className="p-2 -mr-2 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#242220] transition-colors">
+              <button onClick={closeCreateModal} className="p-2 -mr-2 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-surface-card-hover transition-colors">
                 <XMarkIcon className="w-5 h-5" />
               </button>
             </div>
@@ -753,7 +753,7 @@ export default function Dashboard() {
                     placeholder="Nom du client *"
                     value={newRes.customer_name}
                     onChange={(e) => setNewRes({ ...newRes, customer_name: e.target.value })}
-                    className="w-full px-3.5 py-2.5 text-sm border border-gray-200 dark:border-[#2a2724] rounded-xl bg-white dark:bg-[#141311] text-gray-800 dark:text-cream-100 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-coffee-500/30 focus:border-coffee-500/50"
+                    className="w-full px-3.5 py-2.5 text-sm border border-gray-200 dark:border-surface-border-light rounded-xl bg-white dark:bg-surface-bg text-gray-800 dark:text-cream-100 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-coffee-500/30 focus:border-coffee-500/50"
                   />
                   <input
                     required
@@ -761,14 +761,14 @@ export default function Dashboard() {
                     placeholder="Email *"
                     value={newRes.customer_email}
                     onChange={(e) => setNewRes({ ...newRes, customer_email: e.target.value })}
-                    className="w-full px-3.5 py-2.5 text-sm border border-gray-200 dark:border-[#2a2724] rounded-xl bg-white dark:bg-[#141311] text-gray-800 dark:text-cream-100 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-coffee-500/30 focus:border-coffee-500/50"
+                    className="w-full px-3.5 py-2.5 text-sm border border-gray-200 dark:border-surface-border-light rounded-xl bg-white dark:bg-surface-bg text-gray-800 dark:text-cream-100 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-coffee-500/30 focus:border-coffee-500/50"
                   />
                   <input
                     type="tel"
                     placeholder="Téléphone"
                     value={newRes.customer_phone}
                     onChange={(e) => setNewRes({ ...newRes, customer_phone: e.target.value })}
-                    className="w-full px-3.5 py-2.5 text-sm border border-gray-200 dark:border-[#2a2724] rounded-xl bg-white dark:bg-[#141311] text-gray-800 dark:text-cream-100 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-coffee-500/30 focus:border-coffee-500/50"
+                    className="w-full px-3.5 py-2.5 text-sm border border-gray-200 dark:border-surface-border-light rounded-xl bg-white dark:bg-surface-bg text-gray-800 dark:text-cream-100 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-coffee-500/30 focus:border-coffee-500/50"
                   />
                 </div>
               </div>
@@ -782,14 +782,14 @@ export default function Dashboard() {
                     type="date"
                     value={newRes.date}
                     onChange={(e) => setNewRes({ ...newRes, date: e.target.value })}
-                    className="col-span-1 px-3 py-2.5 text-sm border border-gray-200 dark:border-[#2a2724] rounded-xl bg-white dark:bg-[#141311] text-gray-800 dark:text-cream-100 focus:outline-none focus:ring-2 focus:ring-coffee-500/30 focus:border-coffee-500/50"
+                    className="col-span-1 px-3 py-2.5 text-sm border border-gray-200 dark:border-surface-border-light rounded-xl bg-white dark:bg-surface-bg text-gray-800 dark:text-cream-100 focus:outline-none focus:ring-2 focus:ring-coffee-500/30 focus:border-coffee-500/50"
                   />
                   <input
                     required
                     type="time"
                     value={newRes.time}
                     onChange={(e) => setNewRes({ ...newRes, time: e.target.value })}
-                    className="col-span-1 px-3 py-2.5 text-sm border border-gray-200 dark:border-[#2a2724] rounded-xl bg-white dark:bg-[#141311] text-gray-800 dark:text-cream-100 focus:outline-none focus:ring-2 focus:ring-coffee-500/30 focus:border-coffee-500/50"
+                    className="col-span-1 px-3 py-2.5 text-sm border border-gray-200 dark:border-surface-border-light rounded-xl bg-white dark:bg-surface-bg text-gray-800 dark:text-cream-100 focus:outline-none focus:ring-2 focus:ring-coffee-500/30 focus:border-coffee-500/50"
                   />
                   <div className="relative">
                     <UserGroupIcon className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -800,7 +800,7 @@ export default function Dashboard() {
                       max={50}
                       value={newRes.party_size}
                       onChange={(e) => setNewRes({ ...newRes, party_size: Number(e.target.value) })}
-                      className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 dark:border-[#2a2724] rounded-xl bg-white dark:bg-[#141311] text-gray-800 dark:text-cream-100 focus:outline-none focus:ring-2 focus:ring-coffee-500/30 focus:border-coffee-500/50"
+                      className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 dark:border-surface-border-light rounded-xl bg-white dark:bg-surface-bg text-gray-800 dark:text-cream-100 focus:outline-none focus:ring-2 focus:ring-coffee-500/30 focus:border-coffee-500/50"
                     />
                   </div>
                 </div>
@@ -822,7 +822,7 @@ export default function Dashboard() {
                           className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all border ${
                             newRes.table_id === t.id
                               ? "border-coffee-500 bg-coffee-50 dark:bg-coffee-900/20 text-coffee-700 dark:text-cream-300 ring-2 ring-coffee-500/20"
-                              : "border-gray-200 dark:border-[#2a2724] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#242220]"
+                              : "border-gray-200 dark:border-surface-border-light text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-surface-card-hover"
                           }`}
                         >
                           <span className="truncate">{t.name}</span>
@@ -842,17 +842,17 @@ export default function Dashboard() {
                   onChange={(e) => setNewRes({ ...newRes, notes: e.target.value })}
                   rows={3}
                   placeholder="Notes internes (optionnel)"
-                  className="w-full px-3.5 py-2.5 text-sm border border-gray-200 dark:border-[#2a2724] rounded-xl bg-white dark:bg-[#141311] text-gray-800 dark:text-cream-100 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-coffee-500/30 focus:border-coffee-500/50 resize-none"
+                  className="w-full px-3.5 py-2.5 text-sm border border-gray-200 dark:border-surface-border-light rounded-xl bg-white dark:bg-surface-bg text-gray-800 dark:text-cream-100 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-coffee-500/30 focus:border-coffee-500/50 resize-none"
                 />
               </div>
             </form>
 
             {/* Panel Footer */}
-            <div className="px-6 py-4 border-t border-gray-100 dark:border-[#2a2724] flex gap-3">
+            <div className="px-6 py-4 border-t border-gray-100 dark:border-surface-border-light flex gap-3">
               <button
                 type="button"
                 onClick={closeCreateModal}
-                className="flex-1 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-[#242220] rounded-xl hover:bg-gray-200 dark:hover:bg-[#2a2724] transition-colors"
+                className="flex-1 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-surface-card-hover rounded-xl hover:bg-gray-200 dark:hover:bg-[#2a2724] transition-colors"
               >
                 Annuler
               </button>

@@ -44,7 +44,7 @@ function ToggleSwitch({
       aria-checked={checked}
       onClick={() => onChange(!checked)}
       className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-coffee-500 focus-visible:ring-offset-2 ${
-        checked ? "bg-coffee-600" : "bg-gray-300 dark:bg-gray-600"
+        checked ? "bg-coffee-600" : "bg-gray-300 dark:bg-surface-input-border"
       }`}
     >
       <span
@@ -399,11 +399,11 @@ export default function MenuPage() {
                   placeholder="Rechercher un plat..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-1.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-coffee-500/50 focus:border-coffee-500 placeholder-gray-400 dark:placeholder-gray-500"
+                  className="w-full pl-9 pr-3 py-1.5 border border-gray-200 dark:border-surface-input-border rounded-lg bg-white dark:bg-surface-input text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-coffee-500/50 focus:border-coffee-500 placeholder-gray-400 dark:placeholder-gray-500"
                 />
               </div>
 
-              <div className="flex border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
+              <div className="flex border border-gray-200 dark:border-surface-input-border rounded-lg overflow-hidden">
                 <button
                   onClick={() => setViewMode("card")}
                   className={`p-1.5 transition-colors ${
@@ -581,7 +581,7 @@ export default function MenuPage() {
             ) : currentPdfUrl ? (
               /* ── PDF existant ── */
               <div className="space-y-6">
-                <div className="bg-white dark:bg-[#1c1a17] rounded-xl border border-gray-200 dark:border-gray-800 p-6">
+                <div className="bg-white dark:bg-surface-card rounded-xl border border-gray-200 dark:border-gray-800 p-6">
                   <div className="flex items-center gap-4 mb-4">
                     <div className="w-12 h-12 rounded-lg bg-red-50 dark:bg-red-900/20 flex items-center justify-center shrink-0">
                       <DocumentTextIcon className="w-6 h-6 text-red-500" />
@@ -674,7 +674,7 @@ export default function MenuPage() {
                       : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 cursor-pointer hover:border-coffee-400 dark:hover:border-coffee-500 hover:bg-gray-100 dark:hover:bg-gray-800"
                   }`}
                 >
-                  <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-surface-input flex items-center justify-center">
                     <CloudArrowUpIcon className="w-8 h-8 text-gray-400 dark:text-gray-500" />
                   </div>
                   {pdfFile ? (
@@ -745,7 +745,7 @@ export default function MenuPage() {
       {activeTab === "api" && (
         <div className="flex-1 overflow-auto px-6 py-6">
           <div className="max-w-2xl mx-auto opacity-50 pointer-events-none">
-            <div className="bg-white dark:bg-[#1c1a17] rounded-xl border border-gray-200 dark:border-gray-800 p-12 text-center">
+            <div className="bg-white dark:bg-surface-card rounded-xl border border-gray-200 dark:border-gray-800 p-12 text-center">
               <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-6">
                 <CodeBracketIcon className="w-8 h-8 text-gray-400 dark:text-gray-500" />
               </div>
@@ -774,7 +774,7 @@ export default function MenuPage() {
 
           {/* Panel */}
           <div
-            className={`absolute top-0 right-0 bottom-0 w-full max-w-lg bg-white dark:bg-[#1c1a17] shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
+            className={`absolute top-0 right-0 bottom-0 w-full max-w-lg bg-white dark:bg-surface-card shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
               panelReady ? "translate-x-0" : "translate-x-full"
             }`}
           >
@@ -840,7 +840,7 @@ export default function MenuPage() {
                     onClick={() => fileInputRef.current?.click()}
                     className="flex flex-col items-center justify-center gap-3 w-full py-10 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50 cursor-pointer hover:border-coffee-400 dark:hover:border-coffee-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all group"
                   >
-                    <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center group-hover:bg-coffee-100 dark:group-hover:bg-coffee-900/30 transition-colors">
+                    <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-surface-input flex items-center justify-center group-hover:bg-coffee-100 dark:group-hover:bg-coffee-900/30 transition-colors">
                       <CloudArrowUpIcon className="w-6 h-6 text-gray-400 dark:text-gray-500 group-hover:text-coffee-500 transition-colors" />
                     </div>
                     <div className="text-center">
@@ -983,7 +983,7 @@ export default function MenuPage() {
               </div>
 
               {/* ─ Sticky Footer ─ */}
-              <div className="sticky bottom-0 bg-white dark:bg-[#1c1a17] border-t border-gray-100 dark:border-gray-800 p-6 space-y-3">
+              <div className="sticky bottom-0 bg-white dark:bg-surface-card border-t border-gray-100 dark:border-gray-800 p-6 space-y-3">
                 <button
                   type="submit"
                   className="w-full py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-semibold text-sm hover:bg-gray-800 dark:hover:bg-gray-100 active:scale-[0.98] transition-all"

@@ -487,7 +487,7 @@ export function FloorPlanEditor({ floorPlan, onUpdate, onDirtyChange }: FloorPla
 
   const floorLevels = getFloorLevels();
 
-  const isDark = theme === 'dark';
+  const isDark = theme === 'dark' || theme === 'design';
   const gridLineColor = isDark ? 'rgba(75, 85, 99, 0.4)' : 'rgba(209, 213, 219, 0.6)';
   const gridGapColor = isDark ? '#374151' : '#e5e7eb';
 
@@ -549,14 +549,14 @@ export function FloorPlanEditor({ floorPlan, onUpdate, onDirtyChange }: FloorPla
               <div className="relative" ref={floorDropdownRef}>
                 <button
                   onClick={() => setFloorDropdownOpen(!floorDropdownOpen)}
-                  className="flex items-center gap-2 pl-3 pr-2.5 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-coffee-500/50 focus:border-coffee-500 font-medium cursor-pointer transition-colors"
+                  className="flex items-center gap-2 pl-3 pr-2.5 py-1.5 text-sm border border-gray-200 dark:border-surface-input-border rounded-lg bg-white dark:bg-surface-input text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-coffee-500/50 focus:border-coffee-500 font-medium cursor-pointer transition-colors"
                 >
                   <BuildingOfficeIcon className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                   <span>{getFloorName(currentFloor)}</span>
                   <ChevronDownIcon className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${floorDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {floorDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-1 min-w-[180px] bg-white dark:bg-[#1c1a17] border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg dark:shadow-2xl py-1 z-50 animate-dropdown-reveal">
+                  <div className="absolute top-full left-0 mt-1 min-w-[180px] bg-white dark:bg-surface-card border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg dark:shadow-2xl py-1 z-50 animate-dropdown-reveal">
                     {floorLevels.map((level) => (
                       <button
                         key={level}
@@ -600,7 +600,7 @@ export function FloorPlanEditor({ floorPlan, onUpdate, onDirtyChange }: FloorPla
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowResizeModal(true)}
-                className="px-3 py-1.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 font-medium border border-gray-200 dark:border-gray-600 transition-colors"
+                className="px-3 py-1.5 text-xs bg-gray-100 dark:bg-surface-input text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 font-medium border border-gray-200 dark:border-surface-input-border transition-colors"
               >
                 Redimensionner
               </button>
@@ -712,7 +712,7 @@ export function FloorPlanEditor({ floorPlan, onUpdate, onDirtyChange }: FloorPla
         {/* Tooltip */}
         {tooltip && createPortal(
           <div className="fixed z-[9999] pointer-events-none" style={{ left: tooltip.x + 15, top: tooltip.y + 15 }}>
-            <div className="bg-gray-900 dark:bg-gray-700 text-white px-3 py-2 rounded-lg shadow-xl text-sm border border-gray-700 dark:border-gray-600">
+            <div className="bg-gray-900 dark:bg-surface-input text-white px-3 py-2 rounded-lg shadow-xl text-sm border border-gray-700 dark:border-surface-input-border">
               <div className="font-semibold">{tooltip.tableName}</div>
               <div className="text-gray-300 dark:text-gray-400 text-xs mt-1">{tooltip.seats} place{tooltip.seats > 1 ? 's' : ''}</div>
               <div className={`text-xs mt-1 ${tooltip.available ? 'text-emerald-400' : 'text-rose-400'}`}>
@@ -736,7 +736,7 @@ export function FloorPlanEditor({ floorPlan, onUpdate, onDirtyChange }: FloorPla
                 type="text"
                 value={newFloorName}
                 onChange={(e) => setNewFloorName(e.target.value)}
-                className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-coffee-500/50 focus:border-coffee-500 text-sm placeholder-gray-400 dark:placeholder-gray-500"
+                className="w-full px-3 py-2.5 border border-gray-200 dark:border-surface-input-border rounded-lg bg-white dark:bg-surface-input text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-coffee-500/50 focus:border-coffee-500 text-sm placeholder-gray-400 dark:placeholder-gray-500"
                 placeholder="Ex: Rez-de-chaussée, Terrasse..."
                 autoFocus
                 onKeyDown={(e) => {
@@ -747,7 +747,7 @@ export function FloorPlanEditor({ floorPlan, onUpdate, onDirtyChange }: FloorPla
               <div className="flex justify-end gap-2 mt-5">
                 <button
                   onClick={() => { setShowFloorNameModal(false); setNewFloorName(''); }}
-                  className="px-4 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 font-medium transition-colors"
+                  className="px-4 py-2 text-sm bg-gray-100 dark:bg-surface-input text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 font-medium transition-colors"
                 >
                   Annuler
                 </button>
@@ -772,7 +772,7 @@ export function FloorPlanEditor({ floorPlan, onUpdate, onDirtyChange }: FloorPla
                 type="text"
                 value={newTableName}
                 onChange={(e) => setNewTableName(e.target.value)}
-                className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-coffee-500/50 focus:border-coffee-500 text-sm placeholder-gray-400 dark:placeholder-gray-500"
+                className="w-full px-3 py-2.5 border border-gray-200 dark:border-surface-input-border rounded-lg bg-white dark:bg-surface-input text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-coffee-500/50 focus:border-coffee-500 text-sm placeholder-gray-400 dark:placeholder-gray-500"
                 placeholder="Ex: Table 1, Terrasse A..."
                 autoFocus
                 onKeyDown={(e) => {
@@ -783,7 +783,7 @@ export function FloorPlanEditor({ floorPlan, onUpdate, onDirtyChange }: FloorPla
               <div className="flex justify-end gap-2 mt-5">
                 <button
                   onClick={() => setShowTableNameModal(false)}
-                  className="px-4 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 font-medium transition-colors"
+                  className="px-4 py-2 text-sm bg-gray-100 dark:bg-surface-input text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 font-medium transition-colors"
                 >
                   Annuler
                 </button>
@@ -808,20 +808,20 @@ export function FloorPlanEditor({ floorPlan, onUpdate, onDirtyChange }: FloorPla
                 <div>
                   <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1.5">Largeur (m)</label>
                   <input type="number" value={newWidth} onChange={(e) => setNewWidth(Number(e.target.value))} min="5" max="100"
-                    className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-coffee-500/50 focus:border-coffee-500 text-sm" />
+                    className="w-full px-3 py-2.5 border border-gray-200 dark:border-surface-input-border rounded-lg bg-white dark:bg-surface-input text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-coffee-500/50 focus:border-coffee-500 text-sm" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1.5">Hauteur (m)</label>
                   <input type="number" value={newHeight} onChange={(e) => setNewHeight(Number(e.target.value))} min="5" max="100"
-                    className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-coffee-500/50 focus:border-coffee-500 text-sm" />
+                    className="w-full px-3 py-2.5 border border-gray-200 dark:border-surface-input-border rounded-lg bg-white dark:bg-surface-input text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-coffee-500/50 focus:border-coffee-500 text-sm" />
                 </div>
-                <p className="text-xs text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700/50 p-2.5 rounded-lg">
+                <p className="text-xs text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-surface-input/50 p-2.5 rounded-lg">
                   Les éléments en dehors des nouvelles dimensions seront conservés mais masqués.
                 </p>
               </div>
               <div className="flex justify-end gap-2 mt-5">
                 <button onClick={() => { setShowResizeModal(false); setNewWidth(floorPlan.width); setNewHeight(floorPlan.height); }}
-                  className="px-4 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 font-medium transition-colors">
+                  className="px-4 py-2 text-sm bg-gray-100 dark:bg-surface-input text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 font-medium transition-colors">
                   Annuler
                 </button>
                 <button onClick={handleResize}
@@ -847,7 +847,7 @@ export function FloorPlanEditor({ floorPlan, onUpdate, onDirtyChange }: FloorPla
               </p>
               <div className="flex justify-end gap-2">
                 <button onClick={() => setShowDeleteConfirm(false)}
-                  className="px-4 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 font-medium transition-colors">
+                  className="px-4 py-2 text-sm bg-gray-100 dark:bg-surface-input text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 font-medium transition-colors">
                   Annuler
                 </button>
                 <button onClick={confirmClear}
