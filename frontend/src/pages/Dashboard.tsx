@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useOutletContext } from "react-router-dom";
-import { getReservations, getSettings, updateReservationStatus, deleteReservation, restoreReservation } from "../lib/api";
-import type { Reservation, FloorPlan, RestaurantSettings } from "../lib/types";
+import { getReservations, getSettings, getPublicTables, createAdminReservation, updateReservation, updateReservationStatus, deleteReservation, restoreReservation } from "../lib/api";
+import type { Reservation, FloorPlan, RestaurantSettings, PublicTable } from "../lib/types";
 import toast from "react-hot-toast";
 import {
   CalendarIcon,
@@ -16,6 +16,10 @@ import {
   SparklesIcon,
   ExclamationTriangleIcon,
   ArrowPathIcon,
+  MagnifyingGlassIcon,
+  FunnelIcon,
+  PlusIcon,
+  PencilSquareIcon,
 } from "@heroicons/react/24/outline";
 import { Spinner } from "../components/ui/Spinner";
 
@@ -30,6 +34,26 @@ export function Dashboard() {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState<RestaurantSettings | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [dateFilter, setDateFilter] = useState<"all" | "today" | "tomorrow" | "week" | "custom">("all");
+  const [customDate, setCustomDate] = useState("");
+
+  // Create / Edit reservation panel
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createPanelReady, setCreatePanelReady] = useState(false);
+  const [tables, setTables] = useState<PublicTable[]>([]);
+  const [creating, setCreating] = useState(false);
+  const [editingRes, setEditingRes] = useState<Reservation | null>(null);
+  const [newRes, setNewRes] = useState({
+    customer_name: "",
+    customer_email: "",
+    customer_phone: "",
+    date: "",
+    time: "19:00",
+    party_size: 2,
+    table_id: 0,
+    notes: "",
+  });
 
   const loadReservations = useCallback(async () => {
     try {
@@ -97,20 +121,152 @@ export function Dashboard() {
     }
   };
 
+  const openCreateModal = async () => {
+    setShowCreateModal(true);
+    setTimeout(() => setCreatePanelReady(true), 20);
+    try {
+      const t = await getPublicTables();
+      setTables(t);
+    } catch {
+      // Tables will be empty
+    }
+  };
+
+  const closeCreateModal = () => {
+    setCreatePanelReady(false);
+    setTimeout(() => {
+      setShowCreateModal(false);
+      setEditingRes(null);
+      setNewRes({ customer_name: "", customer_email: "", customer_phone: "", date: "", time: "19:00", party_size: 2, table_id: 0, notes: "" });
+    }, 300);
+  };
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newRes.table_id) { toast.error("Veuillez sélectionner une table"); return; }
+    if (!newRes.date || !newRes.time) { toast.error("Date et heure requises"); return; }
+
+    setCreating(true);
+    try {
+      await createAdminReservation({
+        customer_name: newRes.customer_name,
+        customer_email: newRes.customer_email,
+        customer_phone: newRes.customer_phone || undefined,
+        arrival_time: `${newRes.date} ${newRes.time}`,
+        party_size: newRes.party_size,
+        table_id: newRes.table_id,
+        notes: newRes.notes || undefined,
+      });
+      toast.success("Réservation créée");
+      closeCreateModal();
+      loadReservations();
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || "Erreur lors de la création");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const openEditModal = async (res: Reservation) => {
+    const [date, time] = res.arrival_time.split(" ");
+    setEditingRes(res);
+    setNewRes({
+      customer_name: res.customer_name,
+      customer_email: res.customer_email,
+      customer_phone: res.customer_phone || "",
+      date,
+      time: time || "19:00",
+      party_size: res.party_size,
+      table_id: res.table.id || 0,
+      notes: res.notes || "",
+    });
+    setShowCreateModal(true);
+    setTimeout(() => setCreatePanelReady(true), 20);
+    try {
+      const t = await getPublicTables();
+      setTables(t);
+    } catch {}
+  };
+
+  const handleEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingRes) return;
+    if (!newRes.date || !newRes.time) { toast.error("Date et heure requises"); return; }
+
+    setCreating(true);
+    try {
+      await updateReservation(editingRes.id, {
+        customer_name: newRes.customer_name,
+        customer_email: newRes.customer_email,
+        customer_phone: newRes.customer_phone || null,
+        arrival_time: `${newRes.date} ${newRes.time}`,
+        party_size: newRes.party_size,
+        notes: newRes.notes || null,
+      });
+      toast.success("Réservation modifiée");
+      closeCreateModal();
+      loadReservations();
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || "Erreur lors de la modification");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  // Date matching helper
+  const matchesDate = (arrivalTime: string): boolean => {
+    if (dateFilter === "all") return true;
+    const d = new Date(arrivalTime);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    if (dateFilter === "today") return d.toDateString() === today.toDateString();
+    if (dateFilter === "tomorrow") return d.toDateString() === tomorrow.toDateString();
+    if (dateFilter === "week") {
+      const weekEnd = new Date(today);
+      weekEnd.setDate(today.getDate() + 7);
+      return d >= today && d < weekEnd;
+    }
+    if (dateFilter === "custom" && customDate) {
+      return d.toISOString().slice(0, 10) === customDate;
+    }
+    return true;
+  };
+
+  // Search matching helper
+  const matchesSearch = (r: Reservation): boolean => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      r.customer_name.toLowerCase().includes(q) ||
+      r.customer_email.toLowerCase().includes(q) ||
+      (r.customer_phone?.toLowerCase().includes(q) ?? false) ||
+      (r.table.name?.toLowerCase().includes(q) ?? false)
+    );
+  };
+
   const filtered = reservations.filter((r) => {
-    if (activeTab === "events") return r.is_event;
-    if (activeTab === "no_show") return r.status === "no_show";
-    if (activeTab === "all") return true;
-    return r.status === activeTab;
+    // Status/tab filter
+    const matchesTab =
+      activeTab === "events" ? r.is_event :
+      activeTab === "no_show" ? r.status === "no_show" :
+      activeTab === "all" ? true :
+      r.status === activeTab;
+
+    return matchesTab && matchesDate(r.arrival_time) && matchesSearch(r);
   });
 
+  // Counts reflect search + date filters so tabs stay accurate
+  const base = reservations.filter((r) => matchesDate(r.arrival_time) && matchesSearch(r));
   const counts = {
-    pending: reservations.filter((r) => r.status === "pending").length,
-    confirmed: reservations.filter((r) => r.status === "confirmed").length,
-    cancelled: reservations.filter((r) => r.status === "cancelled").length,
-    no_show: reservations.filter((r) => r.status === "no_show").length,
-    events: reservations.filter((r) => r.is_event).length,
-    all: reservations.length,
+    pending: base.filter((r) => r.status === "pending").length,
+    confirmed: base.filter((r) => r.status === "confirmed").length,
+    cancelled: base.filter((r) => r.status === "cancelled").length,
+    no_show: base.filter((r) => r.status === "no_show").length,
+    events: base.filter((r) => r.is_event).length,
+    all: base.length,
   };
 
   const tabs: { key: TabType; label: string; count: number; color: string }[] = [
@@ -185,6 +341,24 @@ export function Dashboard() {
     };
   };
 
+  if (loading) {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="px-6 pt-6 pb-5 flex-shrink-0">
+          <h1 className="text-2xl font-display font-bold text-gray-900 dark:text-cream-50 tracking-tight">
+            Réservations
+          </h1>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+            Chargement...
+          </p>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <Spinner />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full">
       {/* ─── Header ─── */}
@@ -198,6 +372,14 @@ export function Dashboard() {
               Mise à jour auto &middot; 30s
             </p>
           </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={openCreateModal}
+              className="flex items-center gap-2 px-4 py-2.5 bg-coffee-600 text-cream-50 rounded-xl text-sm font-semibold hover:bg-coffee-500 active:scale-[0.97] transition-all duration-200 shadow-sm"
+            >
+              <PlusIcon className="w-4 h-4" />
+              Nouvelle réservation
+            </button>
           {!settings?.auto_confirm && counts.pending > 0 && (
             <div className="flex items-center gap-2.5 px-4 py-2.5 bg-cream-100/80 dark:bg-cream-500/[0.08] border border-cream-300/40 dark:border-cream-500/15 rounded-xl shadow-soft dark:shadow-glow-gold">
               <span className="relative flex h-2.5 w-2.5">
@@ -209,6 +391,66 @@ export function Dashboard() {
               </span>
             </div>
           )}
+          </div>
+        </div>
+
+        {/* ─── Search + Date Filters ─── */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-5">
+          {/* Search */}
+          <div className="relative flex-1">
+            <MagnifyingGlassIcon className="w-4 h-4 text-gray-400 dark:text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Rechercher par nom, email, téléphone..."
+              className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200/60 dark:border-[#2a2724] rounded-xl bg-white dark:bg-[#1c1a17] text-gray-800 dark:text-cream-100 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-coffee-500/30 focus:border-coffee-500/50 transition-all"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <XMarkIcon className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Date filters */}
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <FunnelIcon className="w-4 h-4 text-gray-400 dark:text-gray-600 mr-1 hidden sm:block" />
+            {([
+              { key: "all", label: "Tout" },
+              { key: "today", label: "Aujourd'hui" },
+              { key: "tomorrow", label: "Demain" },
+              { key: "week", label: "7 jours" },
+            ] as const).map((f) => (
+              <button
+                key={f.key}
+                onClick={() => { setDateFilter(f.key); setCustomDate(""); }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
+                  dateFilter === f.key
+                    ? "bg-coffee-600 text-cream-50 shadow-sm"
+                    : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#242220] hover:text-gray-700 dark:hover:text-gray-200"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+            <input
+              type="date"
+              value={dateFilter === "custom" ? customDate : ""}
+              onChange={(e) => {
+                setDateFilter("custom");
+                setCustomDate(e.target.value);
+              }}
+              className={`px-2 py-1.5 rounded-lg text-xs font-medium border transition-all duration-200 cursor-pointer ${
+                dateFilter === "custom"
+                  ? "border-coffee-500/50 bg-coffee-50 dark:bg-coffee-900/20 text-coffee-700 dark:text-cream-300"
+                  : "border-gray-200/60 dark:border-[#2a2724] bg-white dark:bg-[#1c1a17] text-gray-500 dark:text-gray-400"
+              } focus:outline-none focus:ring-2 focus:ring-coffee-500/30`}
+            />
+          </div>
         </div>
 
         {/* ─── Tabs ─── */}
@@ -258,11 +500,7 @@ export function Dashboard() {
 
       {/* ─── Reservation Cards ─── */}
       <div className="flex-1 overflow-auto px-6 pb-6">
-        {loading ? (
-          <div className="flex items-center justify-center py-24">
-            <Spinner />
-          </div>
-        ) : filtered.length === 0 ? (
+        {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24">
             <div className="w-20 h-20 rounded-2xl bg-cream-100/50 dark:bg-cream-500/[0.05] flex items-center justify-center mb-5">
               <CalendarIcon className="w-10 h-10 text-cream-300 dark:text-cream-500/30" />
@@ -271,7 +509,9 @@ export function Dashboard() {
               Aucune réservation
             </p>
             <p className="text-sm text-gray-300 dark:text-gray-600 mt-1.5">
-              {activeTab === "no_show" ? "Aucune réservation no-show" : "Les nouvelles demandes apparaîtront ici"}
+              {searchQuery || dateFilter !== "all"
+                ? "Aucun résultat pour ces filtres"
+                : activeTab === "no_show" ? "Aucune réservation no-show" : "Les nouvelles demandes apparaîtront ici"}
             </p>
           </div>
         ) : (
@@ -374,6 +614,17 @@ export function Dashboard() {
                           <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{res.notes}</p>
                         </div>
                       )}
+
+                      {/* Edit button */}
+                      {res.status !== "cancelled" && res.status !== "no_show" && (
+                        <button
+                          onClick={() => openEditModal(res)}
+                          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium text-coffee-600 dark:text-cream-400 bg-coffee-50 dark:bg-coffee-900/15 border border-coffee-200/50 dark:border-coffee-500/15 hover:bg-coffee-100 dark:hover:bg-coffee-900/30 active:scale-[0.98] transition-all duration-200"
+                        >
+                          <PencilSquareIcon className="w-4 h-4" />
+                          Modifier
+                        </button>
+                      )}
                     </div>
                   )}
 
@@ -465,6 +716,158 @@ export function Dashboard() {
           </div>
         )}
       </div>
+
+      {/* ─── Create Reservation Slide Panel ─── */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50">
+          <div
+            className={`absolute inset-0 bg-black transition-opacity duration-300 ${createPanelReady ? "opacity-50" : "opacity-0"}`}
+            onClick={closeCreateModal}
+          />
+          <div
+            className={`absolute top-0 right-0 bottom-0 w-full max-w-lg bg-white dark:bg-[#1c1a17] shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
+              createPanelReady ? "translate-x-0" : "translate-x-full"
+            }`}
+          >
+            {/* Panel Header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-[#2a2724]">
+              <h2 className="text-lg font-display font-bold text-gray-900 dark:text-cream-50">
+                {editingRes ? "Modifier la réservation" : "Nouvelle réservation"}
+              </h2>
+              <button onClick={closeCreateModal} className="p-2 -mr-2 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#242220] transition-colors">
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Panel Form */}
+            <form onSubmit={editingRes ? handleEdit : handleCreate} className="flex-1 overflow-auto px-6 py-5 space-y-5">
+              {/* Client info */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Client</label>
+                <div className="space-y-3">
+                  <input
+                    required
+                    type="text"
+                    placeholder="Nom du client *"
+                    value={newRes.customer_name}
+                    onChange={(e) => setNewRes({ ...newRes, customer_name: e.target.value })}
+                    className="w-full px-3.5 py-2.5 text-sm border border-gray-200 dark:border-[#2a2724] rounded-xl bg-white dark:bg-[#141311] text-gray-800 dark:text-cream-100 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-coffee-500/30 focus:border-coffee-500/50"
+                  />
+                  <input
+                    required
+                    type="email"
+                    placeholder="Email *"
+                    value={newRes.customer_email}
+                    onChange={(e) => setNewRes({ ...newRes, customer_email: e.target.value })}
+                    className="w-full px-3.5 py-2.5 text-sm border border-gray-200 dark:border-[#2a2724] rounded-xl bg-white dark:bg-[#141311] text-gray-800 dark:text-cream-100 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-coffee-500/30 focus:border-coffee-500/50"
+                  />
+                  <input
+                    type="tel"
+                    placeholder="Téléphone"
+                    value={newRes.customer_phone}
+                    onChange={(e) => setNewRes({ ...newRes, customer_phone: e.target.value })}
+                    className="w-full px-3.5 py-2.5 text-sm border border-gray-200 dark:border-[#2a2724] rounded-xl bg-white dark:bg-[#141311] text-gray-800 dark:text-cream-100 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-coffee-500/30 focus:border-coffee-500/50"
+                  />
+                </div>
+              </div>
+
+              {/* Date / Time / Party size */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Créneau</label>
+                <div className="grid grid-cols-3 gap-3">
+                  <input
+                    required
+                    type="date"
+                    value={newRes.date}
+                    onChange={(e) => setNewRes({ ...newRes, date: e.target.value })}
+                    className="col-span-1 px-3 py-2.5 text-sm border border-gray-200 dark:border-[#2a2724] rounded-xl bg-white dark:bg-[#141311] text-gray-800 dark:text-cream-100 focus:outline-none focus:ring-2 focus:ring-coffee-500/30 focus:border-coffee-500/50"
+                  />
+                  <input
+                    required
+                    type="time"
+                    value={newRes.time}
+                    onChange={(e) => setNewRes({ ...newRes, time: e.target.value })}
+                    className="col-span-1 px-3 py-2.5 text-sm border border-gray-200 dark:border-[#2a2724] rounded-xl bg-white dark:bg-[#141311] text-gray-800 dark:text-cream-100 focus:outline-none focus:ring-2 focus:ring-coffee-500/30 focus:border-coffee-500/50"
+                  />
+                  <div className="relative">
+                    <UserGroupIcon className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      required
+                      type="number"
+                      min={1}
+                      max={50}
+                      value={newRes.party_size}
+                      onChange={(e) => setNewRes({ ...newRes, party_size: Number(e.target.value) })}
+                      className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 dark:border-[#2a2724] rounded-xl bg-white dark:bg-[#141311] text-gray-800 dark:text-cream-100 focus:outline-none focus:ring-2 focus:ring-coffee-500/30 focus:border-coffee-500/50"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Table selection (only for new reservations) */}
+              {!editingRes && (
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Table</label>
+                  {tables.length === 0 ? (
+                    <p className="text-sm text-gray-400 dark:text-gray-600 italic">Aucune table configurée</p>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2 max-h-48 overflow-auto">
+                      {tables.map((t) => (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => setNewRes({ ...newRes, table_id: t.id })}
+                          className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all border ${
+                            newRes.table_id === t.id
+                              ? "border-coffee-500 bg-coffee-50 dark:bg-coffee-900/20 text-coffee-700 dark:text-cream-300 ring-2 ring-coffee-500/20"
+                              : "border-gray-200 dark:border-[#2a2724] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#242220]"
+                          }`}
+                        >
+                          <span className="truncate">{t.name}</span>
+                          <span className="text-xs text-gray-400 dark:text-gray-500 ml-2 flex-shrink-0">{t.total_seats}p</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Notes */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Notes</label>
+                <textarea
+                  value={newRes.notes}
+                  onChange={(e) => setNewRes({ ...newRes, notes: e.target.value })}
+                  rows={3}
+                  placeholder="Notes internes (optionnel)"
+                  className="w-full px-3.5 py-2.5 text-sm border border-gray-200 dark:border-[#2a2724] rounded-xl bg-white dark:bg-[#141311] text-gray-800 dark:text-cream-100 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-coffee-500/30 focus:border-coffee-500/50 resize-none"
+                />
+              </div>
+            </form>
+
+            {/* Panel Footer */}
+            <div className="px-6 py-4 border-t border-gray-100 dark:border-[#2a2724] flex gap-3">
+              <button
+                type="button"
+                onClick={closeCreateModal}
+                className="flex-1 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-[#242220] rounded-xl hover:bg-gray-200 dark:hover:bg-[#2a2724] transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={editingRes ? handleEdit : handleCreate}
+                disabled={creating}
+                className="flex-1 py-2.5 text-sm font-semibold text-cream-50 bg-coffee-600 rounded-xl hover:bg-coffee-500 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              >
+                {creating ? <Spinner size="sm" /> : <CheckIcon className="w-4 h-4" />}
+                {creating
+                  ? (editingRes ? "Modification..." : "Création...")
+                  : (editingRes ? "Enregistrer" : "Confirmer")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

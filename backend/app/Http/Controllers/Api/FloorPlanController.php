@@ -10,11 +10,11 @@ use Illuminate\Support\Facades\Gate;
 class FloorPlanController extends Controller
 {
     /**
-     * Get the current user's floor plan with items
+     * Get the shared restaurant floor plan with items
      */
     public function current(Request $request)
     {
-        $floorPlan = $request->user()->floorPlan()->with('items')->first();
+        $floorPlan = RestaurantFloorPlan::with('items')->first();
 
         if (!$floorPlan) {
             return response()->json(['message' => 'No floor plan found'], 404);
@@ -24,11 +24,11 @@ class FloorPlanController extends Controller
     }
 
     /**
-     * Update the current user's floor plan (name, width, height)
+     * Update the shared restaurant floor plan (name, width, height)
      */
     public function update(Request $request)
     {
-        $floorPlan = $request->user()->floorPlan;
+        $floorPlan = RestaurantFloorPlan::first();
 
         if (!$floorPlan) {
             return response()->json(['message' => 'No floor plan found'], 404);

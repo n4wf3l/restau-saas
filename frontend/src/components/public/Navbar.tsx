@@ -4,6 +4,7 @@ import { CTAButton } from './CTAButton';
 
 interface NavbarProps {
   onReservationClick: () => void;
+  hideReservation?: boolean;
 }
 
 type NavLink = { label: string } & ({ href: string; to?: never } | { to: string; href?: never });
@@ -21,7 +22,7 @@ const LANGUAGES = [
   { code: 'AR', label: 'AR' },
 ];
 
-export function Navbar({ onReservationClick }: NavbarProps) {
+export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeLang, setActiveLang] = useState('FR');
   const [langPickerOpen, setLangPickerOpen] = useState(false);
@@ -88,7 +89,7 @@ export function Navbar({ onReservationClick }: NavbarProps) {
                 {activeLang}
               </button>
 
-              <CTAButton onClick={onReservationClick}>Réserver</CTAButton>
+              {!hideReservation && <CTAButton onClick={onReservationClick}>Réserver</CTAButton>}
             </div>
           </div>
 
@@ -190,14 +191,16 @@ export function Navbar({ onReservationClick }: NavbarProps) {
           </nav>
 
           {/* CTA Button */}
-          <div
-            className={`opacity-0 ${isOpen ? 'animate-menu-reveal' : ''} mb-10`}
-            style={{ animationDelay: `${navLinks.length * 80 + 100}ms` }}
-          >
-            <CTAButton onClick={() => { onReservationClick(); setIsOpen(false); }} className="px-16 py-5 text-sm">
-              Réserver
-            </CTAButton>
-          </div>
+          {!hideReservation && (
+            <div
+              className={`opacity-0 ${isOpen ? 'animate-menu-reveal' : ''} mb-10`}
+              style={{ animationDelay: `${navLinks.length * 80 + 100}ms` }}
+            >
+              <CTAButton onClick={() => { onReservationClick(); setIsOpen(false); }} className="px-16 py-5 text-sm">
+                Réserver
+              </CTAButton>
+            </div>
+          )}
 
           {/* Language Trigger — Mobile */}
           <div

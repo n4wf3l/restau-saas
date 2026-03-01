@@ -16,6 +16,11 @@ class RestaurantSetting extends Model
         'auto_optimize_tables',
         'auto_confirm',
         'send_confirmation_email',
+        'opening_hours',
+        'closure_dates',
+        'menu_pdf_url',
+        'menu_manual_visible',
+        'menu_pdf_visible',
     ];
 
     protected $casts = [
@@ -26,6 +31,10 @@ class RestaurantSetting extends Model
         'auto_optimize_tables' => 'boolean',
         'auto_confirm' => 'boolean',
         'send_confirmation_email' => 'boolean',
+        'opening_hours' => 'array',
+        'closure_dates' => 'array',
+        'menu_manual_visible' => 'boolean',
+        'menu_pdf_visible' => 'boolean',
     ];
 
     public function user(): BelongsTo

@@ -3,6 +3,8 @@ import { Navbar } from '../components/public/Navbar';
 import { Footer } from '../components/public/Footer';
 import { ReservationModal } from '../components/public/ReservationModal';
 import { CTAButton } from '../components/public/CTAButton';
+import { getPublicSettings } from '../lib/api';
+import type { OpeningHours } from '../lib/types';
 import toast from 'react-hot-toast';
 
 // ─── Scroll Reveal ───
@@ -47,6 +49,16 @@ type FormTab = 'contact' | 'recruitment';
 const inputClass =
   'w-full bg-transparent border border-cream-400/30 rounded-none px-4 py-3.5 text-cream-100 text-sm font-body placeholder-cream-400/40 focus:outline-none focus:border-cream-400/70 transition-colors min-h-[48px]';
 
+const DAY_LABELS: Record<string, string> = {
+  monday: 'Lundi', tuesday: 'Mardi', wednesday: 'Mercredi', thursday: 'Jeudi',
+  friday: 'Vendredi', saturday: 'Samedi', sunday: 'Dimanche',
+};
+const DAY_ORDER = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
+function formatTime(t: string): string {
+  return t.replace(':', 'h');
+}
+
 export function ContactPage() {
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<FormTab>('contact');
@@ -58,6 +70,18 @@ export function ContactPage() {
   // Recruitment form
   const [recruitForm, setRecruitForm] = useState({ name: '', email: '', phone: '', position: '', experience: '', message: '' });
   const [recruitSending, setRecruitSending] = useState(false);
+
+  // Opening hours from settings
+  const [openingHours, setOpeningHours] = useState<OpeningHours | null>(null);
+  const [hideReservation, setHideReservation] = useState(false);
+  const [loadingHours, setLoadingHours] = useState(true);
+
+  useEffect(() => {
+    getPublicSettings().then((s) => {
+      if (s.opening_hours) setOpeningHours(s.opening_hours);
+      setHideReservation(!s.reservations_enabled);
+    }).catch(() => {}).finally(() => setLoadingHours(false));
+  }, []);
 
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,8 +104,8 @@ export function ContactPage() {
 
   return (
     <div className="bg-coffee-950 text-white min-h-screen">
-      <Navbar onReservationClick={() => setIsReservationModalOpen(true)} />
-      <ReservationModal isOpen={isReservationModalOpen} onClose={() => setIsReservationModalOpen(false)} />
+      <Navbar onReservationClick={() => setIsReservationModalOpen(true)} hideReservation={hideReservation} />
+      {!hideReservation && <ReservationModal isOpen={isReservationModalOpen} onClose={() => setIsReservationModalOpen(false)} />}
 
       {/* Hero */}
       <section className="pt-32 pb-16 px-4 text-center">
@@ -181,20 +205,26 @@ export function ContactPage() {
                   Horaires d'ouverture
                 </h3>
                 <div className="space-y-3 font-body text-sm">
-                  {[
-                    { day: 'Lundi', hours: '12h00 – 23h00' },
-                    { day: 'Mardi', hours: '12h00 – 23h00' },
-                    { day: 'Mercredi', hours: '12h00 – 23h00' },
-                    { day: 'Jeudi', hours: '12h00 – 23h00' },
-                    { day: 'Vendredi', hours: '12h00 – 00h00' },
-                    { day: 'Samedi', hours: '12h00 – 00h00' },
-                    { day: 'Dimanche', hours: '12h00 – 23h00' },
-                  ].map(({ day, hours }) => (
-                    <div key={day} className="flex items-center justify-between">
-                      <span className="text-cream-400/70">{day}</span>
-                      <span className="text-cream-200">{hours}</span>
+                  {loadingHours ? (
+                    <div className="flex justify-center py-6">
+                      <svg className="animate-spin w-5 h-5 text-cream-400/50" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                        <path className="opacity-80" d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                      </svg>
                     </div>
-                  ))}
+                  ) : openingHours ? DAY_ORDER.map((key) => {
+                    const dh = openingHours[key];
+                    return (
+                      <div key={key} className="flex items-center justify-between">
+                        <span className="text-cream-400/70">{DAY_LABELS[key]}</span>
+                        <span className="text-cream-200">
+                          {dh?.closed ? 'Fermé' : dh ? `${formatTime(dh.open)} – ${formatTime(dh.close)}` : '—'}
+                        </span>
+                      </div>
+                    );
+                  }) : (
+                    <p className="text-cream-400/50 italic">Horaires non configurés</p>
+                  )}
                 </div>
               </div>
             </ScrollReveal>
@@ -372,7 +402,7 @@ export function ContactPage() {
         </div>
       </section>
 
-      <Footer onReservationClick={() => setIsReservationModalOpen(true)} />
+      <Footer onReservationClick={() => setIsReservationModalOpen(true)} hideReservation={hideReservation} />
     </div>
   );
 }

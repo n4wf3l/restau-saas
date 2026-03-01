@@ -17,9 +17,10 @@ import {
 interface FloorPlanEditorProps {
   floorPlan: FloorPlan;
   onUpdate: () => void;
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
-type ToolType = 'table' | 'chair' | 'wall' | 'empty' | 'eraser';
+type ToolType = 'table' | 'chair' | 'wall';
 
 const CELL_SIZE = 40;
 
@@ -27,17 +28,17 @@ const ITEM_CONFIG: Record<ToolType, { color: string; emoji: string; label: strin
   table: { color: 'bg-amber-700/85 dark:bg-amber-600/75', emoji: '🍽️', label: 'Table', key: '1' },
   chair: { color: 'bg-slate-400/85 dark:bg-slate-400/65', emoji: '🪑', label: 'Chaise', key: '2' },
   wall: { color: 'bg-stone-700 dark:bg-stone-500', emoji: '🧱', label: 'Mur', key: '3' },
-  empty: { color: 'bg-white dark:bg-gray-800', emoji: '', label: 'Vide', key: '4' },
-  eraser: { color: 'bg-rose-400/80 dark:bg-rose-500/60', emoji: '❌', label: 'Gomme', key: 'E' },
 };
 
-export function FloorPlanEditor({ floorPlan, onUpdate }: FloorPlanEditorProps) {
+export function FloorPlanEditor({ floorPlan, onUpdate, onDirtyChange }: FloorPlanEditorProps) {
   const { theme } = useTheme();
   const [items, setItems] = useState<FloorPlanItem[]>(floorPlan.items || []);
   const [selectedTool, setSelectedTool] = useState<ToolType>('table');
   const [rotation, setRotation] = useState<0 | 90 | 180 | 270>(0);
   const [saving, setSaving] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [movingItem, setMovingItem] = useState<FloorPlanItem | null>(null);
+  const [moveOrigin, setMoveOrigin] = useState<{ x: number; y: number } | null>(null);
   const [hoveredCell, setHoveredCell] = useState<{ x: number; y: number } | null>(null);
   const [zoom, setZoom] = useState(1);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -54,14 +55,20 @@ export function FloorPlanEditor({ floorPlan, onUpdate }: FloorPlanEditorProps) {
   const [newWidth, setNewWidth] = useState(floorPlan.width);
   const [newHeight, setNewHeight] = useState(floorPlan.height);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showTableDeleteConfirm, setShowTableDeleteConfirm] = useState<{ x: number; y: number; reservationCount: number } | null>(null);
+  const [floorDropdownOpen, setFloorDropdownOpen] = useState(false);
+  const floorDropdownRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   // Initialize items and floor registry from DB (floorPlan.floors)
   useEffect(() => {
-    const normalizedItems = (floorPlan.items || []).map(item => ({
-      ...item,
-      rotation: typeof item.rotation === 'number' ? item.rotation : 0
-    }));
+    const validTypes = new Set<string>(['table', 'chair', 'wall']);
+    const normalizedItems = (floorPlan.items || [])
+      .filter(item => validTypes.has(item.type))
+      .map(item => ({
+        ...item,
+        rotation: typeof item.rotation === 'number' ? item.rotation : 0
+      }));
     setItems(normalizedItems);
     setNewWidth(floorPlan.width);
     setNewHeight(floorPlan.height);
@@ -103,8 +110,6 @@ export function FloorPlanEditor({ floorPlan, onUpdate }: FloorPlanEditorProps) {
       if (e.key === '1') setSelectedTool('table');
       if (e.key === '2') setSelectedTool('chair');
       if (e.key === '3') setSelectedTool('wall');
-      if (e.key === '4') setSelectedTool('empty');
-      if (e.key === 'e' || e.key === 'E') setSelectedTool('eraser');
       if (e.key === 'r' || e.key === 'R') {
         setRotation((prev) => ((prev + 90) % 360) as 0 | 90 | 180 | 270);
       }
@@ -115,6 +120,17 @@ export function FloorPlanEditor({ floorPlan, onUpdate }: FloorPlanEditorProps) {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Close floor dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (floorDropdownRef.current && !floorDropdownRef.current.contains(e.target as Node)) {
+        setFloorDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   // Mouse wheel zoom (Ctrl+Scroll)
@@ -194,60 +210,102 @@ export function FloorPlanEditor({ floorPlan, onUpdate }: FloorPlanEditorProps) {
       }
     }
 
-    if (selectedTool === 'eraser') {
-      setItems((prev) => prev.filter((item) => !(item.x === x && item.y === y && (item.floor_level || 1) === currentFloor)));
-    } else {
-      if (existingItem) {
-        if (existingItem.type === selectedTool) {
-          setItems((prev) =>
-            prev.map((item) =>
-              item.x === x && item.y === y && (item.floor_level || 1) === currentFloor
-                ? { ...item, rotation }
-                : item
-            )
-          );
-        } else {
-          setItems((prev) =>
-            prev.map((item) =>
-              item.x === x && item.y === y && (item.floor_level || 1) === currentFloor
-                ? { ...item, type: selectedTool, rotation }
-                : item
-            )
-          );
+    if (existingItem) {
+      if (existingItem.type === selectedTool) {
+        // Same type → toggle: remove the item
+        // If it's a table with reservation history, show confirmation
+        if (existingItem.type === 'table') {
+          const tableData = publicTables.find(t => t.x === x && t.y === y);
+          if (tableData && tableData.reservation_history_count > 0) {
+            setShowTableDeleteConfirm({ x, y, reservationCount: tableData.reservation_history_count });
+            return;
+          }
         }
+        setItems((prev) => prev.filter((item) => !(item.x === x && item.y === y && (item.floor_level || 1) === currentFloor)));
       } else {
-        const newItem: FloorPlanItem = {
-          id: Date.now(),
-          floor_plan_id: floorPlan.id,
-          type: selectedTool,
-          x,
-          y,
-          rotation,
-          meta: null,
-          floor_level: currentFloor,
-          floor_name: getFloorName(currentFloor),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-        setItems((prev) => [...prev, newItem]);
+        // Different type → replace
+        setItems((prev) =>
+          prev.map((item) =>
+            item.x === x && item.y === y && (item.floor_level || 1) === currentFloor
+              ? { ...item, type: selectedTool, rotation }
+              : item
+          )
+        );
+      }
+    } else {
+      // Empty cell → place new item
+      const newItem: FloorPlanItem = {
+        id: Date.now(),
+        floor_plan_id: floorPlan.id,
+        type: selectedTool,
+        x,
+        y,
+        rotation,
+        meta: null,
+        floor_level: currentFloor,
+        floor_name: getFloorName(currentFloor),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      setItems((prev) => [...prev, newItem]);
+    }
+    setLastSaved(null); onDirtyChange?.(true);
+  };
+
+  const handleCellMouseDown = (x: number, y: number) => {
+    const existingItem = getItemAt(x, y);
+    if (existingItem) {
+      // Start move mode — grab existing item regardless of selected tool
+      setMovingItem(existingItem);
+      setMoveOrigin({ x, y });
+    } else {
+      // Start paint mode — drag to paint selected tool
+      setIsDragging(true);
+    }
+  };
+
+  const handleGridMouseUp = () => {
+    if (movingItem && moveOrigin && hoveredCell) {
+      const didMove = hoveredCell.x !== moveOrigin.x || hoveredCell.y !== moveOrigin.y;
+      if (didMove) {
+        const destItem = getItemAt(hoveredCell.x, hoveredCell.y);
+        setItems(prev => prev.map(item => {
+          const isOnCurrentFloor = (item.floor_level || 1) === currentFloor;
+          // Move the dragged item to destination
+          if (isOnCurrentFloor && item.x === moveOrigin.x && item.y === moveOrigin.y) {
+            return { ...item, x: hoveredCell.x, y: hoveredCell.y };
+          }
+          // Swap: move destination item to origin
+          if (destItem && isOnCurrentFloor && item.x === hoveredCell.x && item.y === hoveredCell.y) {
+            return { ...item, x: moveOrigin.x, y: moveOrigin.y };
+          }
+          return item;
+        }));
+        setLastSaved(null); onDirtyChange?.(true);
       }
     }
-    setLastSaved(null);
+    setMovingItem(null);
+    setMoveOrigin(null);
+    setIsDragging(false);
   };
 
   const handleCellMouseEnter = (x: number, y: number, mouseEvent: React.MouseEvent) => {
     setHoveredCell({ x, y });
-    const item = getItemAt(x, y);
-    if (item && item.type === 'table') {
-      const tableData = publicTables.find(t => t.x === x && t.y === y);
-      const seats = tableData ? tableData.total_seats : getAdjacentChairs(x, y);
-      const tableName = item.table_name || `Table (${x},${y})`;
-      const isAvailable = tableData ? tableData.is_available : true;
-      setTooltip({ x: mouseEvent.clientX, y: mouseEvent.clientY, tableName, seats, available: isAvailable });
+    if (!movingItem) {
+      const item = getItemAt(x, y);
+      if (item && item.type === 'table') {
+        const tableData = publicTables.find(t => t.x === x && t.y === y);
+        const seats = tableData ? tableData.total_seats : getAdjacentChairs(x, y);
+        const tableName = item.table_name || `Table (${x},${y})`;
+        const isAvailable = tableData ? tableData.is_available : true;
+        setTooltip({ x: mouseEvent.clientX, y: mouseEvent.clientY, tableName, seats, available: isAvailable });
+      } else {
+        setTooltip(null);
+      }
     } else {
       setTooltip(null);
     }
-    if (isDragging) handleCellClick(x, y);
+    if (isDragging && !movingItem) handleCellClick(x, y);
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -256,6 +314,8 @@ export function FloorPlanEditor({ floorPlan, onUpdate }: FloorPlanEditorProps) {
 
   const handleMouseLeave = () => {
     setIsDragging(false);
+    setMovingItem(null);
+    setMoveOrigin(null);
     setHoveredCell(null);
     setTooltip(null);
   };
@@ -285,6 +345,7 @@ export function FloorPlanEditor({ floorPlan, onUpdate }: FloorPlanEditorProps) {
 
       toast.success('Sauvegardé !');
       setLastSaved(new Date());
+      onDirtyChange?.(false);
       await loadPublicTables();
       onUpdate();
     } catch (error: any) {
@@ -309,7 +370,7 @@ export function FloorPlanEditor({ floorPlan, onUpdate }: FloorPlanEditorProps) {
       });
       setCurrentFloor(1);
     }
-    setLastSaved(null);
+    setLastSaved(null); onDirtyChange?.(true);
     setShowDeleteConfirm(false);
     toast.success('Etage effacé !');
   };
@@ -352,7 +413,7 @@ export function FloorPlanEditor({ floorPlan, onUpdate }: FloorPlanEditorProps) {
     setNewFloorName(defaultName);
     setCurrentFloor(newLevel);
     setShowFloorNameModal(true);
-    setLastSaved(null);
+    setLastSaved(null); onDirtyChange?.(true);
   };
 
   const renameFloor = () => {
@@ -367,7 +428,7 @@ export function FloorPlanEditor({ floorPlan, onUpdate }: FloorPlanEditorProps) {
     );
     setShowFloorNameModal(false);
     setNewFloorName('');
-    setLastSaved(null);
+    setLastSaved(null); onDirtyChange?.(true);
     toast.success("Nom de l'étage enregistré !");
   };
 
@@ -387,13 +448,14 @@ export function FloorPlanEditor({ floorPlan, onUpdate }: FloorPlanEditorProps) {
     setShowTableNameModal(false);
     setNewTableName('');
     setSelectedTablePosition(null);
-    setLastSaved(null);
+    setLastSaved(null); onDirtyChange?.(true);
     toast.success('Nom de la table modifié !');
   };
 
   const renderItemContent = (item: FloorPlanItem | null, isPreview = false) => {
     if (!item) return null;
-    const config = ITEM_CONFIG[item.type];
+    const config = ITEM_CONFIG[item.type as ToolType];
+    if (!config) return null;
     const actualRotation = typeof item.rotation === 'number' ? item.rotation : 0;
     return (
       <div
@@ -420,7 +482,7 @@ export function FloorPlanEditor({ floorPlan, onUpdate }: FloorPlanEditorProps) {
       }
       return 'bg-amber-700/85 dark:bg-amber-600/75';
     }
-    return ITEM_CONFIG[item.type].color;
+    return ITEM_CONFIG[item.type as ToolType]?.color || 'bg-gray-300';
   };
 
   const floorLevels = getFloorLevels();
@@ -438,17 +500,6 @@ export function FloorPlanEditor({ floorPlan, onUpdate }: FloorPlanEditorProps) {
           <h1 className="text-lg font-semibold text-gray-800 dark:text-cream-100">Plan de salle</h1>
         </div>
         <div className="flex items-center gap-4">
-          {lastSaved ? (
-            <span className="text-sm text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1.5">
-              <CheckCircleIcon className="w-4 h-4" />
-              Sauvegardé
-            </span>
-          ) : items.length > 0 ? (
-            <span className="text-sm text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5">
-              <ExclamationTriangleIcon className="w-4 h-4" />
-              Non sauvegardé
-            </span>
-          ) : null}
           <button
             onClick={handleSave}
             disabled={saving}
@@ -466,7 +517,7 @@ export function FloorPlanEditor({ floorPlan, onUpdate }: FloorPlanEditorProps) {
           <div className="text-[10px] font-semibold text-gray-400 dark:text-gray-600 uppercase tracking-wider mb-1">
             Outils
           </div>
-          {(['table', 'chair', 'wall', 'empty', 'eraser'] as ToolType[]).map((tool) => {
+          {(['table', 'chair', 'wall'] as ToolType[]).map((tool) => {
             const config = ITEM_CONFIG[tool];
             const isSelected = selectedTool === tool;
             return (
@@ -495,25 +546,40 @@ export function FloorPlanEditor({ floorPlan, onUpdate }: FloorPlanEditorProps) {
           {/* Secondary toolbar */}
           <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-5 py-2.5 flex items-center justify-between gap-4 flex-shrink-0">
             <div className="flex items-center gap-2">
-              <div className="relative">
-                <select
-                  value={currentFloor}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (value === 'add_new') {
-                      addNewFloor();
-                    } else {
-                      setCurrentFloor(Number(value));
-                    }
-                  }}
-                  className="pl-3 pr-8 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-coffee-500/50 focus:border-coffee-500 font-medium appearance-none cursor-pointer"
+              <div className="relative" ref={floorDropdownRef}>
+                <button
+                  onClick={() => setFloorDropdownOpen(!floorDropdownOpen)}
+                  className="flex items-center gap-2 pl-3 pr-2.5 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-coffee-500/50 focus:border-coffee-500 font-medium cursor-pointer transition-colors"
                 >
-                  {floorLevels.map((level) => (
-                    <option key={level} value={level}>{getFloorName(level)}</option>
-                  ))}
-                  <option value="add_new">+ Ajouter un étage</option>
-                </select>
-                <ChevronDownIcon className="w-3.5 h-3.5 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <BuildingOfficeIcon className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                  <span>{getFloorName(currentFloor)}</span>
+                  <ChevronDownIcon className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${floorDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {floorDropdownOpen && (
+                  <div className="absolute top-full left-0 mt-1 min-w-[180px] bg-white dark:bg-[#1c1a17] border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg dark:shadow-2xl py-1 z-50 animate-dropdown-reveal">
+                    {floorLevels.map((level) => (
+                      <button
+                        key={level}
+                        onClick={() => { setCurrentFloor(level); setFloorDropdownOpen(false); }}
+                        className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center gap-2 ${
+                          level === currentFloor
+                            ? 'bg-coffee-50 dark:bg-coffee-900/20 text-coffee-700 dark:text-cream-300 font-medium'
+                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                        }`}
+                      >
+                        {level === currentFloor && <span className="w-1.5 h-1.5 rounded-full bg-coffee-500 flex-shrink-0" />}
+                        <span className={level === currentFloor ? '' : 'ml-[14px]'}>{getFloorName(level)}</span>
+                      </button>
+                    ))}
+                    <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
+                    <button
+                      onClick={() => { addNewFloor(); setFloorDropdownOpen(false); }}
+                      className="w-full text-left px-3 py-2 text-sm text-coffee-600 dark:text-cream-400 hover:bg-coffee-50 dark:hover:bg-coffee-900/20 transition-colors font-medium flex items-center gap-2"
+                    >
+                      <span className="ml-[14px]">+ Ajouter un étage</span>
+                    </button>
+                  </div>
+                )}
               </div>
               <button
                 onClick={() => { setNewFloorName(getFloorName(currentFloor)); setShowFloorNameModal(true); }}
@@ -570,8 +636,7 @@ export function FloorPlanEditor({ floorPlan, onUpdate }: FloorPlanEditorProps) {
                 boxShadow: isDark ? '0 4px 30px rgba(0,0,0,0.4)' : '0 4px 30px rgba(0,0,0,0.08)',
                 borderRadius: '4px',
               }}
-              onMouseDown={() => setIsDragging(true)}
-              onMouseUp={() => setIsDragging(false)}
+              onMouseUp={handleGridMouseUp}
               onMouseMove={handleMouseMove}
               onMouseLeave={handleMouseLeave}
             >
@@ -579,26 +644,37 @@ export function FloorPlanEditor({ floorPlan, onUpdate }: FloorPlanEditorProps) {
                 Array.from({ length: floorPlan.width }).map((_, x) => {
                   const item = getItemAt(x, y);
                   const isHovered = hoveredCell?.x === x && hoveredCell?.y === y;
-                  const showPreview = isHovered && selectedTool !== 'eraser' && !item;
+                  const isMovingFrom = !!(movingItem && moveOrigin?.x === x && moveOrigin?.y === y);
+                  const showMovePreview = !!(movingItem && isHovered && !(moveOrigin?.x === x && moveOrigin?.y === y));
+                  const showPreview = isHovered && !item && !movingItem;
                   return (
                     <div
                       key={`${x}-${y}`}
+                      onMouseDown={() => handleCellMouseDown(x, y)}
                       onClick={() => handleCellClick(x, y, false)}
                       onContextMenu={(e) => { e.preventDefault(); handleCellClick(x, y, true); }}
                       onMouseEnter={(e) => handleCellMouseEnter(x, y, e)}
-                      className={`relative cursor-pointer flex items-center justify-center transition-colors ${
+                      className={`relative flex items-center justify-center transition-colors ${
                         item
                           ? getItemColor(item)
                           : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750'
                       } ${isHovered ? 'ring-2 ring-coffee-400/60 ring-inset' : ''}`}
-                      style={{ width: CELL_SIZE * zoom, height: CELL_SIZE * zoom }}
+                      style={{
+                        width: CELL_SIZE * zoom,
+                        height: CELL_SIZE * zoom,
+                        cursor: movingItem ? 'grabbing' : item ? 'grab' : 'pointer',
+                      }}
                     >
-                      {item && renderItemContent(item)}
+                      {item && renderItemContent(item, isMovingFrom)}
                       {showPreview && renderItemContent({
                         id: 0, floor_plan_id: floorPlan.id, type: selectedTool, x, y, rotation,
                         meta: null, floor_level: currentFloor, floor_name: getFloorName(currentFloor),
                         created_at: '', updated_at: '',
                       } as FloorPlanItem, true)}
+                      {showMovePreview && renderItemContent({
+                        ...movingItem!,
+                        x, y,
+                      }, true)}
                     </div>
                   );
                 })
@@ -628,7 +704,7 @@ export function FloorPlanEditor({ floorPlan, onUpdate }: FloorPlanEditorProps) {
               </div>
             </div>
             <div className="text-gray-400 dark:text-gray-500 hidden md:block">
-              <strong>1-4</strong> Outils &middot; <strong>E</strong> Gomme &middot; <strong>R</strong> Tourner &middot; <strong>Ctrl+Scroll</strong> Zoom &middot; <strong>Ctrl+S</strong> Sauvegarder
+              <strong>1-3</strong> Outils &middot; <strong>R</strong> Tourner &middot; <strong>Ctrl+Scroll</strong> Zoom &middot; <strong>Ctrl+S</strong> Sauvegarder
             </div>
           </div>
         </div>
@@ -649,8 +725,8 @@ export function FloorPlanEditor({ floorPlan, onUpdate }: FloorPlanEditorProps) {
 
         {/* Floor Name Modal */}
         {showFloorNameModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-96 border border-gray-200 dark:border-gray-700">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-overlay-fade-in">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-96 border border-gray-200 dark:border-gray-700 animate-modal-slide-in">
               <h3 className="text-lg font-semibold text-gray-800 dark:text-cream-100 flex items-center gap-2 mb-1">
                 <BuildingOfficeIcon className="w-5 h-5 text-coffee-500" />
                 Nommer l'étage
@@ -689,8 +765,8 @@ export function FloorPlanEditor({ floorPlan, onUpdate }: FloorPlanEditorProps) {
 
         {/* Table Name Modal */}
         {showTableNameModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-96 border border-gray-200 dark:border-gray-700">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-overlay-fade-in">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-96 border border-gray-200 dark:border-gray-700 animate-modal-slide-in">
               <h3 className="text-lg font-semibold text-gray-800 dark:text-cream-100 mb-4">Nommer la table</h3>
               <input
                 type="text"
@@ -724,8 +800,8 @@ export function FloorPlanEditor({ floorPlan, onUpdate }: FloorPlanEditorProps) {
 
         {/* Resize Modal */}
         {showResizeModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-96 border border-gray-200 dark:border-gray-700">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-overlay-fade-in">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-96 border border-gray-200 dark:border-gray-700 animate-modal-slide-in">
               <h3 className="text-lg font-semibold text-gray-800 dark:text-cream-100 mb-1">Redimensionner le plan</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Dimensions entre 5 et 100m</p>
               <div className="space-y-3">
@@ -760,8 +836,8 @@ export function FloorPlanEditor({ floorPlan, onUpdate }: FloorPlanEditorProps) {
 
         {/* Delete Confirm Modal */}
         {showDeleteConfirm && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-96 border border-gray-200 dark:border-gray-700">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-overlay-fade-in">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-96 border border-gray-200 dark:border-gray-700 animate-modal-slide-in">
               <h3 className="text-lg font-semibold text-gray-800 dark:text-cream-100 flex items-center gap-2 mb-2">
                 <ExclamationTriangleIcon className="w-5 h-5 text-red-500" />
                 Confirmer la suppression
@@ -778,6 +854,49 @@ export function FloorPlanEditor({ floorPlan, onUpdate }: FloorPlanEditorProps) {
                   className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium flex items-center gap-1.5 transition-colors">
                   <TrashIcon className="w-4 h-4" />
                   Effacer
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Table Delete Confirm Modal (has reservations) */}
+        {showTableDeleteConfirm && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-overlay-fade-in">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-[420px] border border-gray-200 dark:border-gray-700 animate-modal-slide-in">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <ExclamationTriangleIcon className="w-5 h-5 text-amber-500" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-cream-100">
+                    Table avec historique
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    Cette table a <strong className="text-gray-700 dark:text-cream-200">{showTableDeleteConfirm.reservationCount} réservation{showTableDeleteConfirm.reservationCount > 1 ? 's' : ''}</strong> associée{showTableDeleteConfirm.reservationCount > 1 ? 's' : ''} qui seront également impactées.
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                    Il est préférable de <strong className="text-gray-700 dark:text-cream-200">déplacer</strong> la table plutôt que de la supprimer.
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2 mt-5">
+                <button
+                  onClick={() => setShowTableDeleteConfirm(null)}
+                  className="w-full py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-semibold text-sm hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
+                >
+                  Annuler et déplacer la table
+                </button>
+                <button
+                  onClick={() => {
+                    const { x, y } = showTableDeleteConfirm;
+                    setItems((prev) => prev.filter((item) => !(item.x === x && item.y === y && (item.floor_level || 1) === currentFloor)));
+                    setShowTableDeleteConfirm(null);
+                    setLastSaved(null);
+                    onDirtyChange?.(true);
+                  }}
+                  className="w-full py-2.5 text-red-500 dark:text-red-400 rounded-xl font-medium text-sm hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
+                >
+                  Supprimer définitivement
                 </button>
               </div>
             </div>

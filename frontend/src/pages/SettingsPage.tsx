@@ -1,9 +1,10 @@
 import { useEffect, useState, useCallback } from "react";
 import { getSettings, updateSettings } from "../lib/api";
-import type { RestaurantSettings } from "../lib/types";
+import type { RestaurantSettings, OpeningHours, DayHours, ClosureDate } from "../lib/types";
 import toast from "react-hot-toast";
 import {
   CalendarIcon,
+  CalendarDaysIcon,
   ClockIcon,
   UserGroupIcon,
   ShieldCheckIcon,
@@ -11,8 +12,22 @@ import {
   ExclamationTriangleIcon,
   TableCellsIcon,
   NoSymbolIcon,
+  PlusIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { Spinner } from "../components/ui/Spinner";
+
+const DAYS: { key: string; label: string }[] = [
+  { key: "monday", label: "Lundi" },
+  { key: "tuesday", label: "Mardi" },
+  { key: "wednesday", label: "Mercredi" },
+  { key: "thursday", label: "Jeudi" },
+  { key: "friday", label: "Vendredi" },
+  { key: "saturday", label: "Samedi" },
+  { key: "sunday", label: "Dimanche" },
+];
+
+const DEFAULT_HOURS: DayHours = { open: "11:00", close: "23:00", closed: false };
 
 // ─── Toggle Switch ───
 function ToggleSwitch({
@@ -193,24 +208,75 @@ export function SettingsPage() {
 
   const handleUpdate = async (
     field: keyof RestaurantSettings,
-    value: number | boolean
+    value: number | boolean | OpeningHours | ClosureDate[] | null
   ) => {
     if (!settings) return;
 
     const prev = settings;
-    setSettings({ ...settings, [field]: value });
+    setSettings({ ...settings, [field]: value } as RestaurantSettings);
 
     setSaving(true);
     try {
       const updated = await updateSettings({ [field]: value } as any);
       setSettings(updated);
       toast.success("Paramètre mis à jour");
-    } catch {
+    } catch (err) {
+      console.error("Settings save failed:", err);
       setSettings(prev);
       toast.error("Erreur lors de la sauvegarde");
     } finally {
       setSaving(false);
     }
+  };
+
+  // Opening hours helpers — always return a deep copy to avoid mutating React state
+  const getHours = (): OpeningHours => {
+    const src = settings?.opening_hours;
+    const h: OpeningHours = {};
+    for (const d of DAYS) {
+      const dh = src?.[d.key];
+      h[d.key] = dh ? { open: dh.open, close: dh.close, closed: dh.closed } : { ...DEFAULT_HOURS };
+    }
+    return h;
+  };
+
+  const updateDay = (dayKey: string, field: keyof DayHours, value: string | boolean) => {
+    const hours = getHours(); // already a fresh copy
+    hours[dayKey] = { ...hours[dayKey], [field]: value };
+    handleUpdate("opening_hours", hours);
+  };
+
+  const hasOpeningHours = !!settings?.opening_hours;
+
+  const enableOpeningHours = (enable: boolean) => {
+    if (enable) {
+      const h: OpeningHours = {};
+      for (const d of DAYS) h[d.key] = { ...DEFAULT_HOURS };
+      handleUpdate("opening_hours", h);
+    } else {
+      handleUpdate("opening_hours", null);
+    }
+  };
+
+  // Closure dates helpers
+  const [newClosureDate, setNewClosureDate] = useState("");
+  const [newClosureReason, setNewClosureReason] = useState("");
+
+  const closureDates: ClosureDate[] = settings?.closure_dates || [];
+
+  const addClosureDate = () => {
+    if (!newClosureDate) { toast.error("Sélectionnez une date"); return; }
+    if (closureDates.some((c) => c.date === newClosureDate)) { toast.error("Cette date est déjà bloquée"); return; }
+    const updated = [...closureDates, { date: newClosureDate, reason: newClosureReason }]
+      .sort((a, b) => a.date.localeCompare(b.date));
+    handleUpdate("closure_dates", updated);
+    setNewClosureDate("");
+    setNewClosureReason("");
+  };
+
+  const removeClosureDate = (date: string) => {
+    const updated = closureDates.filter((c) => c.date !== date);
+    handleUpdate("closure_dates", updated.length > 0 ? updated : null);
   };
 
   return (
@@ -244,10 +310,8 @@ export function SettingsPage() {
                 icon={NoSymbolIcon}
                 label="Activer les réservations"
                 description="Lorsque désactivé, toute l'interface de réservation est masquée sur le site public (boutons, formulaire, page de réservation)."
-                tag="bientôt"
-                enabled={true}
-                onChange={() => {}}
-                disabled
+                enabled={settings.reservations_enabled}
+                onChange={(v) => handleUpdate("reservations_enabled", v)}
               />
               <ToggleRow
                 icon={ShieldCheckIcon}
@@ -264,6 +328,137 @@ export function SettingsPage() {
                 enabled={settings.send_confirmation_email}
                 onChange={(v) => handleUpdate("send_confirmation_email", v)}
               />
+            </SettingsSection>
+
+            {/* ─── Section: Horaires d'ouverture ─── */}
+            <SettingsSection title="Horaires d'ouverture" icon={ClockIcon}>
+              <ToggleRow
+                icon={ClockIcon}
+                label="Définir les horaires"
+                description="Bloquer les réservations en dehors de vos heures d'ouverture. Sans horaires définis, les clients peuvent réserver à toute heure."
+                enabled={hasOpeningHours}
+                onChange={enableOpeningHours}
+              />
+              {hasOpeningHours && (
+                <div className="py-4 space-y-2">
+                  {DAYS.map((day) => {
+                    const dh = getHours()[day.key] || DEFAULT_HOURS;
+                    return (
+                      <div key={day.key} className="flex items-center gap-3">
+                        <span className="w-20 text-sm font-medium text-gray-700 dark:text-gray-300 flex-shrink-0">
+                          {day.label}
+                        </span>
+                        <ToggleSwitch
+                          enabled={!dh.closed}
+                          onChange={(open) => updateDay(day.key, "closed", !open)}
+                        />
+                        {dh.closed ? (
+                          <span className="text-xs text-gray-400 dark:text-gray-500 italic ml-1">Fermé</span>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="time"
+                              value={dh.open}
+                              onChange={(e) => updateDay(day.key, "open", e.target.value)}
+                              className="px-2.5 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:border-cream-500 tabular-nums"
+                            />
+                            <span className="text-xs text-gray-400">—</span>
+                            <input
+                              type="time"
+                              value={dh.close}
+                              onChange={(e) => updateDay(day.key, "close", e.target.value)}
+                              className="px-2.5 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:border-cream-500 tabular-nums"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </SettingsSection>
+
+            {/* ─── Section: Fermetures exceptionnelles ─── */}
+            <SettingsSection title="Fermetures exceptionnelles" icon={CalendarDaysIcon}>
+              <div className="py-4">
+                <div className="flex gap-3 mb-1">
+                  <CalendarDaysIcon className="w-5 h-5 text-cream-600 dark:text-cream-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <div className="text-sm font-semibold text-gray-900 dark:text-cream-50 mb-0.5">Jours de fermeture</div>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
+                      Bloquez des dates spécifiques (jours fériés, vacances, événements privés). Les clients ne pourront pas réserver ces jours-là.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Add closure form */}
+                <div className="flex items-end gap-2 mt-4 ml-8">
+                  <div className="flex-1">
+                    <input
+                      type="date"
+                      value={newClosureDate}
+                      onChange={(e) => setNewClosureDate(e.target.value)}
+                      min={new Date().toISOString().slice(0, 10)}
+                      className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:border-cream-500"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={newClosureReason}
+                      onChange={(e) => setNewClosureReason(e.target.value)}
+                      placeholder="Raison (optionnel)"
+                      className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:border-cream-500"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={addClosureDate}
+                    disabled={!newClosureDate}
+                    className="flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold text-cream-50 bg-coffee-600 rounded-lg hover:bg-coffee-500 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <PlusIcon className="w-4 h-4" />
+                    Ajouter
+                  </button>
+                </div>
+
+                {/* List of closure dates */}
+                {closureDates.length > 0 && (
+                  <div className="mt-4 ml-8 space-y-1.5">
+                    {closureDates.map((c) => {
+                      const d = new Date(c.date + "T00:00:00");
+                      const formatted = d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "long", year: "numeric" });
+                      const isPast = c.date < new Date().toISOString().slice(0, 10);
+                      return (
+                        <div
+                          key={c.date}
+                          className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl border ${
+                            isPast
+                              ? "border-gray-100 dark:border-[#2a2724] bg-gray-50/50 dark:bg-[#141311] opacity-60"
+                              : "border-rose-200/40 dark:border-rose-500/15 bg-rose-50/30 dark:bg-rose-500/[0.04]"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <span className={`text-sm font-medium ${isPast ? "text-gray-400" : "text-gray-700 dark:text-gray-200"}`}>
+                              {formatted}
+                            </span>
+                            {c.reason && (
+                              <span className="text-xs text-gray-400 dark:text-gray-500">— {c.reason}</span>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeClosureDate(c.date)}
+                            className="p-1 text-gray-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors rounded-md hover:bg-rose-50 dark:hover:bg-rose-500/10"
+                          >
+                            <XMarkIcon className="w-4 h-4" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </SettingsSection>
 
             {/* ─── Section: Gestion des tables ─── */}

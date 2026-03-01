@@ -33,6 +33,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Admin Reservation routes
     Route::get('/reservations', [ReservationController::class, 'index']);
+    Route::post('/reservations', [ReservationController::class, 'store']);
     Route::put('/reservations/{reservation}', [ReservationController::class, 'update']);
     Route::delete('/reservations/{reservation}', [ReservationController::class, 'destroy']);
     Route::post('/reservations/{id}/restore', [ReservationController::class, 'restore']);
@@ -40,6 +41,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Settings routes
     Route::get('/settings', [SettingsController::class, 'show']);
     Route::put('/settings', [SettingsController::class, 'update']);
+    Route::post('/settings/menu-pdf', [SettingsController::class, 'uploadMenuPdf']);
+    Route::delete('/settings/menu-pdf', [SettingsController::class, 'deleteMenuPdf']);
 
     // Menu Items routes
     Route::get('/menu-items', [MenuItemController::class, 'index']);

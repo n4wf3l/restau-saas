@@ -3,6 +3,7 @@ import { Navbar } from '../components/public/Navbar';
 import { ReservationModal } from '../components/public/ReservationModal';
 import { Footer } from '../components/public/Footer';
 import { CTAButton } from '../components/public/CTAButton';
+import { getPublicSettings } from '../lib/api';
 
 // ─── Scroll Reveal ───
 function ScrollReveal({
@@ -47,6 +48,23 @@ const heroImages = ['/rr-ice2.png', '/rr-ice3.png', '/rr-ice4.png'];
 export function Home() {
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [hideReservation, setHideReservation] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    getPublicSettings().then((s) => {
+      setHideReservation(!s.reservations_enabled);
+    }).catch(() => {});
+  }, []);
+
+  // Show scroll-to-top button after scrolling past the hero
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > window.innerHeight * 0.8);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Auto-slider pour les images de fond
   useEffect(() => {
@@ -59,8 +77,8 @@ export function Home() {
 
   return (
     <div className="bg-black text-white min-h-screen">
-      <Navbar onReservationClick={() => setIsReservationModalOpen(true)} />
-      <ReservationModal isOpen={isReservationModalOpen} onClose={() => setIsReservationModalOpen(false)} />
+      <Navbar onReservationClick={() => setIsReservationModalOpen(true)} hideReservation={hideReservation} />
+      {!hideReservation && <ReservationModal isOpen={isReservationModalOpen} onClose={() => setIsReservationModalOpen(false)} />}
 
       {/* Hero Section */}
       <section
@@ -184,6 +202,7 @@ export function Home() {
           backgroundImage: 'linear-gradient(135deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.8) 100%), url("/rr-ice21.png")',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
+          backgroundAttachment: 'fixed',
         }}
       >
         <div className="max-w-6xl mx-auto">
@@ -222,46 +241,48 @@ export function Home() {
       </section>
 
       {/* Reservation CTA Section - Split layout */}
-      <section id="reservation">
-        <div className="grid grid-cols-1 md:grid-cols-2 min-h-[550px]">
-          {/* Left - Image */}
-          <ScrollReveal>
-            <div className="relative overflow-hidden h-56 md:h-[550px]">
-              <img
-                src="/rr-ice18.png"
-                alt="Ambiance du restaurant"
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-            </div>
-          </ScrollReveal>
+      {!hideReservation && (
+        <section id="reservation">
+          <div className="grid grid-cols-1 md:grid-cols-2 min-h-[550px]">
+            {/* Left - Image */}
+            <ScrollReveal>
+              <div className="relative overflow-hidden h-56 md:h-[550px]">
+                <img
+                  src="/rr-ice18.png"
+                  alt="Ambiance du restaurant"
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              </div>
+            </ScrollReveal>
 
-          {/* Right - Content */}
-          <div className="flex items-center justify-center px-8 md:px-16 py-16 md:py-24 bg-[#0d1b2a]">
-            <div className="max-w-md text-center">
-              <ScrollReveal delay={100}>
-                <p className="text-cream-500 text-xs tracking-[0.35em] uppercase mb-4 font-body">
-                  Réservation
-                </p>
-              </ScrollReveal>
-              <ScrollReveal delay={200}>
-                <h2 className="text-3xl md:text-5xl font-display font-bold text-cream-100 mb-6 tracking-wide leading-tight">
-                  Réservez Votre Table
-                </h2>
-              </ScrollReveal>
-              <ScrollReveal delay={300}>
-                <p className="text-cream-400/70 font-body text-sm md:text-base leading-relaxed mb-10">
-                  Choisissez la table exacte qui vous convient grâce à notre plan de
-                  salle interactif. Sélectionnez votre créneau, votre emplacement
-                  préféré et vivez une expérience sur mesure dès votre arrivée.
-                </p>
-              </ScrollReveal>
-              <ScrollReveal delay={400}>
-                <CTAButton onClick={() => setIsReservationModalOpen(true)}>Réserver maintenant</CTAButton>
-              </ScrollReveal>
+            {/* Right - Content */}
+            <div className="flex items-center justify-center px-8 md:px-16 py-16 md:py-24 bg-[#0d1b2a]">
+              <div className="max-w-md text-center">
+                <ScrollReveal delay={100}>
+                  <p className="text-cream-500 text-xs tracking-[0.35em] uppercase mb-4 font-body">
+                    Réservation
+                  </p>
+                </ScrollReveal>
+                <ScrollReveal delay={200}>
+                  <h2 className="text-3xl md:text-5xl font-display font-bold text-cream-100 mb-6 tracking-wide leading-tight">
+                    Réservez Votre Table
+                  </h2>
+                </ScrollReveal>
+                <ScrollReveal delay={300}>
+                  <p className="text-cream-400/70 font-body text-sm md:text-base leading-relaxed mb-10">
+                    Choisissez la table exacte qui vous convient grâce à notre plan de
+                    salle interactif. Sélectionnez votre créneau, votre emplacement
+                    préféré et vivez une expérience sur mesure dès votre arrivée.
+                  </p>
+                </ScrollReveal>
+                <ScrollReveal delay={400}>
+                  <CTAButton onClick={() => setIsReservationModalOpen(true)}>Réserver maintenant</CTAButton>
+                </ScrollReveal>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Video Ambiance Section */}
       <section className="relative h-[250px] md:h-[500px] overflow-hidden">
@@ -278,16 +299,31 @@ export function Home() {
       </section>
 
       {/* Sticky Mobile CTA — always accessible */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 p-3 bg-gradient-to-t from-black via-black/95 to-transparent">
-        <button
-          onClick={() => setIsReservationModalOpen(true)}
-          className="w-full py-4 bg-cream-500 text-coffee-950 font-body font-bold text-sm tracking-[0.15em] uppercase active:bg-cream-600 transition-colors"
-        >
-          Réserver une table
-        </button>
-      </div>
+      {!hideReservation && (
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 p-3 bg-gradient-to-t from-black via-black/95 to-transparent">
+          <button
+            onClick={() => setIsReservationModalOpen(true)}
+            className="w-full py-4 bg-cream-500 text-coffee-950 font-body font-bold text-sm tracking-[0.15em] uppercase active:bg-cream-600 transition-colors"
+          >
+            Réserver une table
+          </button>
+        </div>
+      )}
 
-      <Footer onReservationClick={() => setIsReservationModalOpen(true)} />
+      {/* Scroll to top */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        aria-label="Retour en haut"
+        className={`fixed bottom-20 md:bottom-8 right-5 z-40 w-11 h-11 rounded-full border border-cream-400/30 bg-coffee-950/80 backdrop-blur-md flex items-center justify-center text-cream-400/70 hover:text-cream-200 hover:border-cream-400/60 hover:bg-coffee-950 active:scale-90 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+        }`}
+      >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+        </svg>
+      </button>
+
+      <Footer onReservationClick={() => setIsReservationModalOpen(true)} hideReservation={hideReservation} />
     </div>
   );
 }

@@ -13,18 +13,21 @@ class UserObserver
      */
     public function created(User $user): void
     {
-        // Créer un floor plan par défaut lors de l'inscription
-        RestaurantFloorPlan::create([
-            'user_id' => $user->id,
-            'name' => 'Mon Restaurant',
-            'width' => 40,
-            'height' => 30,
-        ]);
+        // Only create shared records if none exist yet (first user bootstraps the restaurant)
+        if (!RestaurantFloorPlan::exists()) {
+            RestaurantFloorPlan::create([
+                'user_id' => $user->id,
+                'name' => 'Mon Restaurant',
+                'width' => 40,
+                'height' => 30,
+            ]);
+        }
 
-        // Create default settings
-        RestaurantSetting::create([
-            'user_id' => $user->id,
-        ]);
+        if (!RestaurantSetting::exists()) {
+            RestaurantSetting::create([
+                'user_id' => $user->id,
+            ]);
+        }
     }
 
     /**

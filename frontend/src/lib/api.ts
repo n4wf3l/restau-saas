@@ -80,9 +80,35 @@ export async function getReservations(includeNoShow = false): Promise<Reservatio
   return response.data;
 }
 
-// Admin API - Update reservation status
+// Admin API - Update reservation (status and/or other fields)
 export async function updateReservationStatus(id: number, status: string): Promise<any> {
   const response = await api.put(`/api/reservations/${id}`, { status });
+  return response.data;
+}
+
+export async function updateReservation(id: number, payload: {
+  customer_name?: string;
+  customer_email?: string;
+  customer_phone?: string | null;
+  arrival_time?: string;
+  party_size?: number;
+  notes?: string | null;
+}): Promise<any> {
+  const response = await api.put(`/api/reservations/${id}`, payload);
+  return response.data;
+}
+
+// Admin API - Create reservation (always confirmed)
+export async function createAdminReservation(payload: {
+  customer_name: string;
+  customer_email: string;
+  customer_phone?: string;
+  arrival_time: string;
+  party_size: number;
+  table_id: number;
+  notes?: string;
+}): Promise<any> {
+  const response = await api.post("/api/reservations", payload);
   return response.data;
 }
 
@@ -155,7 +181,6 @@ export async function getSettings(): Promise<RestaurantSettings> {
 export async function updateSettings(
   payload: Partial<Omit<RestaurantSettings, 'id' | 'user_id' | 'created_at' | 'updated_at'>>
 ): Promise<RestaurantSettings> {
-  await csrf();
   const response = await api.put("/api/settings", payload);
   return response.data;
 }
@@ -166,11 +191,33 @@ export async function restoreReservation(id: number): Promise<any> {
   return response.data;
 }
 
+// === MENU PDF API ===
+
+// Upload menu PDF
+export async function uploadMenuPdf(file: File): Promise<RestaurantSettings> {
+  const fd = new FormData();
+  fd.append('pdf', file);
+  const response = await api.post("/api/settings/menu-pdf", fd, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return response.data;
+}
+
+// Delete menu PDF
+export async function deleteMenuPdf(): Promise<void> {
+  await api.delete("/api/settings/menu-pdf");
+}
+
 // Public settings (no auth required)
 export async function getPublicSettings(): Promise<{
   reservations_enabled: boolean;
   auto_optimize_tables: boolean;
   service_duration_minutes: number;
+  opening_hours: import("./types").OpeningHours | null;
+  closure_dates: import("./types").ClosureDate[] | null;
+  menu_pdf_url: string | null;
+  menu_manual_visible: boolean;
+  menu_pdf_visible: boolean;
 }> {
   const response = await api.get("/api/public/settings");
   return response.data;

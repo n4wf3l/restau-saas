@@ -83,6 +83,18 @@ export default {
           from: { opacity: '0', transform: 'scale(0.85)' },
           to: { opacity: '1', transform: 'scale(1)' },
         },
+        overlayFadeIn: {
+          from: { opacity: '0' },
+          to: { opacity: '1' },
+        },
+        modalSlideIn: {
+          from: { opacity: '0', transform: 'scale(0.95) translateY(10px)' },
+          to: { opacity: '1', transform: 'scale(1) translateY(0)' },
+        },
+        dropdownReveal: {
+          from: { opacity: '0', transform: 'translateY(-4px) scale(0.97)' },
+          to: { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
       },
       animation: {
         'spin': 'spin 1s linear infinite',
@@ -93,6 +105,9 @@ export default {
         'menu-line': 'menuLine 0.6s cubic-bezier(0.16,1,0.3,1) forwards',
         'hero-scale': 'heroScale 1s cubic-bezier(0.16,1,0.3,1) forwards',
         'hero-fade-up': 'heroFadeUp 0.8s cubic-bezier(0.16,1,0.3,1) forwards',
+        'overlay-fade-in': 'overlayFadeIn 0.2s ease-out',
+        'modal-slide-in': 'modalSlideIn 0.25s cubic-bezier(0.16,1,0.3,1)',
+        'dropdown-reveal': 'dropdownReveal 0.15s cubic-bezier(0.16,1,0.3,1)',
       },
     },
   },

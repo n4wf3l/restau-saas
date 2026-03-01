@@ -34,7 +34,7 @@ export interface FloorPlan {
 export interface FloorPlanItem {
   id: number;
   floor_plan_id: number;
-  type: "table" | "chair" | "wall" | "empty";
+  type: "table" | "chair" | "wall";
   x: number;
   y: number;
   rotation: 0 | 90 | 180 | 270;
@@ -78,6 +78,7 @@ export interface PublicTable {
   occupied_seats: number;
   is_available: boolean;
   chair_ids: number[];
+  reservation_history_count: number;
   reservations: Array<{
     id: number;
     arrival_time: string;
@@ -155,6 +156,19 @@ export interface MenuItemPayload {
   order?: number;
 }
 
+export interface DayHours {
+  open: string;
+  close: string;
+  closed: boolean;
+}
+
+export type OpeningHours = Record<string, DayHours>;
+
+export interface ClosureDate {
+  date: string;
+  reason: string;
+}
+
 export interface RestaurantSettings {
   id: number;
   user_id: number;
@@ -165,6 +179,11 @@ export interface RestaurantSettings {
   auto_optimize_tables: boolean;
   auto_confirm: boolean;
   send_confirmation_email: boolean;
+  opening_hours: OpeningHours | null;
+  closure_dates: ClosureDate[] | null;
+  menu_pdf_url: string | null;
+  menu_manual_visible: boolean;
+  menu_pdf_visible: boolean;
   created_at: string;
   updated_at: string;
 }

@@ -20,6 +20,7 @@ import {
   ArrowRightIcon,
   BuildingStorefrontIcon,
   XCircleIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 
 interface NavItem {
@@ -47,6 +48,23 @@ export function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [floorPlan, setFloorPlan] = useState<FloorPlan | null>(null);
   const [showFloorPlanModal, setShowFloorPlanModal] = useState(false);
+  const [floorPlanDirty, setFloorPlanDirty] = useState(false);
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+
+  const handleCloseFloorPlan = () => {
+    if (floorPlanDirty) {
+      setShowUnsavedModal(true);
+      return;
+    }
+    setShowFloorPlanModal(false);
+    setFloorPlanDirty(false);
+  };
+
+  const confirmCloseFloorPlan = () => {
+    setShowUnsavedModal(false);
+    setShowFloorPlanModal(false);
+    setFloorPlanDirty(false);
+  };
 
   useEffect(() => {
     loadFloorPlan();
@@ -239,21 +257,54 @@ export function DashboardLayout() {
 
       {/* ─── Floor Plan Modal ─── */}
       {showFloorPlanModal && floorPlan && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#141311] rounded-2xl w-full h-full max-w-7xl max-h-[90vh] flex flex-col overflow-hidden shadow-premium dark:shadow-dark-premium border border-cream-200/30 dark:border-[#2a2724]">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-overlay-fade-in" onClick={handleCloseFloorPlan}>
+          <div className="bg-white dark:bg-[#141311] rounded-2xl w-full h-full max-w-7xl max-h-[90vh] flex flex-col overflow-hidden shadow-premium dark:shadow-dark-premium border border-cream-200/30 dark:border-[#2a2724] animate-modal-slide-in" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-cream-200/30 dark:border-[#1e1b18] bg-cream-50/50 dark:bg-[#0e0d0c]">
               <h2 className="text-lg font-display font-semibold text-gray-900 dark:text-cream-100">
                 {floorPlan.name}
               </h2>
               <button
-                onClick={() => setShowFloorPlanModal(false)}
+                onClick={handleCloseFloorPlan}
                 className="p-2 rounded-xl text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-cream-100 dark:hover:bg-[#1c1a17] transition-all duration-200"
               >
                 <XCircleIcon className="w-5 h-5" />
               </button>
             </div>
             <div className="flex-1 overflow-hidden">
-              <FloorPlanEditor floorPlan={floorPlan} onUpdate={loadFloorPlan} />
+              <FloorPlanEditor floorPlan={floorPlan} onUpdate={loadFloorPlan} onDirtyChange={setFloorPlanDirty} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Unsaved Changes Modal ─── */}
+      {showUnsavedModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-overlay-fade-in">
+          <div className="bg-white dark:bg-[#1c1a17] rounded-2xl w-full max-w-sm shadow-2xl border border-cream-200/30 dark:border-[#2a2724] overflow-hidden animate-modal-slide-in">
+            <div className="p-6 text-center">
+              <div className="w-12 h-12 rounded-full bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center mx-auto mb-4">
+                <ExclamationTriangleIcon className="w-6 h-6 text-amber-500" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-cream-100 mb-2">
+                Modifications non sauvegardées
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Vos changements seront perdus si vous quittez sans sauvegarder.
+              </p>
+            </div>
+            <div className="px-6 pb-6 flex flex-col gap-2">
+              <button
+                onClick={() => setShowUnsavedModal(false)}
+                className="w-full py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-semibold text-sm hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
+              >
+                Continuer l'édition
+              </button>
+              <button
+                onClick={confirmCloseFloorPlan}
+                className="w-full py-2.5 text-red-500 dark:text-red-400 rounded-xl font-medium text-sm hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
+              >
+                Quitter sans sauvegarder
+              </button>
             </div>
           </div>
         </div>

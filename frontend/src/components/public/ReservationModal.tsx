@@ -318,12 +318,31 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
     }
   };
 
-  if (!isOpen) return null;
+  // ─────────────────────────────────────────────────────────
+  // ANIMATION STATE
+  // ─────────────────────────────────────────────────────────
+  const [mounted, setMounted] = useState(false);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setMounted(true);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setVisible(true));
+      });
+    } else {
+      setVisible(false);
+      const timer = setTimeout(() => setMounted(false), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
+  if (!mounted) return null;
 
   // ─────────────────────────────────────────────────────────
   // RENDER
   // ─────────────────────────────────────────────────────────
-  
+
   const steps = [
     { number: 1, label: 'Créneau', icon: CalendarDaysIcon },
     { number: 2, label: 'Placement', icon: MapPinIcon },
@@ -333,12 +352,16 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
   ];
 
   return (
-    <div 
-      className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4 overflow-y-auto"
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        visible ? 'bg-black/75' : 'bg-black/0'
+      }`}
       onClick={onClose}
     >
-      <div 
-        className="bg-coffee-950 rounded-xl shadow-2xl w-full max-w-2xl md:max-w-3xl border border-cream-400/30 my-4 md:my-8 max-h-[95vh] overflow-y-auto"
+      <div
+        className={`bg-coffee-950 rounded-xl shadow-2xl w-full max-w-2xl md:max-w-3xl border border-cream-400/30 my-4 md:my-8 max-h-[95vh] overflow-y-auto transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          visible ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-6'
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         

@@ -11,8 +11,7 @@ class MenuItemController extends Controller
 {
     public function index(Request $request)
     {
-        $menuItems = MenuItem::where('user_id', $request->user()->id)
-            ->orderBy('order')
+        $menuItems = MenuItem::orderBy('order')
             ->orderBy('category')
             ->orderBy('name')
             ->get();
@@ -59,11 +58,6 @@ class MenuItemController extends Controller
 
     public function update(Request $request, MenuItem $menuItem)
     {
-        // Check ownership
-        if ($menuItem->user_id !== $request->user()->id) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
         $validated = $request->validate([
             'name' => 'string|max:255',
             'ingredients' => 'nullable|string',
@@ -93,11 +87,6 @@ class MenuItemController extends Controller
 
     public function destroy(Request $request, MenuItem $menuItem)
     {
-        // Check ownership
-        if ($menuItem->user_id !== $request->user()->id) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
         // Delete image file if exists
         if ($menuItem->image_url) {
             $oldPath = str_replace('/storage/', '', $menuItem->image_url);

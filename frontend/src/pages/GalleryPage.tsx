@@ -3,6 +3,7 @@ import { Navbar } from '../components/public/Navbar';
 import { Footer } from '../components/public/Footer';
 import { ReservationModal } from '../components/public/ReservationModal';
 import { CTAButton } from '../components/public/CTAButton';
+import { getPublicSettings } from '../lib/api';
 import { ChevronLeftIcon, ChevronRightIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 // ─── Scroll Reveal ───
@@ -57,6 +58,13 @@ const galleryImages = [
 export function GalleryPage() {
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [hideReservation, setHideReservation] = useState(false);
+
+  useEffect(() => {
+    getPublicSettings().then((s) => {
+      setHideReservation(!s.reservations_enabled);
+    }).catch(() => {});
+  }, []);
 
   const openLightbox = (index: number) => setLightboxIndex(index);
   const closeLightbox = () => setLightboxIndex(null);
@@ -105,8 +113,8 @@ export function GalleryPage() {
 
   return (
     <div className="bg-coffee-950 text-white min-h-screen">
-      <Navbar onReservationClick={() => setIsReservationModalOpen(true)} />
-      <ReservationModal isOpen={isReservationModalOpen} onClose={() => setIsReservationModalOpen(false)} />
+      <Navbar onReservationClick={() => setIsReservationModalOpen(true)} hideReservation={hideReservation} />
+      {!hideReservation && <ReservationModal isOpen={isReservationModalOpen} onClose={() => setIsReservationModalOpen(false)} />}
 
       {/* Hero */}
       <section className="pt-24 md:pt-32 pb-12 md:pb-16 px-4 text-center">
@@ -153,11 +161,13 @@ export function GalleryPage() {
             ))}
           </div>
 
-          <ScrollReveal delay={100}>
-            <div className="text-center mt-16">
-              <CTAButton onClick={() => setIsReservationModalOpen(true)}>Réserver une table</CTAButton>
-            </div>
-          </ScrollReveal>
+          {!hideReservation && (
+            <ScrollReveal delay={100}>
+              <div className="text-center mt-16">
+                <CTAButton onClick={() => setIsReservationModalOpen(true)}>Réserver une table</CTAButton>
+              </div>
+            </ScrollReveal>
+          )}
         </div>
       </section>
 
@@ -211,7 +221,7 @@ export function GalleryPage() {
         </div>
       )}
 
-      <Footer onReservationClick={() => setIsReservationModalOpen(true)} />
+      <Footer onReservationClick={() => setIsReservationModalOpen(true)} hideReservation={hideReservation} />
     </div>
   );
 }

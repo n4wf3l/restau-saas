@@ -2,9 +2,9 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Navbar } from '../components/public/Navbar';
 import { Footer } from '../components/public/Footer';
 import { ReservationModal } from '../components/public/ReservationModal';
-import { getPublicMenuItems } from '../lib/api';
+import { getPublicMenuItems, getPublicSettings } from '../lib/api';
 import type { MenuItem } from '../lib/types';
-import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, XMarkIcon, Bars3Icon, Squares2X2Icon } from '@heroicons/react/24/outline';
 
 // ─── Scroll Reveal ───
 function ScrollReveal({
@@ -49,7 +49,11 @@ export function PublicMenuPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('');
   const [detailItem, setDetailItem] = useState<MenuItem | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'card'>('list');
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
+  const [menuPdfUrl, setMenuPdfUrl] = useState<string | null>(null);
+  const [manualVisible, setManualVisible] = useState(true);
+  const [pdfVisible, setPdfVisible] = useState(false);
 
   // Refs for scrollspy
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
@@ -73,6 +77,11 @@ export function PublicMenuPage() {
       }
     };
     load();
+    getPublicSettings().then((s) => {
+      setMenuPdfUrl(s.menu_pdf_url);
+      setManualVisible(s.menu_manual_visible);
+      setPdfVisible(s.menu_pdf_visible);
+    }).catch(() => {});
   }, []);
 
   // ─── Derived Data ───
@@ -183,10 +192,26 @@ export function PublicMenuPage() {
         </ScrollReveal>
       </section>
 
-      {/* Search */}
+      {/* PDF Menu */}
+      {pdfVisible && menuPdfUrl && (
+        <ScrollReveal delay={300}>
+          <div className="max-w-4xl mx-auto px-4 mb-12">
+            <div className="border border-cream-400/20 rounded-lg overflow-hidden bg-black/30">
+              <iframe
+                src={`http://localhost:8000${menuPdfUrl}`}
+                className="w-full h-[600px] md:h-[800px]"
+                title="Menu PDF"
+              />
+            </div>
+          </div>
+        </ScrollReveal>
+      )}
+
+      {/* Search + View Toggle */}
+      {manualVisible && (<>
       <ScrollReveal delay={300}>
-        <div className="max-w-4xl mx-auto px-4 mb-8">
-          <div className="relative">
+        <div className="max-w-4xl mx-auto px-4 mb-8 flex gap-3 items-center">
+          <div className="relative flex-1">
             <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-cream-400/50" />
             <input
               type="text"
@@ -195,6 +220,22 @@ export function PublicMenuPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-12 pr-4 py-3 bg-transparent border border-cream-400/20 text-cream-100 text-sm font-body placeholder-cream-400/40 focus:outline-none focus:border-cream-400/50 transition-colors"
             />
+          </div>
+          <div className="flex border border-cream-400/20">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-3 transition-colors ${viewMode === 'list' ? 'bg-cream-400/15 text-cream-200' : 'text-cream-400/40 hover:text-cream-400/70'}`}
+              title="Vue liste"
+            >
+              <Bars3Icon className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setViewMode('card')}
+              className={`p-3 transition-colors ${viewMode === 'card' ? 'bg-cream-400/15 text-cream-200' : 'text-cream-400/40 hover:text-cream-400/70'}`}
+              title="Vue carte"
+            >
+              <Squares2X2Icon className="w-5 h-5" />
+            </button>
           </div>
         </div>
       </ScrollReveal>
@@ -272,23 +313,37 @@ export function PublicMenuPage() {
                     </div>
                   </ScrollReveal>
 
-                  {/* Items List */}
-                  <div className="divide-y divide-cream-400/10">
-                    {itemsByCategory.get(cat)?.map((item, idx) => (
-                      <ScrollReveal key={item.id} delay={idx * 60}>
-                        <MenuItemRow
-                          item={item}
-                          onDetailClick={() => setDetailItem(item)}
-                        />
-                      </ScrollReveal>
-                    ))}
-                  </div>
+                  {/* Items */}
+                  {viewMode === 'list' ? (
+                    <div className="divide-y divide-cream-400/10">
+                      {itemsByCategory.get(cat)?.map((item, idx) => (
+                        <ScrollReveal key={item.id} delay={idx * 60}>
+                          <MenuItemRow
+                            item={item}
+                            onDetailClick={() => setDetailItem(item)}
+                          />
+                        </ScrollReveal>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {itemsByCategory.get(cat)?.map((item, idx) => (
+                        <ScrollReveal key={item.id} delay={idx * 60}>
+                          <MenuItemCard
+                            item={item}
+                            onDetailClick={() => setDetailItem(item)}
+                          />
+                        </ScrollReveal>
+                      ))}
+                    </div>
+                  )}
                 </section>
               ))
             )}
           </main>
         </div>
       </div>
+      </>)}
 
       <Footer onReservationClick={() => setIsReservationModalOpen(true)} />
 
@@ -369,6 +424,58 @@ function MenuItemRow({ item, onDetailClick }: MenuItemRowProps) {
 }
 
 // ─────────────────────────────────────────────────────────
+// MenuItemCard — Grid card view
+// ─────────────────────────────────────────────────────────
+
+function MenuItemCard({ item, onDetailClick }: MenuItemRowProps) {
+  return (
+    <div
+      className="group border border-cream-400/15 hover:border-cream-400/30 bg-cream-400/[0.03] hover:bg-cream-400/[0.06] transition-all duration-200 cursor-pointer"
+      onClick={onDetailClick}
+    >
+      {/* Image */}
+      {item.image_url && (
+        <div className="w-full h-40 overflow-hidden">
+          <img
+            src={item.image_url.startsWith('http') ? item.image_url : `http://localhost:8000${item.image_url}`}
+            alt={item.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+        </div>
+      )}
+
+      <div className="p-4">
+        {/* Name + Price */}
+        <div className="flex items-baseline justify-between gap-3 mb-2">
+          <h3 className="font-display font-bold text-cream-100 text-base leading-tight">
+            {item.name}
+          </h3>
+          <span className="font-display font-bold text-cream-300 text-base shrink-0 tabular-nums">
+            {Number(item.price).toFixed(2)}€
+          </span>
+        </div>
+
+        {/* Tags */}
+        <div className="flex gap-1.5 mb-3">
+          {item.is_halal && (
+            <span className="px-1.5 py-0.5 text-[9px] tracking-wider uppercase font-body border border-emerald-400/40 text-emerald-400/80">
+              Halal
+            </span>
+          )}
+        </div>
+
+        {/* Ingredients */}
+        {item.ingredients && (
+          <p className="text-cream-400/50 font-body text-sm leading-relaxed line-clamp-2">
+            {item.ingredients}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────
 // ItemDetailDrawer
 // ─────────────────────────────────────────────────────────
 
@@ -378,23 +485,31 @@ interface ItemDetailDrawerProps {
 }
 
 function ItemDetailDrawer({ item, onClose }: ItemDetailDrawerProps) {
+  const [closing, setClosing] = useState(false);
+
+  const handleClose = useCallback(() => {
+    if (closing) return;
+    setClosing(true);
+    setTimeout(onClose, 250);
+  }, [closing, onClose]);
+
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') handleClose();
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [onClose]);
+  }, [handleClose]);
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end md:items-center justify-center"
-      onClick={onClose}
+      className={`fixed inset-0 z-50 flex items-end md:items-center justify-center transition-opacity duration-250 ${closing ? 'opacity-0' : 'opacity-100'}`}
+      onClick={handleClose}
     >
       <div className="absolute inset-0 bg-black/70" />
 
       <div
-        className="relative w-full md:max-w-lg md:mx-4 bg-coffee-950 border-t md:border border-cream-400/20 md:rounded-lg overflow-hidden animate-slideUp"
+        className={`relative w-full md:max-w-lg md:mx-4 bg-coffee-950 border-t md:border border-cream-400/20 md:rounded-lg overflow-hidden transition-all duration-250 ${closing ? 'opacity-0 translate-y-4 scale-95' : 'animate-slideUp'}`}
         onClick={e => e.stopPropagation()}
       >
         {/* Image */}
@@ -407,14 +522,14 @@ function ItemDetailDrawer({ item, onClose }: ItemDetailDrawerProps) {
         {/* Content */}
         <div className="p-6">
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="absolute top-3 right-3 text-cream-400/60 hover:text-cream-200 active:text-cream-100 transition-colors bg-coffee-950/80 rounded-full p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center"
           >
             <XMarkIcon className="w-5 h-5" />
           </button>
 
-          <div className="flex items-baseline justify-between mb-4">
-            <h3 className="text-xl font-display font-bold text-cream-100 pr-8">
+          <div className="flex items-baseline justify-between mb-4 pr-10">
+            <h3 className="text-xl font-display font-bold text-cream-100">
               {item.name}
             </h3>
             <span className="font-display font-bold text-cream-300 text-xl shrink-0">

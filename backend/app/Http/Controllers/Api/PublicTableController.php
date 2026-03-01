@@ -13,19 +13,12 @@ use Carbon\Carbon;
 class PublicTableController extends Controller
 {
     /**
-     * Load restaurant settings from the floor plan owner.
+     * Load the shared restaurant settings.
      * Returns default settings if none found.
      */
     private function getSettings(): RestaurantSetting
     {
-        $floorPlan = RestaurantFloorPlan::first();
-
-        if ($floorPlan && $floorPlan->user && $floorPlan->user->settings) {
-            return $floorPlan->user->settings;
-        }
-
-        // Return a default settings object (not persisted)
-        return new RestaurantSetting([
+        return RestaurantSetting::first() ?? new RestaurantSetting([
             'service_duration_minutes' => 90,
             'buffer_minutes' => 15,
             'max_occupancy_pct' => 100,
@@ -33,6 +26,84 @@ class PublicTableController extends Controller
             'auto_confirm' => false,
             'send_confirmation_email' => false,
         ]);
+    }
+
+    /**
+     * Check if the given arrival time is within restaurant opening hours.
+     * Returns null if OK, or an error message string if outside hours.
+     */
+    private function checkOpeningHours(RestaurantSetting $settings, Carbon $arrivalTime): ?string
+    {
+        $hours = $settings->opening_hours;
+        if (!$hours || !is_array($hours)) {
+            return null; // No hours configured = always open
+        }
+
+        $dayMap = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        $dayKey = $dayMap[$arrivalTime->dayOfWeek];
+
+        if (!isset($hours[$dayKey])) {
+            return null;
+        }
+
+        $dayHours = $hours[$dayKey];
+
+        if (!empty($dayHours['closed'])) {
+            return "Le restaurant est fermé le " . $this->frenchDay($dayKey);
+        }
+
+        $openTime = $dayHours['open'] ?? null;
+        $closeTime = $dayHours['close'] ?? null;
+
+        if ($openTime && $closeTime) {
+            $arrivalMinutes = $arrivalTime->hour * 60 + $arrivalTime->minute;
+            $openParts = explode(':', $openTime);
+            $closeParts = explode(':', $closeTime);
+            $openMinutes = (int)$openParts[0] * 60 + (int)($openParts[1] ?? 0);
+            $closeMinutes = (int)$closeParts[0] * 60 + (int)($closeParts[1] ?? 0);
+
+            if ($arrivalMinutes < $openMinutes || $arrivalMinutes >= $closeMinutes) {
+                return "Le restaurant est ouvert de {$openTime} à {$closeTime}. Veuillez choisir un horaire dans cette plage.";
+            }
+        }
+
+        return null;
+    }
+
+    private function frenchDay(string $day): string
+    {
+        $map = [
+            'monday' => 'lundi', 'tuesday' => 'mardi', 'wednesday' => 'mercredi',
+            'thursday' => 'jeudi', 'friday' => 'vendredi', 'saturday' => 'samedi', 'sunday' => 'dimanche',
+        ];
+        return $map[$day] ?? $day;
+    }
+
+    /**
+     * Check if the given date falls on a closure date.
+     * Returns null if OK, or an error message string if closed.
+     */
+    private function checkClosureDates(RestaurantSetting $settings, Carbon $arrivalTime): ?string
+    {
+        $closures = $settings->closure_dates;
+        if (!$closures || !is_array($closures)) {
+            return null;
+        }
+
+        $dateStr = $arrivalTime->format('Y-m-d');
+
+        foreach ($closures as $closure) {
+            if (isset($closure['date']) && $closure['date'] === $dateStr) {
+                $reason = $closure['reason'] ?? '';
+                $msg = "Le restaurant est fermé le " . $arrivalTime->format('d/m/Y');
+                if ($reason) {
+                    $msg .= " ({$reason})";
+                }
+                return $msg . ". Veuillez choisir une autre date.";
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -171,6 +242,12 @@ class PublicTableController extends Controller
                 ->where('status', '!=', 'cancelled')
                 ->get();
 
+            // Count ALL reservations ever (past + future, pending + confirmed)
+            $historyCount = Reservation::whereIn('floor_plan_item_id', $group['chairIds'])
+                ->where('status', '!=', 'cancelled')
+                ->distinct('customer_email', 'arrival_time', 'party_size')
+                ->count();
+
             $groupedTables[] = [
                 'id' => $group['table']->id,
                 'name' => $group['name'],
@@ -182,6 +259,7 @@ class PublicTableController extends Controller
                 'occupied_seats' => $occupiedSeats,
                 'is_available' => $availableSeats > 0,
                 'chair_ids' => $group['chairIds'],
+                'reservation_history_count' => $historyCount,
                 'reservations' => $reservations->map(function ($reservation) {
                     return [
                         'id' => $reservation->id,
@@ -198,17 +276,42 @@ class PublicTableController extends Controller
 
     public function checkAvailability(Request $request)
     {
+        $settings = $this->getSettings();
+        if (!$settings->reservations_enabled) {
+            return response()->json(['error' => 'Les réservations sont actuellement désactivées.'], 403);
+        }
+
         $validated = $request->validate([
             'date' => 'required|date',
             'time' => 'required|string',
             'party_size' => 'required|integer|min:1|max:20',
         ]);
-
-        $settings = $this->getSettings();
         $arrivalDateTime = Carbon::parse($validated['date'] . ' ' . $validated['time']);
         $partySize = $validated['party_size'];
         $duration = $settings->service_duration_minutes;
         $buffer = $settings->buffer_minutes;
+
+        // Check closure dates
+        $closureError = $this->checkClosureDates($settings, $arrivalDateTime);
+        if ($closureError) {
+            return response()->json([
+                'available' => false,
+                'tables' => [],
+                'suggestedSlots' => [],
+                'message' => $closureError,
+            ]);
+        }
+
+        // Check opening hours
+        $hoursError = $this->checkOpeningHours($settings, $arrivalDateTime);
+        if ($hoursError) {
+            return response()->json([
+                'available' => false,
+                'tables' => [],
+                'suggestedSlots' => [],
+                'message' => $hoursError,
+            ]);
+        }
 
         $groups = $this->getTableGroups();
 
@@ -322,6 +425,10 @@ class PublicTableController extends Controller
     {
         $settings = $this->getSettings();
 
+        if (!$settings->reservations_enabled) {
+            return response()->json(['error' => 'Les réservations sont actuellement désactivées.'], 403);
+        }
+
         try {
             $rules = [
                 'customer_name' => 'required|string|max:255',
@@ -356,6 +463,18 @@ class PublicTableController extends Controller
         $buffer = $settings->buffer_minutes;
         $arrivalTime = Carbon::parse($validated['arrival_time']);
         $initialStatus = $settings->auto_confirm ? 'confirmed' : 'pending';
+
+        // Check closure dates
+        $closureError = $this->checkClosureDates($settings, $arrivalTime);
+        if ($closureError) {
+            return response()->json(['error' => $closureError], 422);
+        }
+
+        // Check opening hours
+        $hoursError = $this->checkOpeningHours($settings, $arrivalTime);
+        if ($hoursError) {
+            return response()->json(['error' => $hoursError], 422);
+        }
 
         // Auto-optimize: find smallest available table
         if ($settings->auto_optimize_tables) {
@@ -486,6 +605,10 @@ class PublicTableController extends Controller
     public function storeEvent(Request $request)
     {
         $settings = $this->getSettings();
+
+        if (!$settings->reservations_enabled) {
+            return response()->json(['error' => 'Les réservations sont actuellement désactivées.'], 403);
+        }
 
         try {
             $validated = $request->validate([

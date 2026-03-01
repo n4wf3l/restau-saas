@@ -17,7 +17,7 @@ import PublicReservation from "./pages/PublicReservation";
 import { PublicMenuPage } from "./pages/PublicMenuPage";
 import { PrivacyPage } from "./pages/PrivacyPage";
 import { TermsPage } from "./pages/TermsPage";
-import { Toaster } from "react-hot-toast";
+import { AppToaster } from "./components/ui/Toast";
 import "./App.css";
 
 function ScrollToTop() {
@@ -32,7 +32,7 @@ function App() {
       <ThemeProvider>
         <AuthProvider>
           <ScrollToTop />
-          <Toaster position="top-right" />
+          <AppToaster />
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/gallery" element={<GalleryPage />} />

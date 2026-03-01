@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php artisan tinker --execute=\":*)",
+      "Bash(php artisan tinker --execute=\"echo App\\\\Models\\\\MenuItem::count\\(\\) . '' menu items, '' . App\\\\Models\\\\Reservation::withTrashed\\(\\)->count\\(\\) . '' reservation rows'';\")"
+    ]
+  }
+}

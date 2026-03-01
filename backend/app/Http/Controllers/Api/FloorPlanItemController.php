@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\RestaurantFloorPlan;
 use App\Models\RestaurantFloorPlanItem;
 use Illuminate\Http\Request;
 
@@ -13,7 +14,7 @@ class FloorPlanItemController extends Controller
      */
     public function bulkUpsert(Request $request)
     {
-        $floorPlan = $request->user()->floorPlan;
+        $floorPlan = RestaurantFloorPlan::first();
 
         if (!$floorPlan) {
             return response()->json(['message' => 'No floor plan found'], 404);
@@ -61,7 +62,7 @@ class FloorPlanItemController extends Controller
      */
     public function store(Request $request)
     {
-        $floorPlan = $request->user()->floorPlan;
+        $floorPlan = RestaurantFloorPlan::first();
 
         if (!$floorPlan) {
             return response()->json(['message' => 'No floor plan found'], 404);
@@ -99,7 +100,7 @@ class FloorPlanItemController extends Controller
      */
     public function destroy(Request $request, $id)
     {
-        $floorPlan = $request->user()->floorPlan;
+        $floorPlan = RestaurantFloorPlan::first();
 
         if (!$floorPlan) {
             return response()->json(['message' => 'No floor plan found'], 404);

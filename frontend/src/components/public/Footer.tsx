@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { CTAButton } from './CTAButton';
+import { getPublicSettings } from '../../lib/api';
+import type { OpeningHours } from '../../lib/types';
 
 // ─── Scroll Reveal ───
 function ScrollReveal({
@@ -57,45 +59,114 @@ const TikTokIcon = () => (
   </svg>
 );
 
-interface FooterProps {
-  onReservationClick: () => void;
+const DAY_KEYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+const DAY_SHORT: Record<string, string> = {
+  monday: 'Lun', tuesday: 'Mar', wednesday: 'Mer', thursday: 'Jeu',
+  friday: 'Ven', saturday: 'Sam', sunday: 'Dim',
+};
+
+function formatTime(t: string): string {
+  return t.replace(':', 'h');
 }
 
-export function Footer({ onReservationClick }: FooterProps) {
+/** Group consecutive days with same hours into ranges like "Lun - Jeu: 11h00 - 23h00" */
+function formatHoursGroups(hours: OpeningHours): string[] {
+  const lines: string[] = [];
+  let i = 0;
+  while (i < DAY_KEYS.length) {
+    const key = DAY_KEYS[i];
+    const dh = hours[key];
+    if (!dh || dh.closed) {
+      lines.push(`${DAY_SHORT[key]}: Fermé`);
+      i++;
+      continue;
+    }
+    // Find consecutive days with same hours
+    let j = i + 1;
+    while (j < DAY_KEYS.length) {
+      const nk = DAY_KEYS[j];
+      const ndh = hours[nk];
+      if (!ndh || ndh.closed || ndh.open !== dh.open || ndh.close !== dh.close) break;
+      j++;
+    }
+    const range = j - 1 > i
+      ? `${DAY_SHORT[DAY_KEYS[i]]} - ${DAY_SHORT[DAY_KEYS[j - 1]]}`
+      : DAY_SHORT[key];
+    lines.push(`${range}: ${formatTime(dh.open)} - ${formatTime(dh.close)}`);
+    i = j;
+  }
+  return lines;
+}
+
+interface FooterProps {
+  onReservationClick: () => void;
+  hideReservation?: boolean;
+}
+
+export function Footer({ onReservationClick, hideReservation }: FooterProps) {
+  const [hoursLines, setHoursLines] = useState<string[]>([]);
+  const [hasClosures, setHasClosures] = useState(false);
+  const [loadingHours, setLoadingHours] = useState(true);
+
+  useEffect(() => {
+    getPublicSettings().then((s) => {
+      if (s.opening_hours) {
+        setHoursLines(formatHoursGroups(s.opening_hours));
+      }
+      if (s.closure_dates && s.closure_dates.length > 0) {
+        setHasClosures(true);
+      }
+    }).catch(() => {}).finally(() => setLoadingHours(false));
+  }, []);
+
   return (
-    <footer className="bg-coffee-950 pt-16 md:pt-24 pb-24 md:pb-10 px-4">
-      <div className="max-w-2xl mx-auto text-center">
-        {/* Address */}
-        <ScrollReveal>
+    <footer className="bg-coffee-950 pb-24 md:pb-10 px-4">
+      <hr className="border-0 h-px bg-cream-400/30 mb-16 md:mb-24" />
+      <ScrollReveal>
+        <div className="max-w-2xl mx-auto text-center">
+          {/* Address */}
           <p className="text-cream-400/80 font-body text-sm md:text-base mb-8">
             Ghandouri - Tanger, Maroc
           </p>
-        </ScrollReveal>
 
-        {/* Hours */}
-        <ScrollReveal delay={100}>
-          <p className="text-cream-100 font-body font-semibold text-sm md:text-base mb-3">
-            Horaire d'ouverture :
-          </p>
-          <div className="text-cream-400/70 font-body text-sm md:text-base space-y-1 mb-4">
-            <p>Lun - Jeu: 11h00 - 23h00</p>
-            <p>Ven - Sam: 11h00 - 00h00</p>
-            <p>Dimanche: 12h00 - 22h00</p>
-          </div>
-          <p className="text-cream-400/70 font-body text-sm md:text-base mb-12">
-            Fermé les jours fériés
-          </p>
-        </ScrollReveal>
+          {/* Hours */}
+          {loadingHours ? (
+            <div className="flex justify-center mb-12">
+              <svg className="animate-spin w-5 h-5 text-cream-400/50" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                <path className="opacity-80" d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+              </svg>
+            </div>
+          ) : hoursLines.length > 0 ? (
+            <>
+              <p className="text-cream-100 font-body font-semibold text-sm md:text-base mb-3">
+                Horaire d'ouverture :
+              </p>
+              <div className="text-cream-400/70 font-body text-sm md:text-base space-y-1 mb-4">
+                {hoursLines.map((line, i) => (
+                  <p key={i}>{line}</p>
+                ))}
+              </div>
+              {hasClosures && (
+                <p className="text-cream-400/70 font-body text-sm md:text-base mb-12">
+                  Fermetures exceptionnelles — consultez la page de réservation
+                </p>
+              )}
+              {!hasClosures && <div className="mb-12" />}
+            </>
+          ) : (
+            <div className="mb-12" />
+          )}
 
-        {/* CTA */}
-        <ScrollReveal delay={200}>
-          <div className="mb-12">
-            <CTAButton onClick={onReservationClick}>Réserver une table</CTAButton>
-          </div>
-        </ScrollReveal>
+          {/* CTA */}
+          {!hideReservation && (
+            <div className="mb-12">
+              <CTAButton onClick={onReservationClick}>Réserver une table</CTAButton>
+            </div>
+          )}
+          {hideReservation && <div className="mb-12" />}
 
-        {/* Social Icons */}
-        <ScrollReveal delay={300}>
+          {/* Social Icons */}
           <div className="flex justify-center gap-4 mb-16">
             {[
               { label: 'Facebook', icon: <FacebookIcon />, href: '#' },
@@ -112,10 +183,8 @@ export function Footer({ onReservationClick }: FooterProps) {
               </a>
             ))}
           </div>
-        </ScrollReveal>
 
-        {/* Legal + Admin links */}
-        <ScrollReveal delay={400}>
+          {/* Legal + Admin links */}
           <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mb-8">
             <Link to="/privacy" className="text-cream-400/35 hover:text-cream-400/60 font-body text-xs tracking-wide transition-colors">
               Confidentialité
@@ -127,15 +196,11 @@ export function Footer({ onReservationClick }: FooterProps) {
               Espace admin
             </Link>
           </div>
-        </ScrollReveal>
 
-        {/* Separator */}
-        <ScrollReveal delay={450}>
+          {/* Separator */}
           <div className="w-16 h-px bg-cream-400/15 mx-auto mb-8" />
-        </ScrollReveal>
 
-        {/* Bottom credit — NA Innovations promo */}
-        <ScrollReveal delay={500}>
+          {/* Bottom credit — NA Innovations promo */}
           <div className="text-center">
             <p className="text-cream-400/40 font-body text-xs tracking-wide mb-1">
               Plateforme sur mesure par
@@ -144,8 +209,8 @@ export function Footer({ onReservationClick }: FooterProps) {
               NA Innovations
             </p>
           </div>
-        </ScrollReveal>
-      </div>
+        </div>
+      </ScrollReveal>
     </footer>
   );
 }

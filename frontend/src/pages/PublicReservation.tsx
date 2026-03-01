@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getPublicTables, createReservation } from "../lib/api";
+import { getPublicTables, createReservation, getPublicSettings } from "../lib/api";
 import type { PublicTable } from "../lib/types";
 import { toast } from "react-hot-toast";
 import { Spinner } from "../components/ui/Spinner";
@@ -8,6 +8,7 @@ export default function PublicReservation() {
   const [tables, setTables] = useState<PublicTable[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
+  const [reservationsDisabled, setReservationsDisabled] = useState(false);
   const [formData, setFormData] = useState({
     customer_name: "",
     customer_email: "",
@@ -17,7 +18,16 @@ export default function PublicReservation() {
   });
 
   useEffect(() => {
-    loadTables();
+    getPublicSettings().then((s) => {
+      if (!s.reservations_enabled) {
+        setReservationsDisabled(true);
+        setLoading(false);
+        return;
+      }
+      loadTables();
+    }).catch(() => {
+      loadTables();
+    });
   }, []);
 
   const loadTables = async () => {
@@ -81,6 +91,21 @@ export default function PublicReservation() {
       );
     }
   };
+
+  if (reservationsDisabled) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12 px-4">
+        <div className="max-w-xl mx-auto text-center mt-24">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">
+            Réservations indisponibles
+          </h1>
+          <p className="text-gray-600">
+            Les réservations en ligne sont actuellement désactivées. Veuillez nous contacter directement par téléphone.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">

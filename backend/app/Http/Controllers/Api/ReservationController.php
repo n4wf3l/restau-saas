@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Reservation;
+use App\Models\RestaurantFloorPlanItem;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class ReservationController extends Controller
 {
@@ -99,10 +101,87 @@ class ReservationController extends Controller
         return response()->json($result);
     }
 
+    /**
+     * POST /api/reservations — Admin creates a reservation (always confirmed).
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'customer_name' => 'required|string|max:255',
+            'customer_email' => 'required|email|max:255',
+            'customer_phone' => 'nullable|string|max:20',
+            'arrival_time' => 'required|date',
+            'party_size' => 'required|integer|min:1|max:50',
+            'table_id' => 'required|exists:restaurant_floor_plan_items,id',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        $table = RestaurantFloorPlanItem::findOrFail($validated['table_id']);
+
+        if ($table->type !== 'table') {
+            return response()->json(['error' => 'ID invalide — pas une table.'], 422);
+        }
+
+        // Find adjacent chairs
+        $adjacentChairs = RestaurantFloorPlanItem::where('type', 'chair')
+            ->where('floor_plan_id', $table->floor_plan_id)
+            ->where(function ($query) use ($table) {
+                $query->where(function ($q) use ($table) {
+                    $q->where('y', $table->y)
+                      ->whereBetween('x', [$table->x - 1, $table->x + 1]);
+                })->orWhere(function ($q) use ($table) {
+                    $q->where('x', $table->x)
+                      ->whereBetween('y', [$table->y - 1, $table->y + 1]);
+                });
+            })
+            ->where(function ($query) use ($table) {
+                $query->where('x', '!=', $table->x)
+                      ->orWhere('y', '!=', $table->y);
+            })
+            ->get();
+
+        if ($adjacentChairs->isEmpty()) {
+            return response()->json(['error' => 'Aucune chaise autour de cette table.'], 422);
+        }
+
+        $chairIds = $adjacentChairs->pluck('id')->toArray();
+
+        if (count($chairIds) < $validated['party_size']) {
+            return response()->json([
+                'error' => 'Pas assez de places. Places disponibles: ' . count($chairIds),
+            ], 422);
+        }
+
+        $reservations = [];
+        for ($i = 0; $i < $validated['party_size']; $i++) {
+            $reservations[] = Reservation::create([
+                'floor_plan_item_id' => $chairIds[$i],
+                'customer_name' => $validated['customer_name'],
+                'customer_email' => $validated['customer_email'],
+                'customer_phone' => $validated['customer_phone'] ?? null,
+                'arrival_time' => $validated['arrival_time'],
+                'party_size' => $validated['party_size'],
+                'notes' => $validated['notes'] ?? null,
+                'status' => 'confirmed',
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Réservation créée',
+            'reservations' => $reservations,
+        ], 201);
+    }
+
     public function update(Request $request, Reservation $reservation)
     {
         $validated = $request->validate([
-            'status' => 'required|in:pending,confirmed,cancelled,completed,no_show',
+            'status' => 'sometimes|in:pending,confirmed,cancelled,completed,no_show',
+            'customer_name' => 'sometimes|string|max:255',
+            'customer_email' => 'sometimes|email|max:255',
+            'customer_phone' => 'nullable|string|max:20',
+            'arrival_time' => 'sometimes|date',
+            'party_size' => 'sometimes|integer|min:1|max:50',
+            'notes' => 'nullable|string|max:1000',
         ]);
 
         // Update all reservations in the same group
@@ -111,12 +190,20 @@ class ReservationController extends Controller
             ->where('party_size', $reservation->party_size)
             ->get();
 
+        // Build the fields to update on every row in the group
+        $updateFields = [];
+        foreach (['status', 'customer_name', 'customer_email', 'customer_phone', 'arrival_time', 'party_size', 'notes'] as $field) {
+            if (array_key_exists($field, $validated)) {
+                $updateFields[$field] = $validated[$field];
+            }
+        }
+
         foreach ($group as $r) {
-            $r->update(['status' => $validated['status']]);
+            $r->update($updateFields);
         }
 
         // If no_show, soft-delete the entire group
-        if ($validated['status'] === 'no_show') {
+        if (isset($validated['status']) && $validated['status'] === 'no_show') {
             foreach ($group as $r) {
                 $r->delete(); // SoftDeletes — sets deleted_at
             }
@@ -128,8 +215,8 @@ class ReservationController extends Controller
         }
 
         return response()->json([
-            'message' => 'Statut mis à jour',
-            'reservation' => $reservation->load('floorPlanItem'),
+            'message' => 'Réservation mise à jour',
+            'reservation' => $reservation->fresh(),
         ]);
     }
 
