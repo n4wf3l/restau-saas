@@ -218,6 +218,7 @@ export async function getPublicSettings(): Promise<{
   menu_pdf_url: string | null;
   menu_manual_visible: boolean;
   menu_pdf_visible: boolean;
+  social_links: import("./types").SocialLinks | null;
 }> {
   const response = await api.get("/api/public/settings");
   return response.data;

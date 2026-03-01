@@ -21,6 +21,7 @@ class RestaurantSetting extends Model
         'menu_pdf_url',
         'menu_manual_visible',
         'menu_pdf_visible',
+        'social_links',
     ];
 
     protected $casts = [
@@ -35,6 +36,7 @@ class RestaurantSetting extends Model
         'closure_dates' => 'array',
         'menu_manual_visible' => 'boolean',
         'menu_pdf_visible' => 'boolean',
+        'social_links' => 'array',
     ];
 
     public function user(): BelongsTo

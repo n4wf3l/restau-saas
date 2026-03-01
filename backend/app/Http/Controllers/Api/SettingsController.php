@@ -47,6 +47,7 @@ class SettingsController extends Controller
             'closure_dates.*.reason'   => 'nullable|string|max:255',
             'menu_manual_visible'      => 'sometimes|boolean',
             'menu_pdf_visible'         => 'sometimes|boolean',
+            'social_links'             => 'sometimes|nullable|array',
         ]);
 
         $settings = RestaurantSetting::first();
@@ -78,6 +79,7 @@ class SettingsController extends Controller
                 'menu_pdf_url' => $settings->menu_pdf_url,
                 'menu_manual_visible' => (bool) $settings->menu_manual_visible,
                 'menu_pdf_visible' => (bool) $settings->menu_pdf_visible,
+                'social_links' => $settings->social_links,
             ]);
         }
 
@@ -90,6 +92,7 @@ class SettingsController extends Controller
             'menu_pdf_url' => null,
             'menu_manual_visible' => true,
             'menu_pdf_visible' => false,
+            'social_links' => null,
         ]);
     }
 

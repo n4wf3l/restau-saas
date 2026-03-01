@@ -169,6 +169,13 @@ export interface ClosureDate {
   reason: string;
 }
 
+export interface SocialLink {
+  enabled: boolean;
+  url: string;
+}
+
+export type SocialLinks = Record<string, SocialLink>;
+
 export interface RestaurantSettings {
   id: number;
   user_id: number;
@@ -184,6 +191,7 @@ export interface RestaurantSettings {
   menu_pdf_url: string | null;
   menu_manual_visible: boolean;
   menu_pdf_visible: boolean;
+  social_links: SocialLinks | null;
   created_at: string;
   updated_at: string;
 }

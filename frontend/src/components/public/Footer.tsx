@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { CTAButton } from './CTAButton';
 import { getPublicSettings } from '../../lib/api';
-import type { OpeningHours } from '../../lib/types';
+import type { OpeningHours, SocialLinks } from '../../lib/types';
 
 // ─── Scroll Reveal ───
 function ScrollReveal({
@@ -59,6 +59,42 @@ const TikTokIcon = () => (
   </svg>
 );
 
+const YouTubeIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814ZM9.545 15.568V8.432L15.818 12l-6.273 3.568Z" />
+  </svg>
+);
+
+const SnapchatIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+    <path d="M12.206.793c.99 0 4.347.276 5.93 3.821.529 1.193.403 3.219.299 4.847l-.003.06c-.012.18-.022.345-.03.51.075.045.203.09.401.09.3-.016.659-.12.928-.278.175-.1.312-.058.398-.03.123.046.263.137.263.331 0 .382-.52.504-.862.604-.158.05-.331.094-.412.139-.142.075-.18.21-.174.36.002.06.019.12.04.18.26.635.72 1.2 1.292 1.608.165.118.374.21.568.285.097.037.267.097.267.267 0 .195-.28.353-.618.47a4.06 4.06 0 0 1-.573.17c-.13.028-.248.088-.262.238-.01.1.003.203.003.283 0 .125-.053.248-.175.31-.214.108-.51.16-.808.202-.181.027-.374.052-.524.105-.08.028-.152.09-.17.15-.104.329-.234.558-.37.745-.08.112-.166.204-.252.283a4.92 4.92 0 0 1-1.37.86c-.422.177-.88.267-1.41.267-.154 0-.3-.01-.455-.035a5.186 5.186 0 0 1-.693-.14c-.2-.058-.42-.122-.693-.17-.285-.052-.563-.035-.833-.035-.274 0-.54-.017-.83.035-.275.048-.494.112-.694.17a5.2 5.2 0 0 1-.693.14 3.036 3.036 0 0 1-.454.035c-.53 0-.99-.09-1.41-.267a4.92 4.92 0 0 1-1.37-.86 3.214 3.214 0 0 1-.253-.283 3.617 3.617 0 0 1-.37-.745c-.017-.06-.09-.122-.17-.15-.149-.053-.342-.078-.523-.105-.299-.042-.595-.094-.809-.202-.12-.062-.175-.185-.175-.31 0-.08.014-.183.003-.283-.014-.15-.132-.21-.261-.238a4.06 4.06 0 0 1-.574-.17c-.338-.117-.618-.275-.618-.47 0-.17.17-.23.267-.267.194-.075.403-.167.568-.285a4.143 4.143 0 0 0 1.292-1.608c.022-.06.038-.12.04-.18.006-.15-.032-.285-.174-.36-.081-.045-.254-.089-.412-.139-.342-.1-.862-.222-.862-.604 0-.194.14-.285.263-.331.086-.028.223-.07.398.03.269.158.628.262.928.278a.755.755 0 0 0 .401-.09 43.067 43.067 0 0 1-.033-.57c-.104-1.628-.23-3.654.3-4.847C7.653 1.069 11.016.793 12.006.793h.2Z" />
+  </svg>
+);
+
+const LinkedInIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286ZM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065Zm1.782 13.019H3.555V9h3.564v11.452ZM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003Z" />
+  </svg>
+);
+
+const SOCIAL_ICON_MAP: Record<string, React.ReactNode> = {
+  facebook: <FacebookIcon />,
+  instagram: <InstagramIcon />,
+  tiktok: <TikTokIcon />,
+  youtube: <YouTubeIcon />,
+  snapchat: <SnapchatIcon />,
+  linkedin: <LinkedInIcon />,
+};
+
+const SOCIAL_LABELS: Record<string, string> = {
+  facebook: 'Facebook',
+  instagram: 'Instagram',
+  tiktok: 'TikTok',
+  youtube: 'YouTube',
+  snapchat: 'Snapchat',
+  linkedin: 'LinkedIn',
+};
+
 const DAY_KEYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 const DAY_SHORT: Record<string, string> = {
   monday: 'Lun', tuesday: 'Mar', wednesday: 'Mer', thursday: 'Jeu',
@@ -107,6 +143,7 @@ export function Footer({ onReservationClick, hideReservation }: FooterProps) {
   const [hoursLines, setHoursLines] = useState<string[]>([]);
   const [hasClosures, setHasClosures] = useState(false);
   const [loadingHours, setLoadingHours] = useState(true);
+  const [socialLinks, setSocialLinks] = useState<SocialLinks | null>(null);
 
   useEffect(() => {
     getPublicSettings().then((s) => {
@@ -116,8 +153,15 @@ export function Footer({ onReservationClick, hideReservation }: FooterProps) {
       if (s.closure_dates && s.closure_dates.length > 0) {
         setHasClosures(true);
       }
+      if (s.social_links) {
+        setSocialLinks(s.social_links);
+      }
     }).catch(() => {}).finally(() => setLoadingHours(false));
   }, []);
+
+  const activeSocials = socialLinks
+    ? Object.entries(socialLinks).filter(([, link]) => link.enabled && link.url)
+    : [];
 
   return (
     <footer className="bg-coffee-950 pb-24 md:pb-10 px-4">
@@ -167,22 +211,23 @@ export function Footer({ onReservationClick, hideReservation }: FooterProps) {
           {hideReservation && <div className="mb-12" />}
 
           {/* Social Icons */}
-          <div className="flex justify-center gap-4 mb-16">
-            {[
-              { label: 'Facebook', icon: <FacebookIcon />, href: '#' },
-              { label: 'Instagram', icon: <InstagramIcon />, href: '#' },
-              { label: 'TikTok', icon: <TikTokIcon />, href: '#' },
-            ].map((social) => (
-              <a
-                key={social.label}
-                href={social.href}
-                className="w-12 h-12 rounded-full border border-cream-400/40 flex items-center justify-center text-cream-400/70 hover:bg-cream-400/10 active:bg-cream-400/20 hover:text-cream-300 transition-all duration-300"
-                title={social.label}
-              >
-                {social.icon}
-              </a>
-            ))}
-          </div>
+          {activeSocials.length > 0 && (
+            <div className="flex justify-center gap-4 mb-16">
+              {activeSocials.map(([key, link]) => (
+                <a
+                  key={key}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-12 h-12 rounded-full border border-cream-400/40 flex items-center justify-center text-cream-400/70 hover:bg-cream-400/10 active:bg-cream-400/20 hover:text-cream-300 transition-all duration-300"
+                  title={SOCIAL_LABELS[key] || key}
+                >
+                  {SOCIAL_ICON_MAP[key]}
+                </a>
+              ))}
+            </div>
+          )}
+          {activeSocials.length === 0 && <div className="mb-16" />}
 
           {/* Legal + Admin links */}
           <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mb-8">

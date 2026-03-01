@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { getSettings, updateSettings } from "../lib/api";
-import type { RestaurantSettings, OpeningHours, DayHours, ClosureDate } from "../lib/types";
+import type { RestaurantSettings, OpeningHours, DayHours, ClosureDate, SocialLinks, SocialLink } from "../lib/types";
 import toast from "react-hot-toast";
 import {
   CalendarIcon,
@@ -14,6 +14,7 @@ import {
   NoSymbolIcon,
   PlusIcon,
   XMarkIcon,
+  GlobeAltIcon,
 } from "@heroicons/react/24/outline";
 import { Spinner } from "../components/ui/Spinner";
 
@@ -28,6 +29,15 @@ const DAYS: { key: string; label: string }[] = [
 ];
 
 const DEFAULT_HOURS: DayHours = { open: "11:00", close: "23:00", closed: false };
+
+const SOCIAL_NETWORKS: { key: string; label: string; placeholder: string }[] = [
+  { key: "facebook", label: "Facebook", placeholder: "https://facebook.com/..." },
+  { key: "instagram", label: "Instagram", placeholder: "https://instagram.com/..." },
+  { key: "tiktok", label: "TikTok", placeholder: "https://tiktok.com/@..." },
+  { key: "youtube", label: "YouTube", placeholder: "https://youtube.com/@..." },
+  { key: "snapchat", label: "Snapchat", placeholder: "https://snapchat.com/add/..." },
+  { key: "linkedin", label: "LinkedIn", placeholder: "https://linkedin.com/company/..." },
+];
 
 // ─── Toggle Switch ───
 function ToggleSwitch({
@@ -188,6 +198,7 @@ function SettingsSection({
 // ─── Main Page ───
 export function SettingsPage() {
   const [settings, setSettings] = useState<RestaurantSettings | null>(null);
+  const [savedSettings, setSavedSettings] = useState<RestaurantSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -195,6 +206,7 @@ export function SettingsPage() {
     try {
       const data = await getSettings();
       setSettings(data);
+      setSavedSettings(data);
     } catch {
       toast.error("Erreur lors du chargement des paramètres");
     } finally {
@@ -206,23 +218,41 @@ export function SettingsPage() {
     loadSettings();
   }, [loadSettings]);
 
-  const handleUpdate = async (
+  const isDirty = settings && savedSettings
+    ? JSON.stringify(settings) !== JSON.stringify(savedSettings)
+    : false;
+
+  const handleUpdate = (
     field: keyof RestaurantSettings,
-    value: number | boolean | OpeningHours | ClosureDate[] | null
+    value: number | boolean | OpeningHours | ClosureDate[] | SocialLinks | null
   ) => {
     if (!settings) return;
-
-    const prev = settings;
     setSettings({ ...settings, [field]: value } as RestaurantSettings);
+  };
 
+  const handleSave = async () => {
+    if (!settings || !isDirty) return;
     setSaving(true);
     try {
-      const updated = await updateSettings({ [field]: value } as any);
+      const updated = await updateSettings({
+        reservations_enabled: settings.reservations_enabled,
+        auto_confirm: settings.auto_confirm,
+        send_confirmation_email: settings.send_confirmation_email,
+        service_duration_minutes: settings.service_duration_minutes,
+        buffer_minutes: settings.buffer_minutes,
+        max_occupancy_pct: settings.max_occupancy_pct,
+        auto_optimize_tables: settings.auto_optimize_tables,
+        opening_hours: settings.opening_hours,
+        closure_dates: settings.closure_dates,
+        menu_manual_visible: settings.menu_manual_visible,
+        menu_pdf_visible: settings.menu_pdf_visible,
+        social_links: settings.social_links,
+      } as any);
       setSettings(updated);
-      toast.success("Paramètre mis à jour");
+      setSavedSettings(updated);
+      toast.success("Paramètres sauvegardés");
     } catch (err) {
       console.error("Settings save failed:", err);
-      setSettings(prev);
       toast.error("Erreur lors de la sauvegarde");
     } finally {
       setSaving(false);
@@ -279,21 +309,50 @@ export function SettingsPage() {
     handleUpdate("closure_dates", updated.length > 0 ? updated : null);
   };
 
+  // Social links helpers
+  const getSocialLinks = (): SocialLinks => {
+    const src = settings?.social_links;
+    const links: SocialLinks = {};
+    for (const net of SOCIAL_NETWORKS) {
+      const existing = src?.[net.key];
+      links[net.key] = existing ? { enabled: existing.enabled, url: existing.url } : { enabled: false, url: "" };
+    }
+    return links;
+  };
+
+  const updateSocialLink = (key: string, field: keyof SocialLink, value: string | boolean) => {
+    const links = getSocialLinks();
+    links[key] = { ...links[key], [field]: value };
+    handleUpdate("social_links", links);
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* ─── Header ─── */}
-      <div className="px-6 pt-6 pb-5 flex-shrink-0">
-        <h1 className="text-2xl font-display font-bold text-gray-900 dark:text-cream-50 tracking-tight">
-          Paramètres
-        </h1>
-        <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
-          Configurez le comportement de votre restaurant
-          {saving && (
-            <span className="ml-2 text-cream-600 dark:text-cream-400 animate-pulse-soft">
-              Sauvegarde...
-            </span>
-          )}
-        </p>
+      <div className="px-6 pt-6 pb-5 flex-shrink-0 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-display font-bold text-gray-900 dark:text-cream-50 tracking-tight">
+            Paramètres
+          </h1>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+            Configurez le comportement de votre restaurant
+          </p>
+        </div>
+        {settings && (
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={!isDirty || saving}
+            className={`flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl transition-colors shadow-sm ${
+              isDirty
+                ? "text-cream-50 bg-coffee-600 hover:bg-coffee-500"
+                : "text-gray-400 dark:text-gray-500 bg-gray-200 dark:bg-gray-700 cursor-not-allowed"
+            } ${saving ? "opacity-60 cursor-not-allowed" : ""}`}
+          >
+            {saving && <Spinner size="sm" />}
+            {saving ? "Sauvegarde..." : "Sauvegarder"}
+          </button>
+        )}
       </div>
 
       {/* ─── Content ─── */}
@@ -303,7 +362,7 @@ export function SettingsPage() {
             <Spinner />
           </div>
         ) : settings ? (
-          <div className="max-w-3xl space-y-6">
+          <div className="space-y-6">
             {/* ─── Section: Réservations ─── */}
             <SettingsSection title="Réservations" icon={CalendarIcon}>
               <ToggleRow
@@ -525,6 +584,38 @@ export function SettingsPage() {
                     </p>
                   </div>
                 </div>
+              </div>
+            </SettingsSection>
+
+            {/* ─── Section: Réseaux sociaux ─── */}
+            <SettingsSection title="Réseaux sociaux" icon={GlobeAltIcon}>
+              <div className="py-4 space-y-3">
+                {SOCIAL_NETWORKS.map((net) => {
+                  const link = getSocialLinks()[net.key];
+                  return (
+                    <div key={net.key} className="flex items-center gap-3">
+                      <span className="w-24 text-sm font-medium text-gray-700 dark:text-gray-300 flex-shrink-0">
+                        {net.label}
+                      </span>
+                      <ToggleSwitch
+                        enabled={link.enabled}
+                        onChange={(v) => updateSocialLink(net.key, "enabled", v)}
+                      />
+                      {link.enabled && (
+                        <input
+                          type="url"
+                          value={link.url}
+                          onChange={(e) => updateSocialLink(net.key, "url", e.target.value)}
+                          placeholder={net.placeholder}
+                          className="flex-1 px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:border-cream-500"
+                        />
+                      )}
+                      {!link.enabled && (
+                        <span className="text-xs text-gray-400 dark:text-gray-500 italic ml-1">Désactivé</span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </SettingsSection>
           </div>
