@@ -368,24 +368,6 @@ export default function Dashboard() {
     };
   };
 
-  if (loading) {
-    return (
-      <div className="flex flex-col h-full">
-        <div className="px-6 pt-6 pb-5 flex-shrink-0">
-          <h1 className="text-2xl font-display font-bold text-gray-900 dark:text-cream-50 tracking-tight">
-            Réservations
-          </h1>
-          <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
-            Chargement...
-          </p>
-        </div>
-        <div className="flex-1 flex items-center justify-center">
-          <Spinner />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col h-full">
       {/* ─── Header ─── */}
@@ -396,9 +378,10 @@ export default function Dashboard() {
               Réservations
             </h1>
             <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
-              Mise à jour auto &middot; 30s
+              Mise &agrave; jour auto &middot; 30s
             </p>
           </div>
+          {!loading && (
           <div className="flex items-center gap-3">
             <button
               onClick={openCreateModal}
@@ -419,8 +402,11 @@ export default function Dashboard() {
             </div>
           )}
           </div>
+          )}
         </div>
 
+        {!loading && (
+        <>
         {/* ─── Search + Date Filters ─── */}
         <div className="flex flex-col sm:flex-row gap-3 mb-5">
           {/* Search */}
@@ -500,8 +486,16 @@ export default function Dashboard() {
             </button>
           ))}
         </div>
+        </>
+        )}
       </div>
 
+      {loading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <Spinner />
+        </div>
+      ) : (
+      <div className="flex-1 flex flex-col overflow-hidden">
       {/* ─── Events explanation banner ─── */}
       {activeTab === "events" && (
         <div className="mx-6 mb-4 p-4 bg-violet-50/60 dark:bg-violet-500/[0.05] border border-violet-200/40 dark:border-violet-500/10 rounded-xl flex gap-3 animate-fadeIn">
@@ -544,7 +538,7 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4">
-            {filtered.map((res) => {
+            {filtered.map((res, idx) => {
               const st = getStyle(res.status);
               const dt = formatDate(res.arrival_time);
               const isExpanded = expandedId === res.id;
@@ -553,7 +547,8 @@ export default function Dashboard() {
                 <div
                   key={res.id}
                   onClick={() => setExpandedId(isExpanded ? null : res.id)}
-                  className={`bg-white dark:bg-surface-card rounded-2xl ring-1 ring-gray-200/40 dark:ring-surface-border-light border-l-[3px] ${st.border} shadow-card dark:shadow-dark-card hover:shadow-card-hover dark:hover:shadow-dark-card-hover hover:-translate-y-[1px] transition-all duration-200 cursor-pointer select-none`}
+                  className={`bg-white dark:bg-surface-card rounded-2xl ring-1 ring-gray-200/40 dark:ring-surface-border-light border-l-[3px] ${st.border} shadow-card dark:shadow-dark-card hover:shadow-card-hover dark:hover:shadow-dark-card-hover hover:-translate-y-[1px] transition-all duration-200 cursor-pointer select-none animate-stagger-item`}
+                  style={{ animationDelay: `${idx * 60}ms` }}
                 >
                   {/* ─── Card Header ─── */}
                   <div className="px-5 pt-5 pb-3">
@@ -768,6 +763,8 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+      </div>
+      )}
 
       {/* ─── Create Reservation Slide Panel ─── */}
       {showCreateModal && (

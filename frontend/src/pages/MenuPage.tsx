@@ -333,15 +333,19 @@ export default function MenuPage() {
           <h1 className="text-2xl font-display font-bold text-gray-900 dark:text-cream-50 tracking-tight">
             Carte du Menu
           </h1>
-          <button
-            onClick={openModal}
-            className="flex items-center gap-2 px-4 py-2.5 bg-coffee-600 text-cream-50 rounded-xl text-sm font-semibold hover:bg-coffee-500 active:scale-[0.97] transition-all duration-200 shadow-sm"
-          >
-            <PlusIcon className="w-4 h-4" />
-            Ajouter un plat
-          </button>
+          {!loading && (
+            <button
+              onClick={openModal}
+              className="flex items-center gap-2 px-4 py-2.5 bg-coffee-600 text-cream-50 rounded-xl text-sm font-semibold hover:bg-coffee-500 active:scale-[0.97] transition-all duration-200 shadow-sm"
+            >
+              <PlusIcon className="w-4 h-4" />
+              Ajouter un plat
+            </button>
+          )}
         </div>
 
+        {!loading && (
+        <>
         {/* ── Tabs ── */}
         <div className="flex gap-1 border-b border-gray-200 dark:border-gray-700">
           {tabs.map((tab) => (
@@ -378,8 +382,16 @@ export default function MenuPage() {
             </div>
           ))}
         </div>
+        </>
+        )}
       </div>
 
+      {loading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <Spinner />
+        </div>
+      ) : (
+      <div className="flex-1 flex flex-col overflow-hidden">
       {/* ═══ Tab: Gestion manuelle ═══ */}
       {activeTab === "manual" && (
         <>
@@ -463,11 +475,7 @@ export default function MenuPage() {
 
           {/* ── Content ── */}
           <div className="flex-1 overflow-auto px-6 pb-6">
-        {loading ? (
-          <div className="flex items-center justify-center py-24">
-            <Spinner />
-          </div>
-        ) : filteredItems.length === 0 ? (
+        {filteredItems.length === 0 ? (
           <div className="text-center py-16">
             <PhotoIcon className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">
@@ -503,12 +511,13 @@ export default function MenuPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filteredItems
                       .filter((item) => item.category === category)
-                      .map((item) => (
+                      .map((item, i) => (
                         <AdminMenuCard
                           key={item.id}
                           item={item}
                           onEdit={handleEdit}
                           onDelete={handleDeleteRequest}
+                          animIndex={i}
                         />
                       ))}
                   </div>
@@ -516,12 +525,13 @@ export default function MenuPage() {
               ))
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredItems.map((item) => (
+                {filteredItems.map((item, i) => (
                   <AdminMenuCard
                     key={item.id}
                     item={item}
                     onEdit={handleEdit}
                     onDelete={handleDeleteRequest}
+                    animIndex={i}
                   />
                 ))}
               </div>
@@ -538,12 +548,13 @@ export default function MenuPage() {
                   <div className="bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-800 divide-y divide-gray-100 dark:divide-gray-800">
                     {filteredItems
                       .filter((item) => item.category === category)
-                      .map((item) => (
+                      .map((item, i) => (
                         <AdminMenuRow
                           key={item.id}
                           item={item}
                           onEdit={handleEdit}
                           onDelete={handleDeleteRequest}
+                          animIndex={i}
                         />
                       ))}
                   </div>
@@ -551,12 +562,13 @@ export default function MenuPage() {
               ))
             ) : (
               <div className="bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-800 divide-y divide-gray-100 dark:divide-gray-800">
-                {filteredItems.map((item) => (
+                {filteredItems.map((item, i) => (
                   <AdminMenuRow
                     key={item.id}
                     item={item}
                     onEdit={handleEdit}
                     onDelete={handleDeleteRequest}
+                    animIndex={i}
                   />
                 ))}
               </div>
@@ -753,6 +765,8 @@ export default function MenuPage() {
             </div>
           </div>
         </div>
+      )}
+      </div>
       )}
 
       {/* ═══ Uber-style Slide Panel ═══ */}
@@ -1035,11 +1049,15 @@ interface AdminMenuItemProps {
   item: MenuItem;
   onEdit: (item: MenuItem) => void;
   onDelete: (item: MenuItem) => void;
+  animIndex?: number;
 }
 
-function AdminMenuCard({ item, onEdit, onDelete }: AdminMenuItemProps) {
+function AdminMenuCard({ item, onEdit, onDelete, animIndex = 0 }: AdminMenuItemProps) {
   return (
-    <div className="bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden hover:border-gray-300 dark:hover:border-gray-700 transition-colors flex flex-col">
+    <div
+      className="bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden hover:border-gray-300 dark:hover:border-gray-700 transition-colors flex flex-col animate-stagger-item"
+      style={{ animationDelay: `${animIndex * 60}ms` }}
+    >
       {item.image_url && (
         <div className="relative h-36 bg-gray-100 dark:bg-gray-800">
           <img
@@ -1110,9 +1128,12 @@ function AdminMenuCard({ item, onEdit, onDelete }: AdminMenuItemProps) {
 
 /* ═══════════════════════ List View ═══════════════════════ */
 
-function AdminMenuRow({ item, onEdit, onDelete }: AdminMenuItemProps) {
+function AdminMenuRow({ item, onEdit, onDelete, animIndex = 0 }: AdminMenuItemProps) {
   return (
-    <div className="flex items-center gap-4 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+    <div
+      className="flex items-center gap-4 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors animate-stagger-item"
+      style={{ animationDelay: `${animIndex * 60}ms` }}
+    >
       <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 shrink-0">
         {item.image_url ? (
           <img

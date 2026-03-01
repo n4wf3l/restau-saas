@@ -106,6 +106,14 @@ export default {
           from: { opacity: '0', transform: 'translateY(-4px) scale(0.97)' },
           to: { opacity: '1', transform: 'translateY(0) scale(1)' },
         },
+        contentReveal: {
+          from: { opacity: '0', transform: 'translateY(12px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        staggerItem: {
+          from: { opacity: '0', transform: 'translateY(18px) scale(0.97)' },
+          to: { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
       },
       animation: {
         'spin': 'spin 1s linear infinite',
@@ -119,6 +127,8 @@ export default {
         'overlay-fade-in': 'overlayFadeIn 0.2s ease-out',
         'modal-slide-in': 'modalSlideIn 0.25s cubic-bezier(0.16,1,0.3,1)',
         'dropdown-reveal': 'dropdownReveal 0.15s cubic-bezier(0.16,1,0.3,1)',
+        'content-reveal': 'contentReveal 0.4s cubic-bezier(0.16,1,0.3,1) forwards',
+        'stagger-item': 'staggerItem 0.45s cubic-bezier(0.16,1,0.3,1) both',
       },
     },
   },

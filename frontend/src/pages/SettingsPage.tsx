@@ -145,13 +145,18 @@ function SettingsSection({
   title,
   icon: Icon,
   children,
+  animIndex = 0,
 }: {
   title: string;
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   children: React.ReactNode;
+  animIndex?: number;
 }) {
   return (
-    <div className="bg-white dark:bg-surface-card rounded-2xl ring-1 ring-gray-200/40 dark:ring-surface-border-light shadow-card dark:shadow-dark-card">
+    <div
+      className="bg-white dark:bg-surface-card rounded-2xl ring-1 ring-gray-200/40 dark:ring-surface-border-light shadow-card dark:shadow-dark-card animate-stagger-item"
+      style={{ animationDelay: `${animIndex * 80}ms` }}
+    >
       <div className="px-5 py-4 border-b border-gray-100 dark:border-surface-border-light flex items-center gap-2.5">
         <Icon className="w-5 h-5 text-cream-600 dark:text-cream-500" />
         <h2 className="text-base font-display font-semibold text-gray-900 dark:text-cream-50">
@@ -309,7 +314,7 @@ export default function SettingsPage() {
             Configurez le comportement de votre restaurant
           </p>
         </div>
-        {settings && (
+        {!loading && settings && (
           <button
             type="button"
             onClick={handleSave}
@@ -327,15 +332,15 @@ export default function SettingsPage() {
       </div>
 
       {/* ─── Content ─── */}
+      {loading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <Spinner />
+        </div>
+      ) : settings ? (
       <div className="flex-1 overflow-auto px-6 pb-6">
-        {loading ? (
-          <div className="flex items-center justify-center py-24">
-            <Spinner />
-          </div>
-        ) : settings ? (
           <div className="space-y-6">
             {/* ─── Section: Réservations ─── */}
-            <SettingsSection title="Réservations" icon={CalendarIcon}>
+            <SettingsSection title="Réservations" icon={CalendarIcon} animIndex={0}>
               <ToggleRow
                 icon={NoSymbolIcon}
                 label="Activer les réservations"
@@ -361,7 +366,7 @@ export default function SettingsPage() {
             </SettingsSection>
 
             {/* ─── Section: Horaires d'ouverture ─── */}
-            <SettingsSection title="Horaires d'ouverture" icon={ClockIcon}>
+            <SettingsSection title="Horaires d'ouverture" icon={ClockIcon} animIndex={1}>
               <ToggleRow
                 icon={ClockIcon}
                 label="Définir les horaires"
@@ -409,7 +414,7 @@ export default function SettingsPage() {
             </SettingsSection>
 
             {/* ─── Section: Fermetures exceptionnelles ─── */}
-            <SettingsSection title="Fermetures exceptionnelles" icon={CalendarDaysIcon}>
+            <SettingsSection title="Fermetures exceptionnelles" icon={CalendarDaysIcon} animIndex={2}>
               <div className="py-4">
                 <div className="flex gap-3 mb-1">
                   <CalendarDaysIcon className="w-5 h-5 text-cream-600 dark:text-cream-500 flex-shrink-0 mt-0.5" />
@@ -498,7 +503,7 @@ export default function SettingsPage() {
             </SettingsSection>
 
             {/* ─── Section: Gestion des tables ─── */}
-            <SettingsSection title="Gestion des tables" icon={TableCellsIcon}>
+            <SettingsSection title="Gestion des tables" icon={TableCellsIcon} animIndex={3}>
               <NumberSetting
                 icon={ClockIcon}
                 label="Durée de service par table"
@@ -542,7 +547,7 @@ export default function SettingsPage() {
             </SettingsSection>
 
             {/* ─── Section: No-show ─── */}
-            <SettingsSection title="No-show" icon={ExclamationTriangleIcon}>
+            <SettingsSection title="No-show" icon={ExclamationTriangleIcon} animIndex={4}>
               <div className="py-4">
                 <div className="flex gap-3">
                   <ExclamationTriangleIcon className="w-5 h-5 text-cream-600 dark:text-cream-500 flex-shrink-0 mt-0.5" />
@@ -565,7 +570,7 @@ export default function SettingsPage() {
             </SettingsSection>
 
             {/* ─── Section: Réseaux sociaux ─── */}
-            <SettingsSection title="Réseaux sociaux" icon={GlobeAltIcon}>
+            <SettingsSection title="Réseaux sociaux" icon={GlobeAltIcon} animIndex={5}>
               <div className="py-4 space-y-3">
                 {SOCIAL_NETWORKS.map((net) => {
                   const link = getSocialLinks()[net.key];
@@ -596,8 +601,8 @@ export default function SettingsPage() {
               </div>
             </SettingsSection>
           </div>
-        ) : null}
       </div>
+      ) : null}
 
       {/* Closure Date Delete Confirmation */}
       <ConfirmDialog
