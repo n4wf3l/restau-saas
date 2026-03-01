@@ -329,9 +329,18 @@ export default function MenuPage() {
     <div className="flex flex-col h-full">
       {/* ── Header ── */}
       <div className="px-6 pt-6 pb-2">
-        <h1 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-          Carte du Menu
-        </h1>
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-display font-bold text-gray-900 dark:text-cream-50 tracking-tight">
+            Carte du Menu
+          </h1>
+          <button
+            onClick={openModal}
+            className="flex items-center gap-2 px-4 py-2.5 bg-coffee-600 text-cream-50 rounded-xl text-sm font-semibold hover:bg-coffee-500 active:scale-[0.97] transition-all duration-200 shadow-sm"
+          >
+            <PlusIcon className="w-4 h-4" />
+            Ajouter un plat
+          </button>
+        </div>
 
         {/* ── Tabs ── */}
         <div className="flex gap-1 border-b border-gray-200 dark:border-gray-700">
@@ -376,22 +385,33 @@ export default function MenuPage() {
         <>
           {/* ── Toolbar ── */}
           <div className="px-6 pt-4 pb-2">
-            <div className="flex items-center gap-4 flex-wrap">
-              <div className="relative flex-1 min-w-[200px] max-w-md">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <div className="flex flex-col sm:flex-row gap-3">
+              {/* Search */}
+              <div className="relative flex-1">
+                <MagnifyingGlassIcon className="w-4 h-4 text-gray-400 dark:text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="Rechercher un plat..."
+                  placeholder="Rechercher par nom, catégorie, ingrédients..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-1.5 border border-gray-200 dark:border-surface-input-border rounded-lg bg-white dark:bg-surface-input text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-coffee-500/50 focus:border-coffee-500 placeholder-gray-400 dark:placeholder-gray-500"
+                  className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200/60 dark:border-surface-border-light rounded-xl bg-white dark:bg-surface-card text-gray-800 dark:text-cream-100 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-coffee-500/30 focus:border-coffee-500/50 transition-all"
                 />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    aria-label="Effacer la recherche"
+                  >
+                    <XMarkIcon className="w-4 h-4" />
+                  </button>
+                )}
               </div>
 
-              <div className="flex border border-gray-200 dark:border-surface-input-border rounded-lg overflow-hidden">
+              {/* View mode toggle */}
+              <div className="flex border border-gray-200/60 dark:border-surface-border-light rounded-xl overflow-hidden flex-shrink-0 self-center">
                 <button
                   onClick={() => setViewMode("card")}
-                  className={`p-1.5 transition-colors ${
+                  className={`p-2 transition-colors ${
                     viewMode === "card"
                       ? "bg-coffee-600 text-cream-50"
                       : "text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -402,7 +422,7 @@ export default function MenuPage() {
                 </button>
                 <button
                   onClick={() => setViewMode("list")}
-                  className={`p-1.5 transition-colors ${
+                  className={`p-2 transition-colors ${
                     viewMode === "list"
                       ? "bg-coffee-600 text-cream-50"
                       : "text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -412,14 +432,6 @@ export default function MenuPage() {
                   <Bars3Icon className="w-4 h-4" />
                 </button>
               </div>
-
-              <button
-                onClick={openModal}
-                className="flex items-center gap-2 px-4 py-1.5 bg-coffee-600 text-cream-50 rounded-lg hover:bg-coffee-500 transition-colors text-sm font-medium ml-auto shrink-0"
-              >
-                <PlusIcon className="w-4 h-4" />
-                Ajouter un plat
-              </button>
             </div>
           </div>
 
