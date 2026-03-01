@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useOutletContext } from "react-router-dom";
 import { getReservations, getSettings, getPublicTables, createAdminReservation, updateReservation, updateReservationStatus, deleteReservation, restoreReservation } from "../lib/api";
 import type { Reservation, FloorPlan, RestaurantSettings, PublicTable } from "../lib/types";
@@ -27,8 +27,8 @@ type TabType = "pending" | "confirmed" | "all" | "cancelled" | "events" | "no_sh
 
 const AUTO_REFRESH_MS = 30_000;
 
-export function Dashboard() {
-  const { floorPlan } = useOutletContext<{ floorPlan: FloorPlan | null }>();
+export default function Dashboard() {
+  const { } = useOutletContext<{ floorPlan: FloorPlan | null }>();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [activeTab, setActiveTab] = useState<TabType>("pending");
   const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -247,7 +247,7 @@ export function Dashboard() {
     );
   };
 
-  const filtered = reservations.filter((r) => {
+  const filtered = useMemo(() => reservations.filter((r) => {
     // Status/tab filter
     const matchesTab =
       activeTab === "events" ? r.is_event :
@@ -256,18 +256,20 @@ export function Dashboard() {
       r.status === activeTab;
 
     return matchesTab && matchesDate(r.arrival_time) && matchesSearch(r);
-  });
+  }), [reservations, activeTab, dateFilter, searchQuery]);
 
   // Counts reflect search + date filters so tabs stay accurate
-  const base = reservations.filter((r) => matchesDate(r.arrival_time) && matchesSearch(r));
-  const counts = {
-    pending: base.filter((r) => r.status === "pending").length,
-    confirmed: base.filter((r) => r.status === "confirmed").length,
-    cancelled: base.filter((r) => r.status === "cancelled").length,
-    no_show: base.filter((r) => r.status === "no_show").length,
-    events: base.filter((r) => r.is_event).length,
-    all: base.length,
-  };
+  const counts = useMemo(() => {
+    const base = reservations.filter((r) => matchesDate(r.arrival_time) && matchesSearch(r));
+    return {
+      pending: base.filter((r) => r.status === "pending").length,
+      confirmed: base.filter((r) => r.status === "confirmed").length,
+      cancelled: base.filter((r) => r.status === "cancelled").length,
+      no_show: base.filter((r) => r.status === "no_show").length,
+      events: base.filter((r) => r.is_event).length,
+      all: base.length,
+    };
+  }, [reservations, dateFilter, searchQuery]);
 
   const tabs: { key: TabType; label: string; count: number; color: string }[] = [
     // Only show pending tab if auto_confirm is OFF

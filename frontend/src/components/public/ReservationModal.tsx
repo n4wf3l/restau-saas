@@ -310,8 +310,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
         specialNotes: '',
       });
     } catch (error: any) {
-      console.error('Erreur lors de la réservation:', error);
-      console.error('Response data:', error.response?.data);
+      // Reservation error handled via toast
       toast.error(error.response?.data?.message || error.response?.data?.error || 'Erreur lors de la réservation');
     } finally {
       setLoading(false);
@@ -613,8 +612,8 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                 )}
 
                 {/* Liste tables si manuel */}
-                {showTableList && availability.tables && (() => {
-                  const suitableTables = availability.tables.filter(t => t.available_seats >= formData.partySize);
+                {showTableList && availability?.tables && (() => {
+                  const suitableTables = availability!.tables.filter(t => t.available_seats >= formData.partySize);
                   const previewTable = suitableTables.find(t => t.id === previewTableId);
 
                   return (

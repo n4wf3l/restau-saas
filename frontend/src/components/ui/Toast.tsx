@@ -1,5 +1,5 @@
 import { Toaster, type ToasterProps } from 'react-hot-toast';
-import { CheckCircleIcon, XCircleIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
+import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
 
 const TOAST_OPTIONS: ToasterProps['toastOptions'] = {
   duration: 3500,

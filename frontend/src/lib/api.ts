@@ -1,8 +1,10 @@
 import axios from "axios";
 import type { Reservation, PublicTable, ReservationPayload, EventReservationPayload, MenuItem, MenuItemPayload, RestaurantSettings } from "./types";
 
+export const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 export const api = axios.create({
-  baseURL: "http://localhost:8000",
+  baseURL: API_BASE_URL,
   withCredentials: true, // super important (cookies)
   headers: {
     Accept: "application/json",

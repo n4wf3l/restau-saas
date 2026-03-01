@@ -41,7 +41,7 @@ export function FloorPlanEditor({ floorPlan, onUpdate, onDirtyChange }: FloorPla
   const [moveOrigin, setMoveOrigin] = useState<{ x: number; y: number } | null>(null);
   const [hoveredCell, setHoveredCell] = useState<{ x: number; y: number } | null>(null);
   const [zoom, setZoom] = useState(1);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [_lastSaved, setLastSaved] = useState<Date | null>(null);
   const [currentFloor, setCurrentFloor] = useState(1);
   const [floorRegistry, setFloorRegistry] = useState<Map<number, string>>(new Map());
   const [showFloorNameModal, setShowFloorNameModal] = useState(false);
@@ -100,7 +100,7 @@ export function FloorPlanEditor({ floorPlan, onUpdate, onDirtyChange }: FloorPla
       const tables = await getPublicTables();
       setPublicTables(tables);
     } catch (error) {
-      console.error('Failed to load table availability:', error);
+      // Failed to load table availability
     }
   };
 

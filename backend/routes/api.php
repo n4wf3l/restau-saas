@@ -9,13 +9,19 @@ use App\Http\Controllers\Api\SettingsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-// Public routes (no auth required)
-Route::get('/public/tables', [PublicTableController::class, 'index']);
-Route::post('/public/check-availability', [PublicTableController::class, 'checkAvailability']);
-Route::post('/public/reservations', [PublicTableController::class, 'store']);
-Route::post('/public/events', [PublicTableController::class, 'storeEvent']);
-Route::get('/public/settings', [SettingsController::class, 'publicShow']);
-Route::get('/public/menu-items', [MenuItemController::class, 'publicIndex']);
+// Public routes (no auth required) — rate limited
+Route::middleware('throttle:60,1')->group(function () {
+    Route::get('/public/tables', [PublicTableController::class, 'index']);
+    Route::get('/public/settings', [SettingsController::class, 'publicShow']);
+    Route::get('/public/menu-items', [MenuItemController::class, 'publicIndex']);
+});
+
+Route::post('/public/check-availability', [PublicTableController::class, 'checkAvailability'])
+    ->middleware('throttle:30,1');
+Route::post('/public/reservations', [PublicTableController::class, 'store'])
+    ->middleware('throttle:10,1');
+Route::post('/public/events', [PublicTableController::class, 'storeEvent'])
+    ->middleware('throttle:10,1');
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();

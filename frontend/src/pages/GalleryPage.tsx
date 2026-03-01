@@ -3,7 +3,7 @@ import { Navbar } from '../components/public/Navbar';
 import { Footer } from '../components/public/Footer';
 import { ReservationModal } from '../components/public/ReservationModal';
 import { CTAButton } from '../components/public/CTAButton';
-import { getPublicSettings } from '../lib/api';
+import { usePublicSettings } from '../contexts/PublicSettingsContext';
 import { ChevronLeftIcon, ChevronRightIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 // ─── Scroll Reveal ───
@@ -55,16 +55,11 @@ const galleryImages = [
   { src: '/rr-ice4.png', alt: 'Terrasse' },
 ];
 
-export function GalleryPage() {
+export default function GalleryPage() {
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const [hideReservation, setHideReservation] = useState(false);
-
-  useEffect(() => {
-    getPublicSettings().then((s) => {
-      setHideReservation(!s.reservations_enabled);
-    }).catch(() => {});
-  }, []);
+  const publicSettings = usePublicSettings();
+  const hideReservation = publicSettings ? !publicSettings.reservations_enabled : false;
 
   const openLightbox = (index: number) => setLightboxIndex(index);
   const closeLightbox = () => setLightboxIndex(null);

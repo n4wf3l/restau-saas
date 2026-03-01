@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { CTAButton } from './CTAButton';
-import { getPublicSettings } from '../../lib/api';
-import type { OpeningHours, SocialLinks } from '../../lib/types';
+import { usePublicSettings } from '../../contexts/PublicSettingsContext';
+import type { OpeningHours } from '../../lib/types';
 
 // ─── Scroll Reveal ───
 function ScrollReveal({
@@ -140,24 +140,11 @@ interface FooterProps {
 }
 
 export function Footer({ onReservationClick, hideReservation }: FooterProps) {
-  const [hoursLines, setHoursLines] = useState<string[]>([]);
-  const [hasClosures, setHasClosures] = useState(false);
-  const [loadingHours, setLoadingHours] = useState(true);
-  const [socialLinks, setSocialLinks] = useState<SocialLinks | null>(null);
-
-  useEffect(() => {
-    getPublicSettings().then((s) => {
-      if (s.opening_hours) {
-        setHoursLines(formatHoursGroups(s.opening_hours));
-      }
-      if (s.closure_dates && s.closure_dates.length > 0) {
-        setHasClosures(true);
-      }
-      if (s.social_links) {
-        setSocialLinks(s.social_links);
-      }
-    }).catch(() => {}).finally(() => setLoadingHours(false));
-  }, []);
+  const publicSettings = usePublicSettings();
+  const loadingHours = !publicSettings;
+  const hoursLines = publicSettings?.opening_hours ? formatHoursGroups(publicSettings.opening_hours) : [];
+  const hasClosures = (publicSettings?.closure_dates && publicSettings.closure_dates.length > 0) ?? false;
+  const socialLinks = publicSettings?.social_links ?? null;
 
   const activeSocials = socialLinks
     ? Object.entries(socialLinks).filter(([, link]) => link.enabled && link.url)

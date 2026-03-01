@@ -4,7 +4,7 @@ import { Footer } from '../components/public/Footer';
 import { ReservationModal } from '../components/public/ReservationModal';
 import { Link } from 'react-router-dom';
 
-export function TermsPage() {
+export default function TermsPage() {
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
 
   return (

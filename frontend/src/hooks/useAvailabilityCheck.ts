@@ -32,7 +32,7 @@ export function useAvailabilityCheck() {
       
       setAvailability(response.data);
     } catch (error) {
-      console.error('Availability check failed:', error);
+      // Availability check failed
       setAvailability({
         available: false,
         tables: [],

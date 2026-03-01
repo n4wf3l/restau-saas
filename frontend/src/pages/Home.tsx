@@ -3,7 +3,7 @@ import { Navbar } from '../components/public/Navbar';
 import { ReservationModal } from '../components/public/ReservationModal';
 import { Footer } from '../components/public/Footer';
 import { CTAButton } from '../components/public/CTAButton';
-import { getPublicSettings } from '../lib/api';
+import { usePublicSettings } from '../contexts/PublicSettingsContext';
 
 // ─── Scroll Reveal ───
 function ScrollReveal({
@@ -45,17 +45,12 @@ function ScrollReveal({
 const heroImages = ['/rr-ice2.png', '/rr-ice3.png', '/rr-ice4.png'];
 
 
-export function Home() {
+export default function Home() {
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [hideReservation, setHideReservation] = useState(false);
+  const publicSettings = usePublicSettings();
+  const hideReservation = publicSettings ? !publicSettings.reservations_enabled : false;
   const [showScrollTop, setShowScrollTop] = useState(false);
-
-  useEffect(() => {
-    getPublicSettings().then((s) => {
-      setHideReservation(!s.reservations_enabled);
-    }).catch(() => {});
-  }, []);
 
   // Show scroll-to-top button after scrolling past the hero
   useEffect(() => {
@@ -291,6 +286,7 @@ export function Home() {
           loop
           muted
           playsInline
+          preload="none"
           className="absolute inset-0 w-full h-full object-cover"
         >
           <source src="/eau.mp4" type="video/mp4" />

@@ -196,7 +196,7 @@ function SettingsSection({
 }
 
 // ─── Main Page ───
-export function SettingsPage() {
+export default function SettingsPage() {
   const [settings, setSettings] = useState<RestaurantSettings | null>(null);
   const [savedSettings, setSavedSettings] = useState<RestaurantSettings | null>(null);
   const [loading, setLoading] = useState(true);
@@ -252,7 +252,7 @@ export function SettingsPage() {
       setSavedSettings(updated);
       toast.success("Paramètres sauvegardés");
     } catch (err) {
-      console.error("Settings save failed:", err);
+      // Settings save failed
       toast.error("Erreur lors de la sauvegarde");
     } finally {
       setSaving(false);

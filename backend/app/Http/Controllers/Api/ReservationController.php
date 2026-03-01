@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Reservation;
+use App\Models\RestaurantFloorPlan;
 use App\Models\RestaurantFloorPlanItem;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -12,7 +13,18 @@ class ReservationController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Reservation::with('floorPlanItem');
+        // Scope reservations to the authenticated user's floor plan
+        $floorPlan = RestaurantFloorPlan::where('user_id', $request->user()->id)->first();
+
+        if (!$floorPlan) {
+            return response()->json([]);
+        }
+
+        $query = Reservation::with('floorPlanItem')
+            ->where(function ($q) use ($floorPlan) {
+                $q->whereHas('floorPlanItem', fn($sub) => $sub->where('floor_plan_id', $floorPlan->id))
+                  ->orWhere(function ($sub) { $sub->where('is_event', true)->whereNull('floor_plan_item_id'); });
+            });
 
         // If include_no_show=1, also include soft-deleted no-show reservations
         if ($request->boolean('include_no_show')) {
@@ -117,6 +129,15 @@ class ReservationController extends Controller
         ]);
 
         $table = RestaurantFloorPlanItem::findOrFail($validated['table_id']);
+
+        // Verify the table belongs to the authenticated user's floor plan
+        $floorPlan = RestaurantFloorPlan::where('user_id', $request->user()->id)
+            ->where('id', $table->floor_plan_id)
+            ->first();
+
+        if (!$floorPlan) {
+            return response()->json(['error' => 'Non autorisé'], 403);
+        }
 
         if ($table->type !== 'table') {
             return response()->json(['error' => 'ID invalide — pas une table.'], 422);

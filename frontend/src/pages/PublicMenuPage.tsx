@@ -2,7 +2,8 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Navbar } from '../components/public/Navbar';
 import { Footer } from '../components/public/Footer';
 import { ReservationModal } from '../components/public/ReservationModal';
-import { getPublicMenuItems, getPublicSettings } from '../lib/api';
+import { getPublicMenuItems, API_BASE_URL } from '../lib/api';
+import { usePublicSettings } from '../contexts/PublicSettingsContext';
 import type { MenuItem } from '../lib/types';
 import { MagnifyingGlassIcon, XMarkIcon, Bars3Icon, Squares2X2Icon } from '@heroicons/react/24/outline';
 
@@ -43,7 +44,7 @@ function ScrollReveal({
   );
 }
 
-export function PublicMenuPage() {
+export default function PublicMenuPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -51,9 +52,10 @@ export function PublicMenuPage() {
   const [detailItem, setDetailItem] = useState<MenuItem | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'card'>('list');
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
-  const [menuPdfUrl, setMenuPdfUrl] = useState<string | null>(null);
-  const [manualVisible, setManualVisible] = useState(true);
-  const [pdfVisible, setPdfVisible] = useState(false);
+  const publicSettings = usePublicSettings();
+  const menuPdfUrl = publicSettings?.menu_pdf_url ?? null;
+  const manualVisible = publicSettings?.menu_manual_visible ?? true;
+  const pdfVisible = publicSettings?.menu_pdf_visible ?? false;
 
   // Refs for scrollspy
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
@@ -71,17 +73,12 @@ export function PublicMenuPage() {
           .sort((a, b) => a.order - b.order);
         setMenuItems(available);
       } catch (error) {
-        console.error('Failed to load menu:', error);
+        // Failed to load menu
       } finally {
         setLoading(false);
       }
     };
     load();
-    getPublicSettings().then((s) => {
-      setMenuPdfUrl(s.menu_pdf_url);
-      setManualVisible(s.menu_manual_visible);
-      setPdfVisible(s.menu_pdf_visible);
-    }).catch(() => {});
   }, []);
 
   // ─── Derived Data ───
@@ -198,7 +195,7 @@ export function PublicMenuPage() {
           <div className="max-w-4xl mx-auto px-4 mb-12">
             <div className="border border-cream-400/20 rounded-lg overflow-hidden bg-black/30">
               <iframe
-                src={`http://localhost:8000${menuPdfUrl}`}
+                src={`${API_BASE_URL}${menuPdfUrl}`}
                 className="w-full h-[600px] md:h-[800px]"
                 title="Menu PDF"
               />
@@ -437,7 +434,8 @@ function MenuItemCard({ item, onDetailClick }: MenuItemRowProps) {
       {item.image_url && (
         <div className="w-full h-40 overflow-hidden">
           <img
-            src={item.image_url.startsWith('http') ? item.image_url : `http://localhost:8000${item.image_url}`}
+            loading="lazy"
+            src={item.image_url.startsWith('http') ? item.image_url : `${API_BASE_URL}${item.image_url}`}
             alt={item.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
@@ -515,7 +513,7 @@ function ItemDetailDrawer({ item, onClose }: ItemDetailDrawerProps) {
         {/* Image */}
         {item.image_url && (
           <div className="w-full h-48 md:h-56 overflow-hidden">
-            <img src={item.image_url.startsWith('http') ? item.image_url : `http://localhost:8000${item.image_url}`} alt={item.name} className="w-full h-full object-cover" />
+            <img loading="lazy" src={item.image_url.startsWith('http') ? item.image_url : `${API_BASE_URL}${item.image_url}`} alt={item.name} className="w-full h-full object-cover" />
           </div>
         )}
 

@@ -4,7 +4,7 @@ import { Footer } from '../components/public/Footer';
 import { ReservationModal } from '../components/public/ReservationModal';
 import { Link } from 'react-router-dom';
 
-export function PrivacyPage() {
+export default function PrivacyPage() {
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
 
   return (

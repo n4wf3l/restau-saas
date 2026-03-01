@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import type { ReactNode } from "react";
 import { api, csrf, setOnUnauthorized } from "../lib/api";
 import type { User, RegisterPayload } from "../lib/types";

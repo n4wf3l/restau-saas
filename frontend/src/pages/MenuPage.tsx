@@ -8,6 +8,7 @@ import {
   updateSettings,
   uploadMenuPdf,
   deleteMenuPdf,
+  API_BASE_URL,
 } from "../lib/api";
 import type { MenuItem, MenuItemPayload } from "../lib/types";
 import toast from "react-hot-toast";
@@ -57,7 +58,7 @@ function ToggleSwitch({
 
 /* ═══════════════════════ MenuPage ═══════════════════════ */
 
-export function MenuPage() {
+export default function MenuPage() {
   const [activeTab, setActiveTab] = useState<MenuTab>("manual");
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -151,7 +152,7 @@ export function MenuPage() {
       item.image_url
         ? item.image_url.startsWith("http")
           ? item.image_url
-          : `http://localhost:8000${item.image_url}`
+          : `${API_BASE_URL}${item.image_url}`
         : null
     );
     setFormData({
@@ -595,7 +596,7 @@ export function MenuPage() {
                     </div>
                     <div className="flex gap-2 shrink-0">
                       <a
-                        href={`http://localhost:8000${currentPdfUrl}`}
+                        href={`${API_BASE_URL}${currentPdfUrl}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="px-3 py-1.5 text-sm font-medium text-coffee-600 dark:text-coffee-400 border border-coffee-200 dark:border-coffee-800 rounded-lg hover:bg-coffee-50 dark:hover:bg-coffee-900/20 transition-colors"
@@ -615,7 +616,7 @@ export function MenuPage() {
                   {/* PDF Preview */}
                   <div className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
                     <iframe
-                      src={`http://localhost:8000${currentPdfUrl}`}
+                      src={`${API_BASE_URL}${currentPdfUrl}`}
                       className="w-full h-[500px]"
                       title="Aperçu du menu PDF"
                     />
@@ -1022,7 +1023,7 @@ function AdminMenuCard({ item, onEdit, onDelete }: AdminMenuItemProps) {
             src={
               item.image_url.startsWith("http")
                 ? item.image_url
-                : `http://localhost:8000${item.image_url}`
+                : `${API_BASE_URL}${item.image_url}`
             }
             alt={item.name}
             className="w-full h-full object-cover"
@@ -1095,7 +1096,7 @@ function AdminMenuRow({ item, onEdit, onDelete }: AdminMenuItemProps) {
             src={
               item.image_url.startsWith("http")
                 ? item.image_url
-                : `http://localhost:8000${item.image_url}`
+                : `${API_BASE_URL}${item.image_url}`
             }
             alt={item.name}
             className="w-full h-full object-cover"

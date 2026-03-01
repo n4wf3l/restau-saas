@@ -1,24 +1,35 @@
 import { BrowserRouter, Routes, Route, useLocation, Link } from "react-router-dom";
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { GuestRoute } from "./components/GuestRoute";
 import { DashboardLayout } from "./components/DashboardLayout";
-import { Login } from "./pages/Login";
-import { Register } from "./pages/Register";
-import { Dashboard } from "./pages/Dashboard";
-import { MenuPage } from "./pages/MenuPage";
-import { SettingsPage } from "./pages/SettingsPage";
-import { Home } from "./pages/Home";
-import { GalleryPage } from "./pages/GalleryPage";
-import { ContactPage } from "./pages/ContactPage";
-import PublicReservation from "./pages/PublicReservation";
-import { PublicMenuPage } from "./pages/PublicMenuPage";
-import { PrivacyPage } from "./pages/PrivacyPage";
-import { TermsPage } from "./pages/TermsPage";
+import { PublicSettingsProvider } from "./contexts/PublicSettingsContext";
 import { AppToaster } from "./components/ui/Toast";
 import "./App.css";
+
+// Lazy-loaded pages (code splitting)
+const Home = lazy(() => import("./pages/Home"));
+const GalleryPage = lazy(() => import("./pages/GalleryPage"));
+const ContactPage = lazy(() => import("./pages/ContactPage"));
+const PublicReservation = lazy(() => import("./pages/PublicReservation"));
+const PublicMenuPage = lazy(() => import("./pages/PublicMenuPage"));
+const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
+const TermsPage = lazy(() => import("./pages/TermsPage"));
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const MenuPage = lazy(() => import("./pages/MenuPage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+
+function PageLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-coffee-600 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -52,32 +63,36 @@ function App() {
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
+          <PublicSettingsProvider>
           <ScrollToTop />
           <AppToaster />
           <AdminFloatingButton />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/gallery" element={<GalleryPage />} />
-            <Route path="/contact" element={<ContactPage />} />
-            <Route path="/reservation" element={<PublicReservation />} />
-            <Route path="/menu" element={<PublicMenuPage />} />
-            <Route path="/privacy" element={<PrivacyPage />} />
-            <Route path="/terms" element={<TermsPage />} />
-            <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
-            <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <DashboardLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<Dashboard />} />
-              <Route path="menu" element={<MenuPage />} />
-              <Route path="settings" element={<SettingsPage />} />
-            </Route>
-          </Routes>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/gallery" element={<GalleryPage />} />
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="/reservation" element={<PublicReservation />} />
+              <Route path="/menu" element={<PublicMenuPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
+              <Route path="/terms" element={<TermsPage />} />
+              <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+              <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <DashboardLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Dashboard />} />
+                <Route path="menu" element={<MenuPage />} />
+                <Route path="settings" element={<SettingsPage />} />
+              </Route>
+            </Routes>
+          </Suspense>
+          </PublicSettingsProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

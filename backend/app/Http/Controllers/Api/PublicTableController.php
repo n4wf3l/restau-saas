@@ -107,12 +107,12 @@ class PublicTableController extends Controller
     }
 
     /**
-     * Get chair IDs that have conflicting reservations overlapping with the proposed time window.
-     * Window = [arrival_time, arrival_time + duration + buffer]
+     * Batch-query conflicting chair IDs for ALL chairs at once.
+     * Returns an array of conflicting floor_plan_item_ids.
      */
-    private function getConflictingChairIds(array $chairIds, Carbon $proposedArrival, int $durationMinutes, int $bufferMinutes): array
+    private function getBatchConflictingChairIds(array $allChairIds, Carbon $proposedArrival, int $durationMinutes, int $bufferMinutes): array
     {
-        if (empty($chairIds)) {
+        if (empty($allChairIds)) {
             return [];
         }
 
@@ -123,7 +123,7 @@ class PublicTableController extends Controller
             ->connection()
             ->getDriverName();
 
-        $query = Reservation::whereIn('floor_plan_item_id', $chairIds)
+        $query = Reservation::whereIn('floor_plan_item_id', $allChairIds)
             ->where('status', '!=', 'cancelled')
             ->where('arrival_time', '<', $proposedEnd);
 
@@ -143,25 +143,21 @@ class PublicTableController extends Controller
     }
 
     /**
-     * Find all chairs adjacent to a table group and return their IDs.
+     * Find adjacent chair IDs for tables using a pre-loaded chairs collection (in-memory filter).
      */
-    private function getAdjacentChairIds($tablesInGroup): array
+    private function getAdjacentChairIdsFromCollection($tablesInGroup, $allChairs): array
     {
         $allChairIds = [];
         foreach ($tablesInGroup as $groupTable) {
-            $adjacentChairs = RestaurantFloorPlanItem::where('type', 'chair')
-                ->where('floor_plan_id', $groupTable->floor_plan_id)
-                ->where('floor_level', $groupTable->floor_level)
-                ->whereBetween('x', [$groupTable->x - 1, $groupTable->x + 1])
-                ->whereBetween('y', [$groupTable->y - 1, $groupTable->y + 1])
-                ->where(function ($query) use ($groupTable) {
-                    $query->where('x', '!=', $groupTable->x)
-                          ->orWhere('y', '!=', $groupTable->y);
-                })
-                ->pluck('id')
-                ->toArray();
+            $adjacent = $allChairs->filter(function ($chair) use ($groupTable) {
+                return $chair->floor_plan_id === $groupTable->floor_plan_id
+                    && $chair->floor_level === $groupTable->floor_level
+                    && $chair->x >= $groupTable->x - 1 && $chair->x <= $groupTable->x + 1
+                    && $chair->y >= $groupTable->y - 1 && $chair->y <= $groupTable->y + 1
+                    && ($chair->x !== $groupTable->x || $chair->y !== $groupTable->y);
+            })->pluck('id')->toArray();
 
-            $allChairIds = array_merge($allChairIds, $adjacentChairs);
+            $allChairIds = array_merge($allChairIds, $adjacent);
         }
 
         return array_values(array_unique($allChairIds));
@@ -169,10 +165,13 @@ class PublicTableController extends Controller
 
     /**
      * Group tables by name and floor, returning structured groups.
+     * Only 2 DB queries: one for tables, one for chairs.
      */
     private function getTableGroups()
     {
         $tables = RestaurantFloorPlanItem::where('type', 'table')->get();
+        $allChairs = RestaurantFloorPlanItem::where('type', 'chair')->get();
+
         $groups = [];
         $processedIds = [];
         $tableIndex = 1;
@@ -195,7 +194,7 @@ class PublicTableController extends Controller
                 $processedIds[] = $t->id;
             }
 
-            $chairIds = $this->getAdjacentChairIds($tablesInGroup);
+            $chairIds = $this->getAdjacentChairIdsFromCollection($tablesInGroup, $allChairs);
 
             if (empty($chairIds)) {
                 $tableIndex++;
@@ -216,60 +215,58 @@ class PublicTableController extends Controller
         return $groups;
     }
 
+    /**
+     * Build table response data using batched conflict check (1 query for all groups).
+     */
+    private function buildTableData(array $groups, Carbon $arrivalTime, int $duration, int $buffer): array
+    {
+        // Collect ALL chair IDs across all groups
+        $allChairIds = [];
+        foreach ($groups as $group) {
+            $allChairIds = array_merge($allChairIds, $group['chairIds']);
+        }
+        $allChairIds = array_values(array_unique($allChairIds));
+
+        // Single batched query for all conflicts
+        $allConflicting = $this->getBatchConflictingChairIds($allChairIds, $arrivalTime, $duration, $buffer);
+        $conflictingSet = array_flip($allConflicting);
+
+        // Build response per group using in-memory lookup
+        $tables = [];
+        foreach ($groups as $group) {
+            $conflictCount = 0;
+            foreach ($group['chairIds'] as $chairId) {
+                if (isset($conflictingSet[$chairId])) {
+                    $conflictCount++;
+                }
+            }
+            $availableSeats = $group['totalSeats'] - $conflictCount;
+
+            $tables[] = [
+                'id' => $group['table']->id,
+                'name' => $group['name'],
+                'floor' => $group['floor'],
+                'total_seats' => $group['totalSeats'],
+                'available_seats' => $availableSeats,
+                'is_available' => $availableSeats > 0,
+                'chair_ids' => $group['chairIds'],
+            ];
+        }
+
+        return $tables;
+    }
+
     public function index()
     {
         $settings = $this->getSettings();
         $groups = $this->getTableGroups();
         $now = Carbon::now();
 
-        $groupedTables = [];
-
-        foreach ($groups as $group) {
-            // Use time-range conflict checking
-            $conflictingIds = $this->getConflictingChairIds(
-                $group['chairIds'],
-                $now,
-                $settings->service_duration_minutes,
-                $settings->buffer_minutes
-            );
-
-            $occupiedSeats = count($conflictingIds);
-            $availableSeats = $group['totalSeats'] - $occupiedSeats;
-
-            // Get upcoming reservations for display
-            $reservations = Reservation::whereIn('floor_plan_item_id', $group['chairIds'])
-                ->where('arrival_time', '>=', $now)
-                ->where('status', '!=', 'cancelled')
-                ->get();
-
-            // Count ALL reservations ever (past + future, pending + confirmed)
-            $historyCount = Reservation::whereIn('floor_plan_item_id', $group['chairIds'])
-                ->where('status', '!=', 'cancelled')
-                ->distinct('customer_email', 'arrival_time', 'party_size')
-                ->count();
-
-            $groupedTables[] = [
-                'id' => $group['table']->id,
-                'name' => $group['name'],
-                'floor' => $group['floor'],
-                'x' => $group['table']->x,
-                'y' => $group['table']->y,
-                'total_seats' => $group['totalSeats'],
-                'available_seats' => $availableSeats,
-                'occupied_seats' => $occupiedSeats,
-                'is_available' => $availableSeats > 0,
-                'chair_ids' => $group['chairIds'],
-                'reservation_history_count' => $historyCount,
-                'reservations' => $reservations->map(function ($reservation) {
-                    return [
-                        'id' => $reservation->id,
-                        'arrival_time' => $reservation->arrival_time->format('Y-m-d H:i'),
-                        'status' => $reservation->status,
-                        'party_size' => $reservation->party_size,
-                    ];
-                }),
-            ];
-        }
+        $groupedTables = $this->buildTableData(
+            $groups, $now,
+            $settings->service_duration_minutes,
+            $settings->buffer_minutes
+        );
 
         return response()->json($groupedTables);
     }
@@ -315,13 +312,15 @@ class PublicTableController extends Controller
 
         $groups = $this->getTableGroups();
 
-        // Check max occupancy
+        // Build table data with single batched conflict query
+        $availableTables = $this->buildTableData($groups, $arrivalDateTime, $duration, $buffer);
+
+        // Check max occupancy from built data
         $totalRestaurantChairs = 0;
         $totalOccupiedChairs = 0;
-        foreach ($groups as $group) {
-            $totalRestaurantChairs += $group['totalSeats'];
-            $conflicting = $this->getConflictingChairIds($group['chairIds'], $arrivalDateTime, $duration, $buffer);
-            $totalOccupiedChairs += count($conflicting);
+        foreach ($availableTables as $table) {
+            $totalRestaurantChairs += $table['total_seats'];
+            $totalOccupiedChairs += ($table['total_seats'] - $table['available_seats']);
         }
 
         $maxAllowed = (int) floor($totalRestaurantChairs * $settings->max_occupancy_pct / 100);
@@ -332,41 +331,6 @@ class PublicTableController extends Controller
                 'suggestedSlots' => [],
                 'message' => 'Capacité maximale du restaurant atteinte pour ce créneau',
             ]);
-        }
-
-        // Check each table group
-        $availableTables = [];
-
-        foreach ($groups as $group) {
-            $conflictingIds = $this->getConflictingChairIds($group['chairIds'], $arrivalDateTime, $duration, $buffer);
-            $availableSeats = $group['totalSeats'] - count($conflictingIds);
-
-            // Get upcoming reservations for display
-            $reservations = Reservation::whereIn('floor_plan_item_id', $group['chairIds'])
-                ->where('arrival_time', '>=', Carbon::now())
-                ->where('status', '!=', 'cancelled')
-                ->get();
-
-            $availableTables[] = [
-                'id' => $group['table']->id,
-                'name' => $group['name'],
-                'floor' => $group['floor'],
-                'x' => $group['table']->x,
-                'y' => $group['table']->y,
-                'total_seats' => $group['totalSeats'],
-                'available_seats' => $availableSeats,
-                'occupied_seats' => count($conflictingIds),
-                'is_available' => $availableSeats > 0,
-                'chair_ids' => $group['chairIds'],
-                'reservations' => $reservations->map(function ($reservation) {
-                    return [
-                        'id' => $reservation->id,
-                        'arrival_time' => $reservation->arrival_time->format('Y-m-d H:i'),
-                        'status' => $reservation->status,
-                        'party_size' => $reservation->party_size,
-                    ];
-                }),
-            ];
         }
 
         // Filter tables that can accommodate party_size
@@ -381,16 +345,14 @@ class PublicTableController extends Controller
 
             foreach ($timeOffsets as $offset) {
                 $alternativeTime = $arrivalDateTime->copy()->addMinutes($offset);
-                $hasAvailability = false;
+                $altTables = $this->buildTableData($groups, $alternativeTime, $duration, $buffer);
                 $maxAvailableSeats = 0;
+                $hasAvailability = false;
 
-                foreach ($groups as $group) {
-                    $conflicting = $this->getConflictingChairIds($group['chairIds'], $alternativeTime, $duration, $buffer);
-                    $available = $group['totalSeats'] - count($conflicting);
-
-                    if ($available >= $partySize) {
+                foreach ($altTables as $t) {
+                    if ($t['available_seats'] >= $partySize) {
                         $hasAvailability = true;
-                        $maxAvailableSeats = max($maxAvailableSeats, $available);
+                        $maxAvailableSeats = max($maxAvailableSeats, $t['available_seats']);
                     }
                 }
 
@@ -560,7 +522,6 @@ class PublicTableController extends Controller
             ]);
             return response()->json([
                 'error' => 'Erreur lors de la création de la réservation',
-                'message' => $e->getMessage(),
             ], 500);
         }
 
@@ -574,10 +535,19 @@ class PublicTableController extends Controller
 
     /**
      * Find the smallest available table that fits the party size.
+     * Uses batched conflict check for all groups at once.
      */
     private function findSmallestAvailableTable(int $partySize, Carbon $arrivalTime, int $duration, int $buffer): ?array
     {
         $groups = $this->getTableGroups();
+
+        // Collect ALL chair IDs for a single batched conflict query
+        $allChairIds = [];
+        foreach ($groups as $group) {
+            $allChairIds = array_merge($allChairIds, $group['chairIds']);
+        }
+        $allConflicting = $this->getBatchConflictingChairIds(array_values(array_unique($allChairIds)), $arrivalTime, $duration, $buffer);
+        $conflictingSet = array_flip($allConflicting);
 
         // Sort by total seats ascending (smallest first)
         usort($groups, fn($a, $b) => $a['totalSeats'] <=> $b['totalSeats']);
@@ -587,8 +557,7 @@ class PublicTableController extends Controller
                 continue;
             }
 
-            $conflictingIds = $this->getConflictingChairIds($group['chairIds'], $arrivalTime, $duration, $buffer);
-            $availableChairIds = array_values(array_diff($group['chairIds'], $conflictingIds));
+            $availableChairIds = array_values(array_filter($group['chairIds'], fn($id) => !isset($conflictingSet[$id])));
 
             if (count($availableChairIds) >= $partySize) {
                 return [

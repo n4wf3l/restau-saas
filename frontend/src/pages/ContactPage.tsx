@@ -3,8 +3,7 @@ import { Navbar } from '../components/public/Navbar';
 import { Footer } from '../components/public/Footer';
 import { ReservationModal } from '../components/public/ReservationModal';
 import { CTAButton } from '../components/public/CTAButton';
-import { getPublicSettings } from '../lib/api';
-import type { OpeningHours } from '../lib/types';
+import { usePublicSettings } from '../contexts/PublicSettingsContext';
 import toast from 'react-hot-toast';
 
 // ─── Scroll Reveal ───
@@ -59,7 +58,7 @@ function formatTime(t: string): string {
   return t.replace(':', 'h');
 }
 
-export function ContactPage() {
+export default function ContactPage() {
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<FormTab>('contact');
 
@@ -72,16 +71,10 @@ export function ContactPage() {
   const [recruitSending, setRecruitSending] = useState(false);
 
   // Opening hours from settings
-  const [openingHours, setOpeningHours] = useState<OpeningHours | null>(null);
-  const [hideReservation, setHideReservation] = useState(false);
-  const [loadingHours, setLoadingHours] = useState(true);
-
-  useEffect(() => {
-    getPublicSettings().then((s) => {
-      if (s.opening_hours) setOpeningHours(s.opening_hours);
-      setHideReservation(!s.reservations_enabled);
-    }).catch(() => {}).finally(() => setLoadingHours(false));
-  }, []);
+  const publicSettings = usePublicSettings();
+  const openingHours = publicSettings?.opening_hours ?? null;
+  const hideReservation = publicSettings ? !publicSettings.reservations_enabled : false;
+  const loadingHours = !publicSettings;
 
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

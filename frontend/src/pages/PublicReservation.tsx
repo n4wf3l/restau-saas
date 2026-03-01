@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { getPublicTables, createReservation, getPublicSettings } from "../lib/api";
+import { getPublicTables, createReservation } from "../lib/api";
+import { usePublicSettings } from "../contexts/PublicSettingsContext";
 import type { PublicTable } from "../lib/types";
 import { toast } from "react-hot-toast";
 import { Spinner } from "../components/ui/Spinner";
@@ -9,6 +10,7 @@ export default function PublicReservation() {
   const [loading, setLoading] = useState(true);
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
   const [reservationsDisabled, setReservationsDisabled] = useState(false);
+  const publicSettings = usePublicSettings();
   const [formData, setFormData] = useState({
     customer_name: "",
     customer_email: "",
@@ -18,17 +20,14 @@ export default function PublicReservation() {
   });
 
   useEffect(() => {
-    getPublicSettings().then((s) => {
-      if (!s.reservations_enabled) {
-        setReservationsDisabled(true);
-        setLoading(false);
-        return;
-      }
-      loadTables();
-    }).catch(() => {
-      loadTables();
-    });
-  }, []);
+    if (!publicSettings) return;
+    if (!publicSettings.reservations_enabled) {
+      setReservationsDisabled(true);
+      setLoading(false);
+      return;
+    }
+    loadTables();
+  }, [publicSettings]);
 
   const loadTables = async () => {
     try {

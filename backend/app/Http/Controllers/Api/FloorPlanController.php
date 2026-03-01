@@ -14,7 +14,9 @@ class FloorPlanController extends Controller
      */
     public function current(Request $request)
     {
-        $floorPlan = RestaurantFloorPlan::with('items')->first();
+        $floorPlan = RestaurantFloorPlan::where('user_id', $request->user()->id)
+            ->with('items')
+            ->first();
 
         if (!$floorPlan) {
             return response()->json(['message' => 'No floor plan found'], 404);
@@ -28,7 +30,7 @@ class FloorPlanController extends Controller
      */
     public function update(Request $request)
     {
-        $floorPlan = RestaurantFloorPlan::first();
+        $floorPlan = RestaurantFloorPlan::where('user_id', $request->user()->id)->first();
 
         if (!$floorPlan) {
             return response()->json(['message' => 'No floor plan found'], 404);
