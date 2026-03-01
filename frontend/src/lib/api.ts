@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { Reservation, PublicTable, ReservationPayload, EventReservationPayload, MenuItem, MenuItemPayload, RestaurantSettings } from "./types";
+import type { Reservation, PublicTable, ReservationPayload, EventReservationPayload, MenuItem, MenuItemPayload, RestaurantSettings, SiteImage, SiteImagesGrouped } from "./types";
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -208,6 +208,43 @@ export async function uploadMenuPdf(file: File): Promise<RestaurantSettings> {
 // Delete menu PDF
 export async function deleteMenuPdf(): Promise<void> {
   await api.delete("/api/settings/menu-pdf");
+}
+
+// === SITE IMAGES API ===
+
+export async function getSiteImages(category?: string): Promise<SiteImage[]> {
+  const params = category ? { category } : {};
+  const response = await api.get("/api/site-images", { params });
+  return response.data;
+}
+
+export async function createSiteImage(payload: { category: string; image: File; alt?: string }): Promise<SiteImage> {
+  const fd = new FormData();
+  fd.append('category', payload.category);
+  fd.append('image', payload.image);
+  if (payload.alt) fd.append('alt', payload.alt);
+  const response = await api.post("/api/site-images", fd, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return response.data;
+}
+
+export async function updateSiteImage(id: number, payload: { alt?: string; sort_order?: number }): Promise<SiteImage> {
+  const response = await api.put(`/api/site-images/${id}`, payload);
+  return response.data;
+}
+
+export async function deleteSiteImage(id: number): Promise<void> {
+  await api.delete(`/api/site-images/${id}`);
+}
+
+export async function reorderSiteImages(category: string, ids: number[]): Promise<void> {
+  await api.post("/api/site-images/reorder", { category, ids });
+}
+
+export async function getPublicSiteImages(): Promise<SiteImagesGrouped> {
+  const response = await api.get("/api/public/site-images");
+  return response.data;
 }
 
 // Public settings (no auth required)

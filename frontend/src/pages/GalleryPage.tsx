@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Navbar } from '../components/public/Navbar';
 import { Footer } from '../components/public/Footer';
 import { ReservationModal } from '../components/public/ReservationModal';
 import { CTAButton } from '../components/public/CTAButton';
 import { usePublicSettings } from '../contexts/PublicSettingsContext';
-import { ChevronLeftIcon, ChevronRightIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { useSiteImages } from '../contexts/SiteImagesContext';
+import { ImageLightbox } from '../components/ui/ImageLightbox';
 
 // ─── Scroll Reveal ───
 function ScrollReveal({
@@ -43,68 +44,17 @@ function ScrollReveal({
   );
 }
 
-const galleryImages = [
-  { src: 'https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?auto=format&fit=crop&w=1200&q=80', alt: 'Ambiance du restaurant' },
-  { src: '/rr-ice12.png', alt: 'Entrée du restaurant' },
-  { src: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=1200&q=80', alt: 'Plats gastronomiques' },
-  { src: 'https://images.unsplash.com/photo-1567521464027-f127ff144326?auto=format&fit=crop&w=1200&q=80', alt: 'Cocktails signature' },
-  { src: '/rr-ice9.png', alt: 'Terrasse au coucher de soleil' },
-  { src: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=1200&q=80', alt: 'Desserts maison' },
-  { src: '/rr-ice2.png', alt: 'Vue extérieure' },
-  { src: '/rr-ice3.png', alt: 'Ambiance soirée' },
-  { src: '/rr-ice4.png', alt: 'Terrasse' },
-];
 
 export default function GalleryPage() {
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const publicSettings = usePublicSettings();
+  const siteImages = useSiteImages();
+
+  const galleryImages = (siteImages?.gallery ?? []).map(img => ({
+    src: img.image_url, alt: img.alt || '',
+  }));
   const hideReservation = publicSettings ? !publicSettings.reservations_enabled : false;
-
-  const openLightbox = (index: number) => setLightboxIndex(index);
-  const closeLightbox = () => setLightboxIndex(null);
-
-  const goNext = useCallback(() => {
-    if (lightboxIndex === null) return;
-    setLightboxIndex((lightboxIndex + 1) % galleryImages.length);
-  }, [lightboxIndex]);
-
-  const goPrev = useCallback(() => {
-    if (lightboxIndex === null) return;
-    setLightboxIndex((lightboxIndex - 1 + galleryImages.length) % galleryImages.length);
-  }, [lightboxIndex]);
-
-  // Keyboard navigation
-  useEffect(() => {
-    if (lightboxIndex === null) return;
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight') goNext();
-      if (e.key === 'ArrowLeft') goPrev();
-      if (e.key === 'Escape') closeLightbox();
-    };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [lightboxIndex, goNext, goPrev]);
-
-  // Touch swipe
-  useEffect(() => {
-    if (lightboxIndex === null) return;
-    let startX = 0;
-    const handleTouchStart = (e: TouchEvent) => { startX = e.touches[0].clientX; };
-    const handleTouchEnd = (e: TouchEvent) => {
-      const diff = startX - e.changedTouches[0].clientX;
-      if (Math.abs(diff) > 60) {
-        if (diff > 0) goNext();
-        else goPrev();
-      }
-    };
-    window.addEventListener('touchstart', handleTouchStart);
-    window.addEventListener('touchend', handleTouchEnd);
-    return () => {
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, [lightboxIndex, goNext, goPrev]);
 
   return (
     <div className="bg-coffee-950 text-white min-h-screen">
@@ -137,7 +87,7 @@ export default function GalleryPage() {
             {galleryImages.map((img, idx) => (
               <ScrollReveal key={idx} delay={idx * 80}>
                 <div
-                  onClick={() => openLightbox(idx)}
+                  onClick={() => setLightboxIndex(idx)}
                   className="relative group cursor-pointer overflow-hidden aspect-[4/3]"
                 >
                   <img
@@ -168,52 +118,11 @@ export default function GalleryPage() {
 
       {/* Lightbox */}
       {lightboxIndex !== null && (
-        <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center">
-          {/* Close */}
-          <button
-            onClick={closeLightbox}
-            className="absolute top-4 right-4 text-cream-400/60 hover:text-cream-200 active:text-cream-100 transition-colors z-10 p-2 min-w-[48px] min-h-[48px] flex items-center justify-center"
-          >
-            <XMarkIcon className="w-7 h-7" />
-          </button>
-
-          {/* Counter */}
-          <div className="absolute top-6 left-6 text-cream-400/50 text-xs font-body tracking-widest z-10">
-            {lightboxIndex + 1} / {galleryImages.length}
-          </div>
-
-          {/* Prev */}
-          <button
-            onClick={goPrev}
-            className="absolute left-2 md:left-8 top-1/2 -translate-y-1/2 p-3 text-cream-400/50 hover:text-cream-200 active:text-cream-100 transition-colors z-10 min-w-[48px] min-h-[48px] flex items-center justify-center"
-          >
-            <ChevronLeftIcon className="w-8 h-8 md:w-10 md:h-10" />
-          </button>
-
-          {/* Image */}
-          <div className="max-w-5xl max-h-[80vh] w-full mx-4 md:mx-16 flex items-center justify-center">
-            <img
-              src={galleryImages[lightboxIndex].src}
-              alt={galleryImages[lightboxIndex].alt}
-              className="max-w-full max-h-[80vh] object-contain animate-fadeIn"
-            />
-          </div>
-
-          {/* Next */}
-          <button
-            onClick={goNext}
-            className="absolute right-2 md:right-8 top-1/2 -translate-y-1/2 p-3 text-cream-400/50 hover:text-cream-200 active:text-cream-100 transition-colors z-10 min-w-[48px] min-h-[48px] flex items-center justify-center"
-          >
-            <ChevronRightIcon className="w-8 h-8 md:w-10 md:h-10" />
-          </button>
-
-          {/* Caption */}
-          <div className="absolute bottom-8 left-0 right-0 text-center">
-            <p className="text-cream-400/60 text-sm font-body tracking-wider">
-              {galleryImages[lightboxIndex].alt}
-            </p>
-          </div>
-        </div>
+        <ImageLightbox
+          images={galleryImages}
+          currentIndex={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+        />
       )}
 
       <Footer onReservationClick={() => setIsReservationModalOpen(true)} hideReservation={hideReservation} />

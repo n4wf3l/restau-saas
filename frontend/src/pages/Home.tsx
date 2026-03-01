@@ -4,6 +4,8 @@ import { ReservationModal } from '../components/public/ReservationModal';
 import { Footer } from '../components/public/Footer';
 import { CTAButton } from '../components/public/CTAButton';
 import { usePublicSettings } from '../contexts/PublicSettingsContext';
+import { useSiteImages } from '../contexts/SiteImagesContext';
+import { ImageLightbox, type LightboxImage } from '../components/ui/ImageLightbox';
 
 // ─── Scroll Reveal ───
 function ScrollReveal({
@@ -42,13 +44,23 @@ function ScrollReveal({
   );
 }
 
-const heroImages = ['/rr-ice2.png', '/rr-ice3.png', '/rr-ice4.png'];
-
 
 export default function Home() {
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [lightbox, setLightbox] = useState<{ images: LightboxImage[]; index: number } | null>(null);
   const publicSettings = usePublicSettings();
+  const siteImages = useSiteImages();
+
+  const heroImages = (siteImages?.hero ?? []).map(img => img.image_url);
+
+  const restaurantImages: LightboxImage[] = (siteImages?.restaurant ?? []).map(img => ({
+    src: img.image_url, alt: img.alt || '',
+  }));
+
+  const carteImages: LightboxImage[] = (siteImages?.carte ?? []).map(img => ({
+    src: img.image_url, alt: img.alt || '',
+  }));
   const hideReservation = publicSettings ? !publicSettings.reservations_enabled : false;
   const [showScrollTop, setShowScrollTop] = useState(false);
 
@@ -63,12 +75,12 @@ export default function Home() {
 
   // Auto-slider pour les images de fond
   useEffect(() => {
+    if (heroImages.length <= 1) return;
     const interval = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
-    }, 5000); // Change toutes les 5 secondes
-
+    }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [heroImages.length]);
 
   return (
     <div className="bg-black text-white min-h-screen">
@@ -159,19 +171,15 @@ export default function Home() {
 
           {/* Images grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 mb-16">
-            {[
-              '/rr-ice11.png',
-              '/rr-ice13.png',
-              '/rr-ice7.png',
-              '/rr-ice8.png',
-              '/rr-ice9.png',
-              '/rr-ice10.png',
-            ].map((image, idx) => (
+            {restaurantImages.map((img, idx) => (
               <ScrollReveal key={idx} delay={idx * 100}>
-                <div className="relative group overflow-hidden h-52 md:h-72">
+                <div
+                  onClick={() => setLightbox({ images: restaurantImages, index: idx })}
+                  className="relative group overflow-hidden h-52 md:h-72 cursor-pointer"
+                >
                   <img
-                    src={image}
-                    alt={`Gallery ${idx + 1}`}
+                    src={img.src}
+                    alt={img.alt}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-500" />
@@ -213,12 +221,15 @@ export default function Home() {
 
           {/* Food images */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 mb-12">
-            {['/rr-ice14.png', '/rr-ice15.png', '/rr-ice16.png', '/rr-ice17.png', '/rr-ice19.png', '/rr-ice20.png'].map((image, idx) => (
+            {carteImages.map((img, idx) => (
               <ScrollReveal key={idx} delay={idx * 100}>
-                <div className="relative group overflow-hidden h-48 md:h-60">
+                <div
+                  onClick={() => setLightbox({ images: carteImages, index: idx })}
+                  className="relative group overflow-hidden h-48 md:h-60 cursor-pointer"
+                >
                   <img
-                    src={image}
-                    alt={`Plat ${idx + 1}`}
+                    src={img.src}
+                    alt={img.alt}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-500" />
@@ -318,6 +329,15 @@ export default function Home() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
         </svg>
       </button>
+
+      {/* Lightbox */}
+      {lightbox && (
+        <ImageLightbox
+          images={lightbox.images}
+          currentIndex={lightbox.index}
+          onClose={() => setLightbox(null)}
+        />
+      )}
 
       <Footer onReservationClick={() => setIsReservationModalOpen(true)} hideReservation={hideReservation} />
     </div>

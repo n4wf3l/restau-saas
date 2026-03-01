@@ -6,6 +6,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { GuestRoute } from "./components/GuestRoute";
 import { DashboardLayout } from "./components/DashboardLayout";
 import { PublicSettingsProvider } from "./contexts/PublicSettingsContext";
+import { SiteImagesProvider } from "./contexts/SiteImagesContext";
 import { AppToaster } from "./components/ui/Toast";
 import "./App.css";
 
@@ -22,6 +23,7 @@ const Register = lazy(() => import("./pages/Register"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const MenuPage = lazy(() => import("./pages/MenuPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const SiteImagesPage = lazy(() => import("./pages/SiteImagesPage"));
 
 function PageLoader() {
   return (
@@ -64,6 +66,7 @@ function App() {
       <ThemeProvider>
         <AuthProvider>
           <PublicSettingsProvider>
+          <SiteImagesProvider>
           <ScrollToTop />
           <AppToaster />
           <AdminFloatingButton />
@@ -88,10 +91,12 @@ function App() {
               >
                 <Route index element={<Dashboard />} />
                 <Route path="menu" element={<MenuPage />} />
+                <Route path="images" element={<SiteImagesPage />} />
                 <Route path="settings" element={<SettingsPage />} />
               </Route>
             </Routes>
           </Suspense>
+          </SiteImagesProvider>
           </PublicSettingsProvider>
         </AuthProvider>
       </ThemeProvider>

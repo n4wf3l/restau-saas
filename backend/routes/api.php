@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\PublicTableController;
 use App\Http\Controllers\Api\ReservationController;
 use App\Http\Controllers\Api\MenuItemController;
 use App\Http\Controllers\Api\SettingsController;
+use App\Http\Controllers\Api\SiteImageController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -14,6 +15,7 @@ Route::middleware('throttle:60,1')->group(function () {
     Route::get('/public/tables', [PublicTableController::class, 'index']);
     Route::get('/public/settings', [SettingsController::class, 'publicShow']);
     Route::get('/public/menu-items', [MenuItemController::class, 'publicIndex']);
+    Route::get('/public/site-images', [SiteImageController::class, 'publicIndex']);
 });
 
 Route::post('/public/check-availability', [PublicTableController::class, 'checkAvailability'])
@@ -55,4 +57,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/menu-items', [MenuItemController::class, 'store']);
     Route::put('/menu-items/{menuItem}', [MenuItemController::class, 'update']);
     Route::delete('/menu-items/{menuItem}', [MenuItemController::class, 'destroy']);
+
+    // Site Images routes
+    Route::get('/site-images', [SiteImageController::class, 'index']);
+    Route::post('/site-images', [SiteImageController::class, 'store']);
+    Route::put('/site-images/{siteImage}', [SiteImageController::class, 'update']);
+    Route::delete('/site-images/{siteImage}', [SiteImageController::class, 'destroy']);
+    Route::post('/site-images/reorder', [SiteImageController::class, 'reorder']);
 });

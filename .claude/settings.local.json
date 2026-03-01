@@ -7,7 +7,12 @@
       "Bash(xargs cat)",
       "Bash(npm audit)",
       "Bash(sort -k5 -h)",
-      "Bash(npm run build)"
+      "Bash(npm run build)",
+      "Bash(ls c:/Users/ajari/Documents/GitHub/restau-saas/frontend/public/rr-ice*.png)",
+      "Bash(php artisan tinker --execute=\"echo json_encode\\(App\\\\Models\\\\SiteImage::take\\(3\\)->get\\([''id'',''category'',''image_url'']\\)->toArray\\(\\)\\);\")",
+      "Bash(curl -s http://localhost:8000/api/public/site-images)",
+      "Bash(php artisan cache:clear)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8000/api/public/site-images)"
     ]
   }
 }

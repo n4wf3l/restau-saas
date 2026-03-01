@@ -13,6 +13,7 @@ import {
   UsersIcon,
   ChartBarIcon,
   Cog6ToothIcon,
+  PhotoIcon,
   MapIcon,
   MoonIcon,
   SunIcon,
@@ -37,6 +38,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { path: "/dashboard", label: "Réservations", icon: CalendarIcon, exact: true },
   { path: "/dashboard/menu", label: "Carte", icon: BookOpenIcon },
+  { path: "/dashboard/images", label: "Images", icon: PhotoIcon },
   { path: "/dashboard/clients", label: "Clients", icon: UsersIcon, soon: true },
   { path: "/dashboard/analytics", label: "Statistiques", icon: ChartBarIcon, soon: true },
   { path: "/dashboard/settings", label: "Paramètres", icon: Cog6ToothIcon },

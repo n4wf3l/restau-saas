@@ -6,6 +6,7 @@ import { getPublicMenuItems, API_BASE_URL } from '../lib/api';
 import { usePublicSettings } from '../contexts/PublicSettingsContext';
 import type { MenuItem } from '../lib/types';
 import { MagnifyingGlassIcon, XMarkIcon, Bars3Icon, Squares2X2Icon } from '@heroicons/react/24/outline';
+import { ImageLightbox, type LightboxImage } from '../components/ui/ImageLightbox';
 
 // ─── Scroll Reveal ───
 function ScrollReveal({
@@ -56,6 +57,9 @@ export default function PublicMenuPage() {
   const menuPdfUrl = publicSettings?.menu_pdf_url ?? null;
   const manualVisible = publicSettings?.menu_manual_visible ?? true;
   const pdfVisible = publicSettings?.menu_pdf_visible ?? false;
+
+  // Lightbox state
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   // Refs for scrollspy
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
@@ -117,6 +121,23 @@ export default function PublicMenuPage() {
     }
     return map;
   }, [filteredCategories, filteredItems]);
+
+  // Build lightbox images from all menu items with images
+  const lightboxImages: LightboxImage[] = useMemo(() => {
+    return menuItems
+      .filter(item => item.image_url)
+      .map(item => ({
+        src: item.image_url!.startsWith('http') ? item.image_url! : `${API_BASE_URL}${item.image_url}`,
+        alt: item.name,
+      }));
+  }, [menuItems]);
+
+  const openLightboxForItem = useCallback((item: MenuItem) => {
+    if (!item.image_url) return;
+    const src = item.image_url.startsWith('http') ? item.image_url : `${API_BASE_URL}${item.image_url}`;
+    const idx = lightboxImages.findIndex(img => img.src === src);
+    if (idx >= 0) setLightboxIndex(idx);
+  }, [lightboxImages]);
 
   // Set initial active category
   useEffect(() => {
@@ -318,6 +339,7 @@ export default function PublicMenuPage() {
                           <MenuItemRow
                             item={item}
                             onDetailClick={() => setDetailItem(item)}
+                            onImageClick={() => openLightboxForItem(item)}
                           />
                         </ScrollReveal>
                       ))}
@@ -329,6 +351,7 @@ export default function PublicMenuPage() {
                           <MenuItemCard
                             item={item}
                             onDetailClick={() => setDetailItem(item)}
+                            onImageClick={() => openLightboxForItem(item)}
                           />
                         </ScrollReveal>
                       ))}
@@ -346,7 +369,20 @@ export default function PublicMenuPage() {
 
       {/* Detail Drawer */}
       {detailItem && (
-        <ItemDetailDrawer item={detailItem} onClose={() => setDetailItem(null)} />
+        <ItemDetailDrawer
+          item={detailItem}
+          onClose={() => setDetailItem(null)}
+          onImageClick={() => openLightboxForItem(detailItem)}
+        />
+      )}
+
+      {/* Lightbox */}
+      {lightboxIndex !== null && (
+        <ImageLightbox
+          images={lightboxImages}
+          currentIndex={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+        />
       )}
     </div>
   );
@@ -359,6 +395,7 @@ export default function PublicMenuPage() {
 interface MenuItemRowProps {
   item: MenuItem;
   onDetailClick: () => void;
+  onImageClick?: () => void;
 }
 
 function MenuItemRow({ item, onDetailClick }: MenuItemRowProps) {
@@ -424,7 +461,7 @@ function MenuItemRow({ item, onDetailClick }: MenuItemRowProps) {
 // MenuItemCard — Grid card view
 // ─────────────────────────────────────────────────────────
 
-function MenuItemCard({ item, onDetailClick }: MenuItemRowProps) {
+function MenuItemCard({ item, onDetailClick, onImageClick }: MenuItemRowProps) {
   return (
     <div
       className="group border border-cream-400/15 hover:border-cream-400/30 bg-cream-400/[0.03] hover:bg-cream-400/[0.06] transition-all duration-200 cursor-pointer"
@@ -432,7 +469,10 @@ function MenuItemCard({ item, onDetailClick }: MenuItemRowProps) {
     >
       {/* Image */}
       {item.image_url && (
-        <div className="w-full h-40 overflow-hidden">
+        <div
+          className="w-full h-40 overflow-hidden cursor-zoom-in"
+          onClick={(e) => { e.stopPropagation(); onImageClick?.(); }}
+        >
           <img
             loading="lazy"
             src={item.image_url.startsWith('http') ? item.image_url : `${API_BASE_URL}${item.image_url}`}
@@ -480,9 +520,10 @@ function MenuItemCard({ item, onDetailClick }: MenuItemRowProps) {
 interface ItemDetailDrawerProps {
   item: MenuItem;
   onClose: () => void;
+  onImageClick?: () => void;
 }
 
-function ItemDetailDrawer({ item, onClose }: ItemDetailDrawerProps) {
+function ItemDetailDrawer({ item, onClose, onImageClick }: ItemDetailDrawerProps) {
   const [closing, setClosing] = useState(false);
 
   const handleClose = useCallback(() => {
@@ -512,8 +553,11 @@ function ItemDetailDrawer({ item, onClose }: ItemDetailDrawerProps) {
       >
         {/* Image */}
         {item.image_url && (
-          <div className="w-full h-48 md:h-56 overflow-hidden">
-            <img loading="lazy" src={item.image_url.startsWith('http') ? item.image_url : `${API_BASE_URL}${item.image_url}`} alt={item.name} className="w-full h-full object-cover" />
+          <div
+            className="w-full h-48 md:h-56 overflow-hidden cursor-zoom-in"
+            onClick={() => onImageClick?.()}
+          >
+            <img loading="lazy" src={item.image_url.startsWith('http') ? item.image_url : `${API_BASE_URL}${item.image_url}`} alt={item.name} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
           </div>
         )}
 

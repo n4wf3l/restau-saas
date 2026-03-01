@@ -176,6 +176,23 @@ export interface SocialLink {
 
 export type SocialLinks = Record<string, SocialLink>;
 
+export interface SiteImage {
+  id: number;
+  category: 'hero' | 'restaurant' | 'carte' | 'gallery';
+  image_url: string;
+  alt: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SiteImagesGrouped {
+  hero: SiteImage[];
+  restaurant: SiteImage[];
+  carte: SiteImage[];
+  gallery: SiteImage[];
+}
+
 export interface RestaurantSettings {
   id: number;
   user_id: number;
