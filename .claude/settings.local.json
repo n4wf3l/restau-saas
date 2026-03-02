@@ -12,7 +12,8 @@
       "Bash(php artisan tinker --execute=\"echo json_encode\\(App\\\\Models\\\\SiteImage::take\\(3\\)->get\\([''id'',''category'',''image_url'']\\)->toArray\\(\\)\\);\")",
       "Bash(curl -s http://localhost:8000/api/public/site-images)",
       "Bash(php artisan cache:clear)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8000/api/public/site-images)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8000/api/public/site-images)",
+      "Bash(grep -n \"ContactPage\\\\|/contact\" c:/Users/ajari/Documents/GitHub/restau-saas/frontend/src/components/public/*.tsx)"
     ]
   }
 }

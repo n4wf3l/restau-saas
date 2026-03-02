@@ -4,6 +4,7 @@ import { Footer } from '../components/public/Footer';
 import { ReservationModal } from '../components/public/ReservationModal';
 import { CTAButton } from '../components/public/CTAButton';
 import { usePublicSettings } from '../contexts/PublicSettingsContext';
+import { submitContact, submitRecruitment } from '../lib/api';
 import toast from 'react-hot-toast';
 
 // ─── Scroll Reveal ───
@@ -79,20 +80,37 @@ export default function ContactPage() {
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setContactSending(true);
-    // Simulate sending
-    await new Promise((r) => setTimeout(r, 1000));
-    toast.success('Message envoyé avec succès !');
-    setContactForm({ name: '', email: '', phone: '', subject: '', message: '' });
-    setContactSending(false);
+    try {
+      await submitContact(contactForm);
+      toast.success('Message envoyé avec succès !');
+      setContactForm({ name: '', email: '', phone: '', subject: '', message: '' });
+    } catch (err: any) {
+      if (err?.response?.status === 429) {
+        toast.error('Trop de messages envoyés. Veuillez réessayer dans une minute.');
+      } else {
+        toast.error("Erreur lors de l'envoi du message.");
+      }
+    } finally {
+      setContactSending(false);
+    }
   };
 
   const handleRecruitSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setRecruitSending(true);
-    await new Promise((r) => setTimeout(r, 1000));
-    toast.success('Candidature envoyée avec succès !');
-    setRecruitForm({ name: '', email: '', phone: '', position: '', experience: '', message: '' });
-    setRecruitSending(false);
+    try {
+      await submitRecruitment(recruitForm);
+      toast.success('Candidature envoyée avec succès !');
+      setRecruitForm({ name: '', email: '', phone: '', position: '', experience: '', message: '' });
+    } catch (err: any) {
+      if (err?.response?.status === 429) {
+        toast.error('Trop de candidatures envoyées. Veuillez réessayer dans une minute.');
+      } else {
+        toast.error("Erreur lors de l'envoi de la candidature.");
+      }
+    } finally {
+      setRecruitSending(false);
+    }
   };
 
   return (

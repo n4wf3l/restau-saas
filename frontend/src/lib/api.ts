@@ -247,6 +247,19 @@ export async function getPublicSiteImages(): Promise<SiteImagesGrouped> {
   return response.data;
 }
 
+// Contact / Recruitment (public, rate limited)
+export async function submitContact(data: {
+  name: string; email: string; phone?: string; subject: string; message: string;
+}): Promise<void> {
+  await api.post("/api/public/contact", data);
+}
+
+export async function submitRecruitment(data: {
+  name: string; email: string; phone?: string; position: string; experience: string; message?: string;
+}): Promise<void> {
+  await api.post("/api/public/recruit", data);
+}
+
 // Public settings (no auth required)
 export async function getPublicSettings(): Promise<{
   reservations_enabled: boolean;

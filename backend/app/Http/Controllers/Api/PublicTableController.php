@@ -8,6 +8,7 @@ use App\Models\RestaurantFloorPlan;
 use App\Models\RestaurantSetting;
 use App\Models\Reservation;
 use Illuminate\Http\Request;
+use App\Services\ReservationMailService;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -512,6 +513,9 @@ class PublicTableController extends Controller
             ], 500);
         }
 
+        // Send confirmation/pending email (one per group)
+        ReservationMailService::sendByStatus($reservations[0], $tableName);
+
         return response()->json([
             'message' => 'Réservation créée avec succès',
             'table_name' => $tableName,
@@ -595,6 +599,9 @@ class PublicTableController extends Controller
             'event_details' => $validated['event_details'],
             'status' => $settings->auto_confirm ? 'confirmed' : 'pending',
         ]);
+
+        // Send confirmation/pending email
+        ReservationMailService::sendByStatus($reservation, 'Événement');
 
         return response()->json([
             'message' => 'Demande d\'événement enregistrée. Le restaurant vous contactera pour confirmer.',

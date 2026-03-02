@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateReservationRequest;
 use App\Models\Reservation;
 use App\Models\RestaurantFloorPlan;
 use App\Models\RestaurantFloorPlanItem;
+use App\Services\ReservationMailService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -178,6 +179,7 @@ class ReservationController extends Controller
     public function update(UpdateReservationRequest $request, Reservation $reservation)
     {
         $validated = $request->validated();
+        $oldStatus = $reservation->status;
 
         // Update all reservations in the same group
         $group = Reservation::where('customer_email', $reservation->customer_email)
@@ -195,6 +197,19 @@ class ReservationController extends Controller
 
         foreach ($group as $r) {
             $r->update($updateFields);
+        }
+
+        // Send email on status change (confirmed / cancelled)
+        $newStatus = $validated['status'] ?? $oldStatus;
+        if ($oldStatus !== $newStatus) {
+            $fresh = $reservation->fresh();
+            $tableName = $fresh->floorPlanItem?->table_name ?? 'Table';
+
+            if ($newStatus === 'confirmed') {
+                ReservationMailService::sendConfirmed($fresh, $tableName);
+            } elseif ($newStatus === 'cancelled') {
+                ReservationMailService::sendCancelled($fresh);
+            }
         }
 
         // If no_show, soft-delete the entire group

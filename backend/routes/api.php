@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ReservationController;
 use App\Http\Controllers\Api\MenuItemController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\SiteImageController;
+use App\Http\Controllers\Api\ContactController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -24,6 +25,11 @@ Route::post('/public/reservations', [PublicTableController::class, 'store'])
     ->middleware('throttle:10,1');
 Route::post('/public/events', [PublicTableController::class, 'storeEvent'])
     ->middleware('throttle:10,1');
+
+Route::post('/public/contact', [ContactController::class, 'contact'])
+    ->middleware('throttle:3,1');
+Route::post('/public/recruit', [ContactController::class, 'recruit'])
+    ->middleware('throttle:3,1');
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();

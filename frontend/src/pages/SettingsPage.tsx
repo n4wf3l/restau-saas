@@ -357,9 +357,8 @@ export default function SettingsPage() {
               />
               <ToggleRow
                 icon={EnvelopeIcon}
-                label="Email de double confirmation"
+                label="Email de confirmation"
                 description="Envoyer un email de confirmation au client après sa réservation."
-                tag="bientôt"
                 enabled={settings.send_confirmation_email}
                 onChange={(v) => handleUpdate("send_confirmation_email", v)}
               />
