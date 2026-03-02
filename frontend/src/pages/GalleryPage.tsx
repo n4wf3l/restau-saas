@@ -49,6 +49,7 @@ export default function GalleryPage() {
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const publicSettings = usePublicSettings();
+  const restaurantName = publicSettings?.restaurant_name ?? 'RR Ice';
   const siteImages = useSiteImages();
 
   const galleryImages = (siteImages?.gallery ?? []).map(img => ({
@@ -75,7 +76,7 @@ export default function GalleryPage() {
         </ScrollReveal>
         <ScrollReveal delay={200}>
           <p className="text-cream-400/70 font-body text-base md:text-lg max-w-xl mx-auto leading-relaxed">
-            Plongez dans l'atmosphère de RR Ice à travers nos photos
+            Plongez dans l'atmosphère de {restaurantName} à travers nos photos
           </p>
         </ScrollReveal>
       </section>

@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Reservation;
+use App\Models\RestaurantSetting;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -22,7 +23,7 @@ class ReservationPending extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Demande de réservation reçue — RR Ice',
+            subject: 'Demande de réservation reçue — ' . (RestaurantSetting::first()?->restaurant_name ?? 'RR Ice'),
         );
     }
 

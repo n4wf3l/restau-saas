@@ -209,6 +209,8 @@ export interface RestaurantSettings {
   menu_manual_visible: boolean;
   menu_pdf_visible: boolean;
   social_links: SocialLinks | null;
+  restaurant_name: string;
+  logo_url: string | null;
   created_at: string;
   updated_at: string;
 }

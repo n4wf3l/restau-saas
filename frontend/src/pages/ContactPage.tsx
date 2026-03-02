@@ -73,6 +73,7 @@ export default function ContactPage() {
 
   // Opening hours from settings
   const publicSettings = usePublicSettings();
+  const restaurantName = publicSettings?.restaurant_name ?? 'RR Ice';
   const openingHours = publicSettings?.opening_hours ?? null;
   const hideReservation = publicSettings ? !publicSettings.reservations_enabled : false;
   const loadingHours = !publicSettings;
@@ -244,7 +245,7 @@ export default function ContactPage() {
             <ScrollReveal delay={150}>
               <div className="border border-cream-400/15 overflow-hidden h-full">
                 <iframe
-                  title="RR Ice — Ghandouri, Tanger"
+                  title={`${restaurantName} — Ghandouri, Tanger`}
                   src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3237.5!2d-5.8128!3d35.7595!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd0b8!2sGhandouri%2C+Tanger!5e0!3m2!1sfr!2sma!4v1700000000000"
                   width="100%"
                   height="100%"

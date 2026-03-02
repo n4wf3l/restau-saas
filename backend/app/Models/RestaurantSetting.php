@@ -22,6 +22,8 @@ class RestaurantSetting extends Model
         'menu_manual_visible',
         'menu_pdf_visible',
         'social_links',
+        'restaurant_name',
+        'logo_url',
     ];
 
     protected $casts = [

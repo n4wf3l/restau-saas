@@ -13,7 +13,8 @@
       "Bash(curl -s http://localhost:8000/api/public/site-images)",
       "Bash(php artisan cache:clear)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8000/api/public/site-images)",
-      "Bash(grep -n \"ContactPage\\\\|/contact\" c:/Users/ajari/Documents/GitHub/restau-saas/frontend/src/components/public/*.tsx)"
+      "Bash(grep -n \"ContactPage\\\\|/contact\" c:/Users/ajari/Documents/GitHub/restau-saas/frontend/src/components/public/*.tsx)",
+      "Bash(grep -l \"RestaurantSetting\\\\|restaurant_settings\" /c/Users/ajari/Documents/GitHub/restau-saas/backend/app/Models/*.php)"
     ]
   }
 }

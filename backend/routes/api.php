@@ -57,6 +57,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('/settings', [SettingsController::class, 'update']);
     Route::post('/settings/menu-pdf', [SettingsController::class, 'uploadMenuPdf']);
     Route::delete('/settings/menu-pdf', [SettingsController::class, 'deleteMenuPdf']);
+    Route::post('/settings/logo', [SettingsController::class, 'uploadLogo']);
+    Route::delete('/settings/logo', [SettingsController::class, 'deleteLogo']);
 
     // Menu Items routes
     Route::get('/menu-items', [MenuItemController::class, 'index']);

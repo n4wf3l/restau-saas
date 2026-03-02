@@ -1,9 +1,12 @@
+@php
+    $restaurantName = \App\Models\RestaurantSetting::first()?->restaurant_name ?? 'RR Ice';
+@endphp
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RR Ice</title>
+    <title>{{ $restaurantName }}</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f5f0eb; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f5f0eb;">
@@ -15,7 +18,7 @@
                     <tr>
                         <td align="center" style="background-color: #1a1410; padding: 28px 24px; border-radius: 12px 12px 0 0;">
                             <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: #e8ddd0; letter-spacing: 3px;">
-                                RR ICE
+                                {{ strtoupper($restaurantName) }}
                             </h1>
                         </td>
                     </tr>
@@ -31,7 +34,7 @@
                     <tr>
                         <td align="center" style="background-color: #1a1410; padding: 24px; border-radius: 0 0 12px 12px;">
                             <p style="margin: 0 0 6px; font-size: 13px; color: #a89a8a;">
-                                RR Ice — Ghandouri, Tanger
+                                {{ $restaurantName }} — Ghandouri, Tanger
                             </p>
                             <p style="margin: 0; font-size: 12px; color: #7a6e60;">
                                 Cet email a été envoyé automatiquement. Merci de ne pas y répondre.

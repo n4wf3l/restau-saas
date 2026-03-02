@@ -310,8 +310,11 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
         specialNotes: '',
       });
     } catch (error: any) {
-      // Reservation error handled via toast
-      toast.error(error.response?.data?.message || error.response?.data?.error || 'Erreur lors de la réservation');
+      if (error.response?.status === 429) {
+        toast.error('Trop de réservations envoyées. Veuillez réessayer dans une minute.');
+      } else {
+        toast.error(error.response?.data?.message || error.response?.data?.error || 'Erreur lors de la réservation');
+      }
     } finally {
       setLoading(false);
     }

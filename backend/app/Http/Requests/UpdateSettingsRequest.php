@@ -31,6 +31,7 @@ class UpdateSettingsRequest extends FormRequest
             'menu_manual_visible'      => 'sometimes|boolean',
             'menu_pdf_visible'         => 'sometimes|boolean',
             'social_links'             => 'sometimes|nullable|array',
+            'restaurant_name'          => 'sometimes|string|max:100',
         ];
     }
 }

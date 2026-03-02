@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
-import { getSettings, updateSettings } from "../lib/api";
+import { getSettings, updateSettings, uploadLogo, deleteLogo, API_BASE_URL } from "../lib/api";
+import { useRefreshPublicSettings } from "../contexts/PublicSettingsContext";
 import type { RestaurantSettings, OpeningHours, DayHours, ClosureDate, SocialLinks, SocialLink } from "../lib/types";
 import toast from "react-hot-toast";
 import {
@@ -15,6 +16,7 @@ import {
   PlusIcon,
   XMarkIcon,
   GlobeAltIcon,
+  BuildingStorefrontIcon,
 } from "@heroicons/react/24/outline";
 import { Spinner } from "../components/ui/Spinner";
 import { ToggleSwitch } from "../components/ui/ToggleSwitch";
@@ -176,6 +178,8 @@ export default function SettingsPage() {
   const [savedSettings, setSavedSettings] = useState<RestaurantSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const refreshPublicSettings = useRefreshPublicSettings();
 
   const loadSettings = useCallback(async () => {
     try {
@@ -199,7 +203,7 @@ export default function SettingsPage() {
 
   const handleUpdate = (
     field: keyof RestaurantSettings,
-    value: number | boolean | OpeningHours | ClosureDate[] | SocialLinks | null
+    value: string | number | boolean | OpeningHours | ClosureDate[] | SocialLinks | null
   ) => {
     if (!settings) return;
     setSettings({ ...settings, [field]: value } as RestaurantSettings);
@@ -222,9 +226,11 @@ export default function SettingsPage() {
         menu_manual_visible: settings.menu_manual_visible,
         menu_pdf_visible: settings.menu_pdf_visible,
         social_links: settings.social_links,
+        restaurant_name: settings.restaurant_name,
       } as any);
       setSettings(updated);
       setSavedSettings(updated);
+      refreshPublicSettings();
       toast.success("Paramètres sauvegardés");
     } catch (err) {
       // Settings save failed
@@ -339,8 +345,91 @@ export default function SettingsPage() {
       ) : settings ? (
       <div className="flex-1 overflow-auto px-6 pb-6">
           <div className="space-y-6">
+            {/* ─── Section: Identité du restaurant ─── */}
+            <SettingsSection title="Identité du restaurant" icon={BuildingStorefrontIcon} animIndex={0}>
+              <div className="py-4 space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 dark:text-cream-50 mb-1.5">
+                    Nom du restaurant
+                  </label>
+                  <input
+                    type="text"
+                    value={settings.restaurant_name || ''}
+                    onChange={(e) => handleUpdate("restaurant_name", e.target.value)}
+                    placeholder="Nom du restaurant"
+                    className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-cream-50 text-sm focus:outline-none focus:ring-2 focus:ring-coffee-500"
+                  />
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                    Affiché sur le site, les emails et le dashboard.
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 dark:text-cream-50 mb-1.5">
+                    Logo
+                  </label>
+                  <div className="flex items-center gap-4">
+                    <img
+                      src={settings.logo_url ? (settings.logo_url.startsWith('http') ? settings.logo_url : `${API_BASE_URL}${settings.logo_url}`) : '/logo.png'}
+                      alt="Logo"
+                      className="w-16 h-16 object-contain rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800"
+                    />
+                    <div className="flex gap-2">
+                      <label className={`px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors ${logoUploading ? 'opacity-50 cursor-not-allowed' : ''} bg-coffee-600 hover:bg-coffee-500 text-white`}>
+                        {logoUploading ? <Spinner size="xs" className="text-white" /> : 'Changer'}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          disabled={logoUploading}
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            setLogoUploading(true);
+                            try {
+                              const updated = await uploadLogo(file);
+                              setSettings(updated);
+                              setSavedSettings(updated);
+                              refreshPublicSettings();
+                              toast.success('Logo mis à jour');
+                            } catch {
+                              toast.error("Erreur lors de l'upload du logo");
+                            } finally {
+                              setLogoUploading(false);
+                              e.target.value = '';
+                            }
+                          }}
+                        />
+                      </label>
+                      {settings.logo_url && (
+                        <button
+                          onClick={async () => {
+                            try {
+                              await deleteLogo();
+                              const updated = { ...settings, logo_url: null as string | null };
+                              setSettings(updated);
+                              setSavedSettings(updated);
+                              refreshPublicSettings();
+                              toast.success('Logo supprimé');
+                            } catch {
+                              toast.error('Erreur lors de la suppression');
+                            }
+                          }}
+                          className="px-3 py-2 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
+                        >
+                          Supprimer
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                    JPG, PNG — Max 5 Mo. Utilisé dans la navbar, l'accueil et les pages de connexion.
+                  </p>
+                </div>
+              </div>
+            </SettingsSection>
+
             {/* ─── Section: Réservations ─── */}
-            <SettingsSection title="Réservations" icon={CalendarIcon} animIndex={0}>
+            <SettingsSection title="Réservations" icon={CalendarIcon} animIndex={1}>
               <ToggleRow
                 icon={NoSymbolIcon}
                 label="Activer les réservations"
@@ -365,7 +454,7 @@ export default function SettingsPage() {
             </SettingsSection>
 
             {/* ─── Section: Horaires d'ouverture ─── */}
-            <SettingsSection title="Horaires d'ouverture" icon={ClockIcon} animIndex={1}>
+            <SettingsSection title="Horaires d'ouverture" icon={ClockIcon} animIndex={2}>
               <ToggleRow
                 icon={ClockIcon}
                 label="Définir les horaires"
@@ -413,7 +502,7 @@ export default function SettingsPage() {
             </SettingsSection>
 
             {/* ─── Section: Fermetures exceptionnelles ─── */}
-            <SettingsSection title="Fermetures exceptionnelles" icon={CalendarDaysIcon} animIndex={2}>
+            <SettingsSection title="Fermetures exceptionnelles" icon={CalendarDaysIcon} animIndex={3}>
               <div className="py-4">
                 <div className="flex gap-3 mb-1">
                   <CalendarDaysIcon className="w-5 h-5 text-cream-600 dark:text-cream-500 flex-shrink-0 mt-0.5" />
@@ -502,7 +591,7 @@ export default function SettingsPage() {
             </SettingsSection>
 
             {/* ─── Section: Gestion des tables ─── */}
-            <SettingsSection title="Gestion des tables" icon={TableCellsIcon} animIndex={3}>
+            <SettingsSection title="Gestion des tables" icon={TableCellsIcon} animIndex={4}>
               <NumberSetting
                 icon={ClockIcon}
                 label="Durée de service par table"
@@ -546,7 +635,7 @@ export default function SettingsPage() {
             </SettingsSection>
 
             {/* ─── Section: No-show ─── */}
-            <SettingsSection title="No-show" icon={ExclamationTriangleIcon} animIndex={4}>
+            <SettingsSection title="No-show" icon={ExclamationTriangleIcon} animIndex={5}>
               <div className="py-4">
                 <div className="flex gap-3">
                   <ExclamationTriangleIcon className="w-5 h-5 text-cream-600 dark:text-cream-500 flex-shrink-0 mt-0.5" />
@@ -569,7 +658,7 @@ export default function SettingsPage() {
             </SettingsSection>
 
             {/* ─── Section: Réseaux sociaux ─── */}
-            <SettingsSection title="Réseaux sociaux" icon={GlobeAltIcon} animIndex={5}>
+            <SettingsSection title="Réseaux sociaux" icon={GlobeAltIcon} animIndex={6}>
               <div className="py-4 space-y-3">
                 {SOCIAL_NETWORKS.map((net) => {
                   const link = getSocialLinks()[net.key];

@@ -58,6 +58,8 @@ class SettingsController extends Controller
                     'menu_manual_visible' => (bool) $settings->menu_manual_visible,
                     'menu_pdf_visible' => (bool) $settings->menu_pdf_visible,
                     'social_links' => $settings->social_links,
+                    'restaurant_name' => $settings->restaurant_name ?? 'RR Ice',
+                    'logo_url' => $settings->logo_url,
                 ]);
             }
 
@@ -71,6 +73,8 @@ class SettingsController extends Controller
                 'menu_manual_visible' => true,
                 'menu_pdf_visible' => false,
                 'social_links' => null,
+                'restaurant_name' => 'RR Ice',
+                'logo_url' => null,
             ]);
         });
     }
@@ -114,5 +118,46 @@ class SettingsController extends Controller
         Cache::forget('public_settings');
 
         return response()->json(['message' => 'PDF supprimé']);
+    }
+
+    /**
+     * POST /api/settings/logo
+     * Upload a logo image.
+     */
+    public function uploadLogo(Request $request)
+    {
+        $request->validate([
+            'logo' => 'required|image|max:5120',
+        ]);
+
+        $settings = $this->getSettings();
+
+        // Delete old logo if exists
+        $this->deleteStorageFile($settings->logo_url, 'logos/');
+
+        $path = $request->file('logo')->store('logos', 'public');
+        $settings->update(['logo_url' => '/storage/' . $path]);
+
+        Cache::forget('public_settings');
+
+        return response()->json($settings->fresh());
+    }
+
+    /**
+     * DELETE /api/settings/logo
+     * Remove the uploaded logo.
+     */
+    public function deleteLogo(Request $request)
+    {
+        $settings = $this->getSettings();
+
+        if ($settings->logo_url) {
+            $this->deleteStorageFile($settings->logo_url, 'logos/');
+            $settings->update(['logo_url' => null]);
+        }
+
+        Cache::forget('public_settings');
+
+        return response()->json(['message' => 'Logo supprimé']);
     }
 }

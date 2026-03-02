@@ -4,6 +4,8 @@ import { useAuth } from "../contexts/AuthContext";
 import toast from "react-hot-toast";
 import { PasswordToggle } from "../components/ui/PasswordToggle";
 import { Spinner } from "../components/ui/Spinner";
+import { usePublicSettings } from "../contexts/PublicSettingsContext";
+import { API_BASE_URL } from "../lib/api";
 
 const inputClass =
   "w-full bg-transparent border border-cream-400/30 rounded-none px-4 py-3.5 text-cream-100 text-sm font-body placeholder-cream-400/40 focus:outline-none focus:border-cream-400/60 transition-colors min-h-[48px]";
@@ -14,6 +16,9 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const ps = usePublicSettings();
+  const restaurantName = ps?.restaurant_name ?? 'RR Ice';
+  const logoSrc = ps?.logo_url ? (ps.logo_url.startsWith('http') ? ps.logo_url : `${API_BASE_URL}${ps.logo_url}`) : '/logo.png';
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -25,8 +30,11 @@ export default function Login() {
       toast.success("Connexion réussie !");
       navigate("/dashboard");
     } catch (error: any) {
-      const message = error.response?.data?.message || "Erreur de connexion";
-      toast.error(message);
+      if (error.response?.status === 429) {
+        toast.error("Trop de tentatives. Veuillez réessayer dans une minute.");
+      } else {
+        toast.error(error.response?.data?.message || "Erreur de connexion");
+      }
     } finally {
       setLoading(false);
     }
@@ -46,8 +54,8 @@ export default function Login() {
         <div className="flex justify-center mb-10">
           <Link to="/">
             <img
-              src="/logo.png"
-              alt="RR Ice"
+              src={logoSrc}
+              alt={restaurantName}
               className="w-20 h-20 object-contain opacity-90 hover:opacity-100 transition-opacity"
             />
           </Link>

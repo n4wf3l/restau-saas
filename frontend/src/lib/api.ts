@@ -260,6 +260,19 @@ export async function submitRecruitment(data: {
   await api.post("/api/public/recruit", data);
 }
 
+// Logo upload/delete
+export async function uploadLogo(file: File) {
+  const formData = new FormData();
+  formData.append("logo", file);
+  const response = await api.post("/api/settings/logo", formData);
+  return response.data;
+}
+
+export async function deleteLogo() {
+  const response = await api.delete("/api/settings/logo");
+  return response.data;
+}
+
 // Public settings (no auth required)
 export async function getPublicSettings(): Promise<{
   reservations_enabled: boolean;
@@ -271,6 +284,8 @@ export async function getPublicSettings(): Promise<{
   menu_manual_visible: boolean;
   menu_pdf_visible: boolean;
   social_links: import("./types").SocialLinks | null;
+  restaurant_name: string;
+  logo_url: string | null;
 }> {
   const response = await api.get("/api/public/settings");
   return response.data;

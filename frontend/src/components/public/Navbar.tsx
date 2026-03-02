@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { CTAButton } from './CTAButton';
+import { usePublicSettings } from '../../contexts/PublicSettingsContext';
+import { API_BASE_URL } from '../../lib/api';
 
 interface NavbarProps {
   onReservationClick: () => void;
@@ -27,6 +29,9 @@ export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
   const [activeLang, setActiveLang] = useState('FR');
   const [langPickerOpen, setLangPickerOpen] = useState(false);
   const location = useLocation();
+  const ps = usePublicSettings();
+  const restaurantName = ps?.restaurant_name ?? 'RR Ice';
+  const logoSrc = ps?.logo_url ? (ps.logo_url.startsWith('http') ? ps.logo_url : `${API_BASE_URL}${ps.logo_url}`) : '/logo.png';
 
   // Lock body scroll when mobile menu or lang picker is open
   useEffect(() => {
@@ -72,7 +77,7 @@ export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
           <div className="hidden md:flex items-center h-20">
             <div className="flex-1 flex justify-center items-center border-r border-cream-400/30 px-8">
               <Link to="/" className="flex items-center gap-2">
-                <img src="/logo.png" alt="RR Ice" className="w-12 h-12 object-contain" />
+                <img src={logoSrc} alt={restaurantName} className="w-12 h-12 object-contain" />
               </Link>
             </div>
 
@@ -96,7 +101,7 @@ export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
           {/* Mobile Header */}
           <div className="md:hidden flex items-center justify-between h-16 px-5">
             <Link to="/" className="flex items-center gap-2 z-50">
-              <img src="/logo.png" alt="RR Ice" className="w-12 h-12 object-contain" />
+              <img src={logoSrc} alt={restaurantName} className="w-12 h-12 object-contain" />
             </Link>
 
             {/* Hamburger / Close */}

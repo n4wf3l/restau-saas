@@ -24,6 +24,7 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const MenuPage = lazy(() => import("./pages/MenuPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const SiteImagesPage = lazy(() => import("./pages/SiteImagesPage"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 function PageLoader() {
   return (
@@ -94,6 +95,7 @@ function App() {
                 <Route path="images" element={<SiteImagesPage />} />
                 <Route path="settings" element={<SettingsPage />} />
               </Route>
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
           </SiteImagesProvider>

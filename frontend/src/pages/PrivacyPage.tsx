@@ -3,9 +3,11 @@ import { Navbar } from '../components/public/Navbar';
 import { Footer } from '../components/public/Footer';
 import { ReservationModal } from '../components/public/ReservationModal';
 import { Link } from 'react-router-dom';
+import { usePublicSettings } from '../contexts/PublicSettingsContext';
 
 export default function PrivacyPage() {
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
+  const restaurantName = usePublicSettings()?.restaurant_name ?? 'RR Ice';
 
   return (
     <div className="bg-coffee-950 text-white min-h-screen">
@@ -34,7 +36,7 @@ export default function PrivacyPage() {
                 1. Introduction
               </h2>
               <p>
-                RR Ice (« nous », « notre ») s'engage à protéger la vie privée de ses clients et utilisateurs.
+                {restaurantName} (« nous », « notre ») s'engage à protéger la vie privée de ses clients et utilisateurs.
                 Cette politique de confidentialité décrit comment nous collectons, utilisons et protégeons
                 vos informations personnelles lorsque vous utilisez notre site web et nos services de réservation.
               </p>

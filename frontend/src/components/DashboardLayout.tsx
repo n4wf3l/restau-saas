@@ -2,8 +2,9 @@ import { useState, useEffect, useCallback } from "react";
 import { Outlet, useLocation, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
+import { usePublicSettings } from "../contexts/PublicSettingsContext";
 import { FloorPlanEditor } from "./floorplan/FloorPlanEditor";
-import { api } from "../lib/api";
+import { api, API_BASE_URL } from "../lib/api";
 import type { FloorPlan } from "../lib/types";
 import toast from "react-hot-toast";
 import { Spinner } from "./ui/Spinner";
@@ -22,7 +23,6 @@ import {
   XMarkIcon,
   ArrowRightOnRectangleIcon,
   ArrowRightIcon,
-  BuildingStorefrontIcon,
   XCircleIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
@@ -47,6 +47,9 @@ const NAV_ITEMS: NavItem[] = [
 export function DashboardLayout() {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const ps = usePublicSettings();
+  const restaurantName = ps?.restaurant_name ?? 'RR Ice';
+  const logoSrc = ps?.logo_url ? (ps.logo_url.startsWith('http') ? ps.logo_url : `${API_BASE_URL}${ps.logo_url}`) : '/logo.png';
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -134,9 +137,9 @@ export function DashboardLayout() {
           {sidebarOpen ? (
             <>
               <Link to="/dashboard" className="flex items-center gap-2.5">
-                <BuildingStorefrontIcon className="w-6 h-6 text-cream-600 dark:text-cream-500" />
+                <img src={logoSrc} alt={restaurantName} className="w-8 h-8 object-contain" />
                 <span className="font-display font-bold text-gray-900 dark:text-cream-100 text-lg tracking-tight">
-                  RR Ice
+                  {restaurantName}
                 </span>
               </Link>
               <div className="flex items-center gap-1">
@@ -159,11 +162,11 @@ export function DashboardLayout() {
             </>
           ) : (
             <Link
-              to="/"
-              className="mx-auto p-2 rounded-lg text-gray-400 dark:text-gray-500 hover:text-cream-600 dark:hover:text-cream-400 hover:bg-cream-50 dark:hover:bg-surface-card transition-all duration-200"
-              title="Voir le site"
+              to="/dashboard"
+              className="mx-auto"
+              title={restaurantName}
             >
-              <ArrowRightIcon className="w-5 h-5" />
+              <img src={logoSrc} alt={restaurantName} className="w-8 h-8 object-contain" />
             </Link>
           )}
         </div>

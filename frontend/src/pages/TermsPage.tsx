@@ -3,9 +3,11 @@ import { Navbar } from '../components/public/Navbar';
 import { Footer } from '../components/public/Footer';
 import { ReservationModal } from '../components/public/ReservationModal';
 import { Link } from 'react-router-dom';
+import { usePublicSettings } from '../contexts/PublicSettingsContext';
 
 export default function TermsPage() {
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
+  const restaurantName = usePublicSettings()?.restaurant_name ?? 'RR Ice';
 
   return (
     <div className="bg-coffee-950 text-white min-h-screen">
@@ -35,7 +37,7 @@ export default function TermsPage() {
               </h2>
               <p>
                 Les présentes conditions générales d'utilisation (CGU) régissent l'accès et l'utilisation
-                du site web de RR Ice, incluant le service de réservation en ligne, la consultation du menu
+                du site web de {restaurantName}, incluant le service de réservation en ligne, la consultation du menu
                 et toute interaction avec notre plateforme numérique. En utilisant notre site, vous acceptez
                 ces conditions dans leur intégralité.
               </p>
@@ -99,7 +101,7 @@ export default function TermsPage() {
               </h2>
               <p>
                 L'ensemble des contenus présents sur ce site (textes, images, logos, photographies, vidéos,
-                design, code source) sont la propriété exclusive de RR Ice ou de ses partenaires.
+                design, code source) sont la propriété exclusive de {restaurantName} ou de ses partenaires.
                 Toute reproduction, représentation ou exploitation, totale ou partielle, sans autorisation
                 préalable écrite, est strictement interdite.
               </p>
@@ -110,10 +112,10 @@ export default function TermsPage() {
                 5. Responsabilité
               </h2>
               <p>
-                RR Ice s'efforce d'assurer l'exactitude des informations publiées sur son site.
+                {restaurantName} s'efforce d'assurer l'exactitude des informations publiées sur son site.
                 Toutefois, nous ne pouvons garantir l'absence d'erreurs ou d'omissions. Les prix,
                 la disponibilité des plats et les horaires d'ouverture sont donnés à titre indicatif
-                et peuvent être modifiés sans préavis. RR Ice ne saurait être tenu responsable des
+                et peuvent être modifiés sans préavis. {restaurantName} ne saurait être tenu responsable des
                 dommages directs ou indirects résultant de l'utilisation du site.
               </p>
             </div>
@@ -137,7 +139,7 @@ export default function TermsPage() {
                 7. Modification des CGU
               </h2>
               <p>
-                RR Ice se réserve le droit de modifier les présentes conditions générales à tout moment.
+                {restaurantName} se réserve le droit de modifier les présentes conditions générales à tout moment.
                 Les modifications prennent effet dès leur publication sur le site. Il est conseillé de
                 consulter régulièrement cette page pour prendre connaissance des éventuelles mises à jour.
               </p>

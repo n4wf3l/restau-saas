@@ -6,6 +6,7 @@ import { CTAButton } from '../components/public/CTAButton';
 import { usePublicSettings } from '../contexts/PublicSettingsContext';
 import { useSiteImages } from '../contexts/SiteImagesContext';
 import { ImageLightbox, type LightboxImage } from '../components/ui/ImageLightbox';
+import { API_BASE_URL } from '../lib/api';
 
 // ─── Scroll Reveal ───
 function ScrollReveal({
@@ -50,6 +51,8 @@ export default function Home() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [lightbox, setLightbox] = useState<{ images: LightboxImage[]; index: number } | null>(null);
   const publicSettings = usePublicSettings();
+  const restaurantName = publicSettings?.restaurant_name ?? 'RR Ice';
+  const logoSrc = publicSettings?.logo_url ? (publicSettings.logo_url.startsWith('http') ? publicSettings.logo_url : `${API_BASE_URL}${publicSettings.logo_url}`) : '/logo.png';
   const siteImages = useSiteImages();
 
   const heroImages = (siteImages?.hero ?? []).map(img => img.image_url);
@@ -112,14 +115,14 @@ export default function Home() {
           {/* Logo */}
           <div className="flex justify-center mb-8 opacity-0 animate-hero-scale" style={{ animationDelay: '200ms' }}>
             <img
-              src="/logo.png"
-              alt="RR Ice Logo"
+              src={logoSrc}
+              alt={restaurantName}
               className="w-32 h-32 md:w-52 md:h-52 object-contain drop-shadow-2xl"
             />
           </div>
 
           <h1 className="text-3xl md:text-6xl font-display font-bold mb-4 md:mb-6 text-cream-200 tracking-wider opacity-0 animate-hero-fade-up" style={{ animationDelay: '500ms' }}>
-            RR ICE
+            {restaurantName}
           </h1>
           <p className="text-base md:text-xl text-cream-300 mb-8 md:mb-10 max-w-2xl mx-auto leading-relaxed px-2 opacity-0 animate-hero-fade-up" style={{ animationDelay: '700ms' }}>
             Découvrez une expérience culinaire exceptionnelle dans une ambiance élégante et intime
@@ -161,7 +164,7 @@ export default function Home() {
                 Notre Restaurant
               </h2>
               <p className="text-cream-400/70 font-body text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-                Situé au cœur de Ghandouri à Tanger, RR Ice vous accueille dans un cadre
+                Situé au cœur de Ghandouri à Tanger, {restaurantName} vous accueille dans un cadre
                 élégant avec une terrasse panoramique offrant une vue imprenable sur la
                 corniche, du port jusqu'au cap Mnar, avec l'Espagne en toile de fond
                 depuis notre 2e étage.
