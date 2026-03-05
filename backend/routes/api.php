@@ -11,31 +11,35 @@ use App\Http\Controllers\Api\ContactController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-// Public routes (no auth required) — rate limited
-Route::middleware('throttle:60,1')->group(function () {
+// ─── Public routes — tenant resolved via ?tenant=<slug> or X-Tenant header ───
+Route::middleware(['throttle:60,1', 'tenant'])->group(function () {
     Route::get('/public/tables', [PublicTableController::class, 'index']);
     Route::get('/public/settings', [SettingsController::class, 'publicShow']);
     Route::get('/public/menu-items', [MenuItemController::class, 'publicIndex']);
     Route::get('/public/site-images', [SiteImageController::class, 'publicIndex']);
 });
 
-Route::post('/public/check-availability', [PublicTableController::class, 'checkAvailability'])
-    ->middleware('throttle:30,1');
-Route::post('/public/reservations', [PublicTableController::class, 'store'])
-    ->middleware('throttle:10,1');
-Route::post('/public/events', [PublicTableController::class, 'storeEvent'])
-    ->middleware('throttle:10,1');
+Route::middleware('tenant')->group(function () {
+    Route::post('/public/check-availability', [PublicTableController::class, 'checkAvailability'])
+        ->middleware('throttle:30,1');
+    Route::post('/public/reservations', [PublicTableController::class, 'store'])
+        ->middleware('throttle:10,1');
+    Route::post('/public/events', [PublicTableController::class, 'storeEvent'])
+        ->middleware('throttle:10,1');
 
-Route::post('/public/contact', [ContactController::class, 'contact'])
-    ->middleware('throttle:3,1');
-Route::post('/public/recruit', [ContactController::class, 'recruit'])
-    ->middleware('throttle:3,1');
+    Route::post('/public/contact', [ContactController::class, 'contact'])
+        ->middleware('throttle:3,1');
+    Route::post('/public/recruit', [ContactController::class, 'recruit'])
+        ->middleware('throttle:3,1');
+});
 
-Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
+// ─── Auth user route — tenant via authenticated user ───
+Route::middleware(['auth:sanctum', 'auth.tenant'])->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::middleware(['auth:sanctum'])->group(function () {
+// ─── Admin routes — tenant via authenticated user ───
+Route::middleware(['auth:sanctum', 'auth.tenant'])->group(function () {
     // Floor Plan routes
     Route::get('/floor-plans/current', [FloorPlanController::class, 'current']);
     Route::put('/floor-plans/current', [FloorPlanController::class, 'update']);

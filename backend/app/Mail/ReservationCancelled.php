@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use App\Models\Reservation;
-use App\Models\RestaurantSetting;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -17,12 +16,13 @@ class ReservationCancelled extends Mailable implements ShouldQueue
 
     public function __construct(
         public Reservation $reservation,
+        public string $restaurantName = 'Mon Restaurant',
     ) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Votre réservation a été annulée — ' . (RestaurantSetting::first()?->restaurant_name ?? 'RR Ice'),
+            subject: 'Votre réservation a été annulée — ' . $this->restaurantName,
         );
     }
 

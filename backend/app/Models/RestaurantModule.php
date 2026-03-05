@@ -5,18 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class SiteImage extends Model
+class RestaurantModule extends Model
 {
     protected $fillable = [
         'restaurant_id',
-        'category',
-        'image_url',
-        'alt',
-        'sort_order',
+        'reservations_enabled',
+        'menu_enabled',
+        'website_enabled',
     ];
 
     protected $casts = [
-        'sort_order' => 'integer',
+        'reservations_enabled' => 'boolean',
+        'menu_enabled'         => 'boolean',
+        'website_enabled'      => 'boolean',
     ];
 
     public function restaurant(): BelongsTo

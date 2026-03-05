@@ -1,5 +1,5 @@
 @php
-    $restaurantName = \App\Models\RestaurantSetting::first()?->restaurant_name ?? 'RR Ice';
+    $restaurantName = $restaurantName ?? 'Mon Restaurant';
 @endphp
 <!DOCTYPE html>
 <html lang="fr">

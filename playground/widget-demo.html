@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Widget Demo — Multi-Tenant API Test</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, sans-serif; background: #1a1a2e; color: #eee; padding: 2rem; }
+        h1 { margin-bottom: 1rem; color: #e8ddd0; }
+        .controls { display: flex; gap: 1rem; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; }
+        label { font-size: 0.875rem; color: #a89a8a; }
+        input, select, button {
+            padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid #333;
+            background: #16213e; color: #eee; font-size: 0.875rem;
+        }
+        button { background: #e8ddd0; color: #1a1410; cursor: pointer; font-weight: 600; border: none; }
+        button:hover { background: #d4c4b0; }
+        .results { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; }
+        .card {
+            background: #16213e; border-radius: 12px; padding: 1.5rem;
+            border: 1px solid #333; overflow: hidden;
+        }
+        .card h2 { font-size: 1rem; color: #e8ddd0; margin-bottom: 0.75rem; }
+        .card pre {
+            background: #0f0f23; padding: 1rem; border-radius: 8px;
+            overflow-x: auto; font-size: 0.75rem; line-height: 1.5;
+            max-height: 400px; overflow-y: auto; color: #a89a8a;
+        }
+        .status { font-size: 0.75rem; color: #666; margin-top: 0.5rem; }
+        .error { color: #ff6b6b; }
+        .success { color: #51cf66; }
+    </style>
+</head>
+<body>
+    <h1>Multi-Tenant Widget Demo</h1>
+    <p style="color: #a89a8a; margin-bottom: 1.5rem;">
+        Simulates an external site calling the public API with <code>?tenant=&lt;slug&gt;</code>
+    </p>
+
+    <div class="controls">
+        <div>
+            <label for="apiUrl">API Base URL</label><br>
+            <input type="text" id="apiUrl" value="http://localhost:8000" style="width: 250px;">
+        </div>
+        <div>
+            <label for="tenantSlug">Tenant Slug</label><br>
+            <input type="text" id="tenantSlug" value="default" placeholder="e.g. default, latlantique">
+        </div>
+        <div style="align-self: flex-end;">
+            <button onclick="loadAll()">Load All Endpoints</button>
+        </div>
+    </div>
+
+    <div class="results">
+        <div class="card">
+            <h2>GET /api/public/settings</h2>
+            <pre id="settings">Click "Load All Endpoints" to start...</pre>
+            <div class="status" id="settings-status"></div>
+        </div>
+        <div class="card">
+            <h2>GET /api/public/tables</h2>
+            <pre id="tables">—</pre>
+            <div class="status" id="tables-status"></div>
+        </div>
+        <div class="card">
+            <h2>GET /api/public/menu-items</h2>
+            <pre id="menu">—</pre>
+            <div class="status" id="menu-status"></div>
+        </div>
+        <div class="card">
+            <h2>GET /api/public/site-images</h2>
+            <pre id="images">—</pre>
+            <div class="status" id="images-status"></div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchEndpoint(endpoint, elementId) {
+            const base = document.getElementById('apiUrl').value.replace(/\/$/, '');
+            const tenant = document.getElementById('tenantSlug').value;
+            const url = `${base}${endpoint}?tenant=${encodeURIComponent(tenant)}`;
+            const statusEl = document.getElementById(`${elementId}-status`);
+            const preEl = document.getElementById(elementId);
+
+            statusEl.textContent = `Fetching ${url}...`;
+            statusEl.className = 'status';
+
+            try {
+                const start = performance.now();
+                const res = await fetch(url);
+                const ms = Math.round(performance.now() - start);
+                const data = await res.json();
+
+                if (res.ok) {
+                    preEl.textContent = JSON.stringify(data, null, 2);
+                    statusEl.textContent = `${res.status} OK — ${ms}ms`;
+                    statusEl.className = 'status success';
+                } else {
+                    preEl.textContent = JSON.stringify(data, null, 2);
+                    statusEl.textContent = `${res.status} Error — ${ms}ms`;
+                    statusEl.className = 'status error';
+                }
+            } catch (err) {
+                preEl.textContent = err.message;
+                statusEl.textContent = 'Network error';
+                statusEl.className = 'status error';
+            }
+        }
+
+        function loadAll() {
+            fetchEndpoint('/api/public/settings', 'settings');
+            fetchEndpoint('/api/public/tables', 'tables');
+            fetchEndpoint('/api/public/menu-items', 'menu');
+            fetchEndpoint('/api/public/site-images', 'images');
+        }
+    </script>
+</body>
+</html>

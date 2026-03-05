@@ -9,6 +9,7 @@ class RestaurantSetting extends Model
 {
     protected $fillable = [
         'user_id',
+        'restaurant_id',
         'reservations_enabled',
         'service_duration_minutes',
         'buffer_minutes',
@@ -44,5 +45,10 @@ class RestaurantSetting extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function restaurant(): BelongsTo
+    {
+        return $this->belongsTo(Restaurant::class);
     }
 }

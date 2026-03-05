@@ -6,31 +6,36 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreMenuItemRequest;
 use App\Http\Requests\UpdateMenuItemRequest;
 use App\Models\MenuItem;
+use App\Services\TenantContext;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
 class MenuItemController extends Controller
 {
+    private function tc(): TenantContext
+    {
+        return app(TenantContext::class);
+    }
+
     public function index()
     {
-        $menuItems = MenuItem::orderBy('order')
-            ->orderBy('category')
-            ->orderBy('name')
-            ->get();
-
-        return response()->json($menuItems);
+        $rid = $this->tc()->id();
+        return response()->json(
+            MenuItem::where('restaurant_id', $rid)
+                ->orderBy('order')->orderBy('category')->orderBy('name')->get()
+        );
     }
 
     public function publicIndex()
     {
-        return Cache::remember('public_menu_items', 1800, function () {
-            $menuItems = MenuItem::where('is_available', true)
-                ->orderBy('order')
-                ->orderBy('category')
-                ->orderBy('name')
-                ->get();
+        $rid = $this->tc()->id();
 
-            return response()->json($menuItems);
+        return Cache::remember("public_menu_items:{$rid}", 1800, function () use ($rid) {
+            return response()->json(
+                MenuItem::where('restaurant_id', $rid)
+                    ->where('is_available', true)
+                    ->orderBy('order')->orderBy('category')->orderBy('name')->get()
+            );
         });
     }
 
@@ -45,21 +50,19 @@ class MenuItemController extends Controller
 
         unset($validated['image']);
         $validated['user_id'] = $request->user()->id;
+        $validated['restaurant_id'] = $this->tc()->id();
 
         $menuItem = MenuItem::create($validated);
-
-        Cache::forget('public_menu_items');
+        Cache::forget("public_menu_items:{$this->tc()->id()}");
 
         return response()->json($menuItem, 201);
     }
 
     public function update(UpdateMenuItemRequest $request, MenuItem $menuItem)
     {
-        // Authorization handled by UpdateMenuItemRequest::authorize()
         $validated = $request->validated();
 
         if ($request->hasFile('image')) {
-            // Delete old image if it exists
             $this->deleteStorageFile($menuItem->image_url, 'menu-images/');
             $path = $request->file('image')->store('menu-images', 'public');
             $validated['image_url'] = '/storage/' . $path;
@@ -67,20 +70,16 @@ class MenuItemController extends Controller
 
         unset($validated['image']);
         $menuItem->update($validated);
-
-        Cache::forget('public_menu_items');
+        Cache::forget("public_menu_items:{$this->tc()->id()}");
 
         return response()->json($menuItem);
     }
 
     public function destroy(Request $request, MenuItem $menuItem)
     {
-        // Delete image file if exists
         $this->deleteStorageFile($menuItem->image_url, 'menu-images/');
-
         $menuItem->delete();
-
-        Cache::forget('public_menu_items');
+        Cache::forget("public_menu_items:{$this->tc()->id()}");
 
         return response()->json(['message' => 'Menu item deleted']);
     }

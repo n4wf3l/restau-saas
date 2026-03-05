@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\RestaurantFloorPlanItem;
-use App\Models\RestaurantFloorPlan;
 use App\Models\RestaurantSetting;
 use App\Models\Reservation;
+use App\Services\TenantContext;
 use Illuminate\Http\Request;
 use App\Services\ReservationMailService;
 use Illuminate\Support\Facades\DB;
@@ -14,13 +14,15 @@ use Carbon\Carbon;
 
 class PublicTableController extends Controller
 {
-    /**
-     * Load the shared restaurant settings.
-     * Returns default settings if none found.
-     */
+    private function tc(): TenantContext
+    {
+        return app(TenantContext::class);
+    }
+
     private function getSettings(): RestaurantSetting
     {
-        return RestaurantSetting::first() ?? new RestaurantSetting([
+        $rid = $this->tc()->id();
+        return RestaurantSetting::where('restaurant_id', $rid)->first() ?? new RestaurantSetting([
             'service_duration_minutes' => 90,
             'buffer_minutes' => 15,
             'max_occupancy_pct' => 100,
@@ -30,15 +32,11 @@ class PublicTableController extends Controller
         ]);
     }
 
-    /**
-     * Check if the given arrival time is within restaurant opening hours.
-     * Returns null if OK, or an error message string if outside hours.
-     */
     private function checkOpeningHours(RestaurantSetting $settings, Carbon $arrivalTime): ?string
     {
         $hours = $settings->opening_hours;
         if (!$hours || !is_array($hours)) {
-            return null; // No hours configured = always open
+            return null;
         }
 
         $dayMap = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
@@ -81,10 +79,6 @@ class PublicTableController extends Controller
         return $map[$day] ?? $day;
     }
 
-    /**
-     * Check if the given date falls on a closure date.
-     * Returns null if OK, or an error message string if closed.
-     */
     private function checkClosureDates(RestaurantSetting $settings, Carbon $arrivalTime): ?string
     {
         $closures = $settings->closure_dates;
@@ -108,10 +102,6 @@ class PublicTableController extends Controller
         return null;
     }
 
-    /**
-     * Batch-query conflicting chair IDs for ALL chairs at once.
-     * Returns an array of conflicting floor_plan_item_ids.
-     */
     private function getBatchConflictingChairIds(array $allChairIds, Carbon $proposedArrival, int $durationMinutes, int $bufferMinutes): array
     {
         if (empty($allChairIds)) {
@@ -144,9 +134,6 @@ class PublicTableController extends Controller
         return $query->pluck('floor_plan_item_id')->toArray();
     }
 
-    /**
-     * Find adjacent chair IDs for tables using a pre-loaded chairs collection (in-memory filter).
-     */
     private function getAdjacentChairIdsFromCollection($tablesInGroup, $allChairs): array
     {
         $allChairIds = [];
@@ -165,14 +152,17 @@ class PublicTableController extends Controller
         return array_values(array_unique($allChairIds));
     }
 
-    /**
-     * Group tables by name and floor, returning structured groups.
-     * Only 2 DB queries: one for tables, one for chairs.
-     */
     private function getTableGroups()
     {
-        $tables = RestaurantFloorPlanItem::where('type', 'table')->get();
-        $allChairs = RestaurantFloorPlanItem::where('type', 'chair')->get();
+        $floorPlan = $this->tc()->require()->floorPlan;
+        if (!$floorPlan) {
+            return [];
+        }
+
+        $tables = RestaurantFloorPlanItem::where('type', 'table')
+            ->where('floor_plan_id', $floorPlan->id)->get();
+        $allChairs = RestaurantFloorPlanItem::where('type', 'chair')
+            ->where('floor_plan_id', $floorPlan->id)->get();
 
         $groups = [];
         $processedIds = [];
@@ -217,23 +207,17 @@ class PublicTableController extends Controller
         return $groups;
     }
 
-    /**
-     * Build table response data using batched conflict check (1 query for all groups).
-     */
     private function buildTableData(array $groups, Carbon $arrivalTime, int $duration, int $buffer): array
     {
-        // Collect ALL chair IDs across all groups
         $allChairIds = [];
         foreach ($groups as $group) {
             $allChairIds = array_merge($allChairIds, $group['chairIds']);
         }
         $allChairIds = array_values(array_unique($allChairIds));
 
-        // Single batched query for all conflicts
         $allConflicting = $this->getBatchConflictingChairIds($allChairIds, $arrivalTime, $duration, $buffer);
         $conflictingSet = array_flip($allConflicting);
 
-        // Build response per group using in-memory lookup
         $tables = [];
         foreach ($groups as $group) {
             $conflictCount = 0;
@@ -290,7 +274,6 @@ class PublicTableController extends Controller
         $duration = $settings->service_duration_minutes;
         $buffer = $settings->buffer_minutes;
 
-        // Check closure dates
         $closureError = $this->checkClosureDates($settings, $arrivalDateTime);
         if ($closureError) {
             return response()->json([
@@ -301,7 +284,6 @@ class PublicTableController extends Controller
             ]);
         }
 
-        // Check opening hours
         $hoursError = $this->checkOpeningHours($settings, $arrivalDateTime);
         if ($hoursError) {
             return response()->json([
@@ -313,11 +295,8 @@ class PublicTableController extends Controller
         }
 
         $groups = $this->getTableGroups();
-
-        // Build table data with single batched conflict query
         $availableTables = $this->buildTableData($groups, $arrivalDateTime, $duration, $buffer);
 
-        // Check max occupancy from built data
         $totalRestaurantChairs = 0;
         $totalOccupiedChairs = 0;
         foreach ($availableTables as $table) {
@@ -335,12 +314,10 @@ class PublicTableController extends Controller
             ]);
         }
 
-        // Filter tables that can accommodate party_size
         $suitableTables = array_filter($availableTables, function ($table) use ($partySize) {
             return $table['available_seats'] >= $partySize;
         });
 
-        // If no suitable tables, suggest alternative time slots
         $suggestedSlots = [];
         if (empty($suitableTables)) {
             $timeOffsets = [30, -30, 60, -60];
@@ -403,7 +380,6 @@ class PublicTableController extends Controller
                 'notes' => 'nullable|string|max:1000',
             ];
 
-            // table_id is optional when auto_optimize is on
             if (!$settings->auto_optimize_tables) {
                 $rules['table_id'] = 'required|exists:restaurant_floor_plan_items,id';
             } else {
@@ -428,19 +404,16 @@ class PublicTableController extends Controller
         $arrivalTime = Carbon::parse($validated['arrival_time']);
         $initialStatus = $settings->auto_confirm ? 'confirmed' : 'pending';
 
-        // Check closure dates
         $closureError = $this->checkClosureDates($settings, $arrivalTime);
         if ($closureError) {
             return response()->json(['error' => $closureError], 422);
         }
 
-        // Check opening hours
         $hoursError = $this->checkOpeningHours($settings, $arrivalTime);
         if ($hoursError) {
             return response()->json(['error' => $hoursError], 422);
         }
 
-        // Auto-optimize: find smallest available table
         if ($settings->auto_optimize_tables) {
             $bestTable = $this->findSmallestAvailableTable(
                 $validated['party_size'],
@@ -457,14 +430,12 @@ class PublicTableController extends Controller
             $availableChairIds = $bestTable['availableChairIds'];
             $tableName = $bestTable['name'];
         } else {
-            // Manual table selection
             $table = RestaurantFloorPlanItem::findOrFail($validated['table_id']);
 
             if ($table->type !== 'table') {
                 return response()->json(['error' => 'ID invalide - pas une table.'], 422);
             }
 
-            // Find adjacent chairs
             $adjacentChairs = RestaurantFloorPlanItem::adjacentChairs($table);
 
             if ($adjacentChairs->isEmpty()) {
@@ -472,8 +443,6 @@ class PublicTableController extends Controller
             }
 
             $chairIds = $adjacentChairs->pluck('id')->toArray();
-
-            // Time-range conflict check
             $conflictingIds = $this->getBatchConflictingChairIds($chairIds, $arrivalTime, $duration, $buffer);
             $availableChairIds = array_values(array_diff($chairIds, $conflictingIds));
             $tableName = $table->table_name ?? 'Table ' . $table->id;
@@ -485,7 +454,6 @@ class PublicTableController extends Controller
             ], 422);
         }
 
-        // Create reservations for the required number of seats (atomic)
         try {
             $reservations = DB::transaction(function () use ($validated, $availableChairIds, $initialStatus) {
                 $created = [];
@@ -513,7 +481,6 @@ class PublicTableController extends Controller
             ], 500);
         }
 
-        // Send confirmation/pending email (one per group)
         ReservationMailService::sendByStatus($reservations[0], $tableName);
 
         return response()->json([
@@ -524,15 +491,10 @@ class PublicTableController extends Controller
         ], 201);
     }
 
-    /**
-     * Find the smallest available table that fits the party size.
-     * Uses batched conflict check for all groups at once.
-     */
     private function findSmallestAvailableTable(int $partySize, Carbon $arrivalTime, int $duration, int $buffer): ?array
     {
         $groups = $this->getTableGroups();
 
-        // Collect ALL chair IDs for a single batched conflict query
         $allChairIds = [];
         foreach ($groups as $group) {
             $allChairIds = array_merge($allChairIds, $group['chairIds']);
@@ -540,7 +502,6 @@ class PublicTableController extends Controller
         $allConflicting = $this->getBatchConflictingChairIds(array_values(array_unique($allChairIds)), $arrivalTime, $duration, $buffer);
         $conflictingSet = array_flip($allConflicting);
 
-        // Sort by total seats ascending (smallest first)
         usort($groups, fn($a, $b) => $a['totalSeats'] <=> $b['totalSeats']);
 
         foreach ($groups as $group) {
@@ -600,7 +561,6 @@ class PublicTableController extends Controller
             'status' => $settings->auto_confirm ? 'confirmed' : 'pending',
         ]);
 
-        // Send confirmation/pending email
         ReservationMailService::sendByStatus($reservation, 'Événement');
 
         return response()->json([

@@ -10,6 +10,7 @@ class RestaurantFloorPlan extends Model
 {
     protected $fillable = [
         'user_id',
+        'restaurant_id',
         'name',
         'width',
         'height',
@@ -25,6 +26,11 @@ class RestaurantFloorPlan extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function restaurant(): BelongsTo
+    {
+        return $this->belongsTo(Restaurant::class);
     }
 
     public function items(): HasMany

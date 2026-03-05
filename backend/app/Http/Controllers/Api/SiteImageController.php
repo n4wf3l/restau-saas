@@ -6,17 +6,22 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSiteImageRequest;
 use App\Http\Requests\UpdateSiteImageRequest;
 use App\Models\SiteImage;
+use App\Services\TenantContext;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
 class SiteImageController extends Controller
 {
-    /**
-     * Admin: list images, optionally filtered by category.
-     */
+    private function tc(): TenantContext
+    {
+        return app(TenantContext::class);
+    }
+
     public function index(Request $request)
     {
-        $query = SiteImage::orderBy('category')->orderBy('sort_order');
+        $rid = $this->tc()->id();
+        $query = SiteImage::where('restaurant_id', $rid)
+            ->orderBy('category')->orderBy('sort_order');
 
         if ($request->has('category')) {
             $request->validate([
@@ -28,60 +33,47 @@ class SiteImageController extends Controller
         return response()->json($query->get());
     }
 
-    /**
-     * Admin: upload a new site image.
-     */
     public function store(StoreSiteImageRequest $request)
     {
+        $rid = $this->tc()->id();
         $validated = $request->validated();
 
         $path = $request->file('image')->store('site-images', 'public');
         $validated['image_url'] = '/storage/' . $path;
 
         if (!isset($validated['sort_order'])) {
-            $maxOrder = SiteImage::where('category', $validated['category'])->max('sort_order');
+            $maxOrder = SiteImage::where('restaurant_id', $rid)
+                ->where('category', $validated['category'])->max('sort_order');
             $validated['sort_order'] = ($maxOrder ?? -1) + 1;
         }
 
         unset($validated['image']);
+        $validated['restaurant_id'] = $rid;
         $siteImage = SiteImage::create($validated);
 
-        Cache::forget('public_site_images');
+        Cache::forget("public_site_images:{$rid}");
 
         return response()->json($siteImage, 201);
     }
 
-    /**
-     * Admin: update alt text or sort_order.
-     */
     public function update(UpdateSiteImageRequest $request, SiteImage $siteImage)
     {
         $siteImage->update($request->validated());
-
-        Cache::forget('public_site_images');
-
+        Cache::forget("public_site_images:{$this->tc()->id()}");
         return response()->json($siteImage);
     }
 
-    /**
-     * Admin: delete a site image.
-     */
     public function destroy(SiteImage $siteImage)
     {
         $this->deleteStorageFile($siteImage->image_url, 'site-images/');
-
         $siteImage->delete();
-
-        Cache::forget('public_site_images');
-
+        Cache::forget("public_site_images:{$this->tc()->id()}");
         return response()->json(['message' => 'Image supprimée']);
     }
 
-    /**
-     * Admin: bulk update sort_order for a category.
-     */
     public function reorder(Request $request)
     {
+        $rid = $this->tc()->id();
         $request->validate([
             'category' => 'required|string|in:hero,restaurant,carte,gallery',
             'ids'      => 'required|array',
@@ -90,22 +82,23 @@ class SiteImageController extends Controller
 
         foreach ($request->ids as $index => $id) {
             SiteImage::where('id', $id)
+                ->where('restaurant_id', $rid)
                 ->where('category', $request->category)
                 ->update(['sort_order' => $index]);
         }
 
-        Cache::forget('public_site_images');
+        Cache::forget("public_site_images:{$rid}");
 
         return response()->json(['message' => 'Ordre mis à jour']);
     }
 
-    /**
-     * Public: return all images grouped by category, cached 30 min.
-     */
     public function publicIndex()
     {
-        $data = Cache::remember('public_site_images', 1800, function () {
-            $images = SiteImage::orderBy('sort_order')->get();
+        $rid = $this->tc()->id();
+
+        $data = Cache::remember("public_site_images:{$rid}", 1800, function () use ($rid) {
+            $images = SiteImage::where('restaurant_id', $rid)
+                ->orderBy('sort_order')->get();
 
             $grouped = [
                 'hero'       => [],

@@ -1,7 +1,12 @@
 import axios from "axios";
 import type { Reservation, PublicTable, ReservationPayload, EventReservationPayload, MenuItem, MenuItemPayload, RestaurantSettings, SiteImage, SiteImagesGrouped } from "./types";
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+export const API_BASE_URL = import.meta.env.VITE_API_URL || window.location.origin;
+
+// Tenant slug for public API calls — read from URL param or default
+export function getTenantSlug(): string | null {
+  return new URLSearchParams(window.location.search).get('tenant');
+}
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -12,8 +17,9 @@ export const api = axios.create({
   },
 });
 
-// Intercepteur pour ajouter le token XSRF depuis les cookies
+// Intercepteur pour ajouter le token XSRF et le tenant slug
 api.interceptors.request.use((config) => {
+  // XSRF token from cookies
   const token = document.cookie
     .split("; ")
     .find((row) => row.startsWith("XSRF-TOKEN="))
@@ -21,6 +27,12 @@ api.interceptors.request.use((config) => {
 
   if (token) {
     config.headers["X-XSRF-TOKEN"] = decodeURIComponent(token);
+  }
+
+  // Inject tenant slug for public API routes
+  const tenant = getTenantSlug();
+  if (tenant && config.url?.includes('/api/public/')) {
+    config.params = { ...config.params, tenant };
   }
 
   return config;
