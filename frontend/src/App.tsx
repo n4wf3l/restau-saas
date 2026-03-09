@@ -5,12 +5,12 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { GuestRoute } from "./components/GuestRoute";
 import { DashboardLayout } from "./components/DashboardLayout";
-import { PublicSettingsProvider } from "./contexts/PublicSettingsContext";
-import { SiteImagesProvider } from "./contexts/SiteImagesContext";
+import { RestaurantLayout } from "./components/RestaurantLayout";
 import { AppToaster } from "./components/ui/Toast";
 import "./App.css";
 
 // Lazy-loaded pages (code splitting)
+const SaasLandingPage = lazy(() => import("./pages/SaasLandingPage"));
 const Home = lazy(() => import("./pages/Home"));
 const GalleryPage = lazy(() => import("./pages/GalleryPage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
@@ -24,6 +24,7 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const MenuPage = lazy(() => import("./pages/MenuPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const SiteImagesPage = lazy(() => import("./pages/SiteImagesPage"));
+const AdminPage = lazy(() => import("./pages/AdminPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function PageLoader() {
@@ -44,7 +45,8 @@ function AdminFloatingButton() {
   const { user, loading } = useAuth();
   const { pathname } = useLocation();
 
-  if (loading || !user || pathname.startsWith("/dashboard") || pathname === "/login" || pathname === "/register") {
+  if (loading || !user) return null;
+  if (pathname.startsWith("/dashboard") || pathname === "/login" || pathname === "/register" || pathname === "/") {
     return null;
   }
 
@@ -66,22 +68,30 @@ function App() {
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
-          <PublicSettingsProvider>
-          <SiteImagesProvider>
           <ScrollToTop />
           <AppToaster />
           <AdminFloatingButton />
           <Suspense fallback={<PageLoader />}>
             <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/gallery" element={<GalleryPage />} />
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="/reservation" element={<PublicReservation />} />
-              <Route path="/menu" element={<PublicMenuPage />} />
-              <Route path="/privacy" element={<PrivacyPage />} />
-              <Route path="/terms" element={<TermsPage />} />
+              {/* SaaS landing page */}
+              <Route path="/" element={<SaasLandingPage />} />
+
+              {/* Restaurant public site — /r/:slug/* */}
+              <Route path="/r/:slug" element={<RestaurantLayout />}>
+                <Route index element={<Home />} />
+                <Route path="gallery" element={<GalleryPage />} />
+                <Route path="contact" element={<ContactPage />} />
+                <Route path="reservation" element={<PublicReservation />} />
+                <Route path="menu" element={<PublicMenuPage />} />
+                <Route path="privacy" element={<PrivacyPage />} />
+                <Route path="terms" element={<TermsPage />} />
+              </Route>
+
+              {/* Auth */}
               <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
               <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
+
+              {/* Admin dashboard */}
               <Route
                 path="/dashboard"
                 element={
@@ -94,12 +104,12 @@ function App() {
                 <Route path="menu" element={<MenuPage />} />
                 <Route path="images" element={<SiteImagesPage />} />
                 <Route path="settings" element={<SettingsPage />} />
+                <Route path="admin" element={<AdminPage />} />
               </Route>
+
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
-          </SiteImagesProvider>
-          </PublicSettingsProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

@@ -4,9 +4,11 @@ import { Footer } from '../components/public/Footer';
 import { ReservationModal } from '../components/public/ReservationModal';
 import { Link } from 'react-router-dom';
 import { usePublicSettings } from '../contexts/PublicSettingsContext';
+import { useRestaurantBasePath } from '../hooks/useRestaurantBasePath';
 
 export default function TermsPage() {
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
+  const basePath = useRestaurantBasePath();
   const restaurantName = usePublicSettings()?.restaurant_name ?? 'RR Ice';
 
   return (
@@ -126,7 +128,7 @@ export default function TermsPage() {
               </h2>
               <p>
                 La collecte et le traitement de vos données personnelles sont régis par notre{' '}
-                <Link to="/privacy" className="text-cream-400/80 hover:text-cream-300 underline underline-offset-4 decoration-cream-400/30 transition-colors">
+                <Link to={`${basePath}/privacy`} className="text-cream-400/80 hover:text-cream-300 underline underline-offset-4 decoration-cream-400/30 transition-colors">
                   Politique de Confidentialité
                 </Link>.
                 En utilisant notre site et nos services, vous consentez à la collecte et au traitement
@@ -162,7 +164,7 @@ export default function TermsPage() {
               </h2>
               <p>
                 Pour toute question concernant ces conditions générales, contactez-nous via notre{' '}
-                <Link to="/contact" className="text-cream-400/80 hover:text-cream-300 underline underline-offset-4 decoration-cream-400/30 transition-colors">
+                <Link to={`${basePath}/contact`} className="text-cream-400/80 hover:text-cream-300 underline underline-offset-4 decoration-cream-400/30 transition-colors">
                   page de contact
                 </Link>
                 {' '}ou par email à{' '}

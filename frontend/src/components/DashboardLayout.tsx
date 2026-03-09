@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { Outlet, useLocation, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
-import { usePublicSettings } from "../contexts/PublicSettingsContext";
 import { FloorPlanEditor } from "./floorplan/FloorPlanEditor";
 import { api, API_BASE_URL } from "../lib/api";
 import type { FloorPlan } from "../lib/types";
@@ -25,6 +24,8 @@ import {
   ArrowRightIcon,
   XCircleIcon,
   ExclamationTriangleIcon,
+  ShieldCheckIcon,
+  ClockIcon,
 } from "@heroicons/react/24/outline";
 
 interface NavItem {
@@ -33,6 +34,7 @@ interface NavItem {
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   exact?: boolean;
   soon?: boolean;
+  adminOnly?: boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -42,14 +44,23 @@ const NAV_ITEMS: NavItem[] = [
   { path: "/dashboard/clients", label: "Clients", icon: UsersIcon, soon: true },
   { path: "/dashboard/analytics", label: "Statistiques", icon: ChartBarIcon, soon: true },
   { path: "/dashboard/settings", label: "Paramètres", icon: Cog6ToothIcon },
+  { path: "/dashboard/admin", label: "Admin", icon: ShieldCheckIcon, adminOnly: true },
 ];
 
 export function DashboardLayout() {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const ps = usePublicSettings();
-  const restaurantName = ps?.restaurant_name ?? 'RR Ice';
-  const logoSrc = ps?.logo_url ? (ps.logo_url.startsWith('http') ? ps.logo_url : `${API_BASE_URL}${ps.logo_url}`) : '/logo.png';
+  const restaurant = user?.restaurant;
+  const restaurantName = restaurant?.name ?? 'Mon Restaurant';
+  const restaurantSlug = restaurant?.slug;
+  const logoUrl = restaurant?.settings?.logo_url;
+  const logoSrc = logoUrl
+    ? (logoUrl.startsWith('http') ? logoUrl : `${API_BASE_URL}${logoUrl}`)
+    : null;
+  const logoInitial = restaurantName.charAt(0).toUpperCase();
+  const isAdmin = user?.role === 'admin';
+  const isPending = restaurant?.status === 'pending';
+  const isSuspended = restaurant?.status === 'suspended';
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -137,20 +148,28 @@ export function DashboardLayout() {
           {sidebarOpen ? (
             <>
               <Link to="/dashboard" className="flex items-center gap-2.5">
-                <img src={logoSrc} alt={restaurantName} className="w-8 h-8 object-contain" />
-                <span className="font-display font-bold text-gray-900 dark:text-cream-100 text-lg tracking-tight">
+                {logoSrc ? (
+                  <img src={logoSrc} alt={restaurantName} className="w-8 h-8 object-contain" />
+                ) : (
+                  <div className="w-8 h-8 bg-gradient-to-br from-coffee-400 to-coffee-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-display font-bold text-sm">{logoInitial}</span>
+                  </div>
+                )}
+                <span className="font-display font-bold text-gray-900 dark:text-cream-100 text-lg tracking-tight truncate">
                   {restaurantName}
                 </span>
               </Link>
               <div className="flex items-center gap-1">
-                <Link
-                  to="/"
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-gray-400 dark:text-gray-500 hover:text-coffee-600 dark:hover:text-cream-400 hover:bg-cream-50 dark:hover:bg-surface-card transition-all duration-200 text-xs font-medium"
-                  title="Voir le site"
-                >
-                  <span>Site</span>
-                  <ArrowRightIcon className="w-3 h-3" />
-                </Link>
+                {restaurantSlug && restaurant?.status === 'active' && (
+                  <Link
+                    to={`/r/${restaurantSlug}`}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-gray-400 dark:text-gray-500 hover:text-coffee-600 dark:hover:text-cream-400 hover:bg-cream-50 dark:hover:bg-surface-card transition-all duration-200 text-xs font-medium"
+                    title="Voir le site"
+                  >
+                    <span>Site</span>
+                    <ArrowRightIcon className="w-3 h-3" />
+                  </Link>
+                )}
                 <button
                   onClick={closeMobileMenu}
                   className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 hover:bg-cream-50 dark:hover:bg-surface-card transition-all md:hidden"
@@ -166,14 +185,34 @@ export function DashboardLayout() {
               className="mx-auto"
               title={restaurantName}
             >
-              <img src={logoSrc} alt={restaurantName} className="w-8 h-8 object-contain" />
+              {logoSrc ? (
+                <img src={logoSrc} alt={restaurantName} className="w-8 h-8 object-contain" />
+              ) : (
+                <div className="w-8 h-8 bg-gradient-to-br from-coffee-400 to-coffee-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-display font-bold text-sm">{logoInitial}</span>
+                </div>
+              )}
             </Link>
           )}
         </div>
 
+        {/* ─── Status Banner ─── */}
+        {sidebarOpen && isPending && (
+          <div className="mx-3 mt-3 px-3 py-2.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 rounded-xl">
+            <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">En attente d'activation</p>
+            <p className="text-[11px] text-amber-600/70 dark:text-amber-500/70 mt-0.5">Votre compte est en cours de validation par l'équipe.</p>
+          </div>
+        )}
+        {sidebarOpen && isSuspended && (
+          <div className="mx-3 mt-3 px-3 py-2.5 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/40 rounded-xl">
+            <p className="text-xs font-semibold text-red-700 dark:text-red-400">Compte suspendu</p>
+            <p className="text-[11px] text-red-600/70 dark:text-red-500/70 mt-0.5">Contactez l'équipe pour plus d'informations.</p>
+          </div>
+        )}
+
         {/* ─── Navigation ─── */}
         <nav className="flex-1 px-3 py-5 space-y-1 overflow-y-auto" aria-label="Navigation principale">
-          {NAV_ITEMS.map((item) => {
+          {NAV_ITEMS.filter(item => !item.adminOnly || isAdmin).map((item) => {
             const Icon = item.icon;
             const active = isActive(item);
 
@@ -316,7 +355,34 @@ export function DashboardLayout() {
 
         {/* Page content */}
         <div className="flex-1 overflow-hidden">
-          <Outlet context={{ floorPlan }} />
+          {!isAdmin && (isPending || isSuspended) ? (
+            <div className="flex items-center justify-center h-full px-6">
+              <div className="text-center max-w-md">
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 ${
+                  isPending ? 'bg-amber-50 dark:bg-amber-900/20' : 'bg-red-50 dark:bg-red-900/20'
+                }`}>
+                  {isPending ? (
+                    <ClockIcon className="w-8 h-8 text-amber-500" />
+                  ) : (
+                    <ExclamationTriangleIcon className="w-8 h-8 text-red-500" />
+                  )}
+                </div>
+                <h2 className="text-xl font-display font-bold text-gray-900 dark:text-cream-100 mb-3">
+                  {isPending ? 'Votre compte est en attente d\'activation' : 'Votre compte est suspendu'}
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                  {isPending
+                    ? 'Notre équipe est en train de valider votre inscription. Vous recevrez un email dès que votre restaurant sera activé et prêt à être configuré.'
+                    : 'Votre compte a été suspendu. Contactez notre équipe pour plus d\'informations.'}
+                </p>
+                <p className="mt-4 text-xs text-gray-400 dark:text-gray-500">
+                  Restaurant: <span className="font-semibold">{restaurantName}</span>
+                </p>
+              </div>
+            </div>
+          ) : (
+            <Outlet context={{ floorPlan }} />
+          )}
         </div>
       </div>
 

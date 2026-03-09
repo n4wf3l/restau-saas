@@ -12,6 +12,7 @@ class Restaurant extends Model
         'name',
         'slug',
         'logo_url',
+        'status',
     ];
 
     public function domains(): HasMany

@@ -1,10 +1,14 @@
 import axios from "axios";
-import type { Reservation, PublicTable, ReservationPayload, EventReservationPayload, MenuItem, MenuItemPayload, RestaurantSettings, SiteImage, SiteImagesGrouped } from "./types";
+import type { Reservation, PublicTable, ReservationPayload, EventReservationPayload, MenuItem, MenuItemPayload, RestaurantSettings, SiteImage, SiteImagesGrouped, Restaurant } from "./types";
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL || window.location.origin;
 
-// Tenant slug for public API calls — read from URL param or default
+// Tenant slug for public API calls — read from URL path /r/:slug or ?tenant= query param
 export function getTenantSlug(): string | null {
+  // 1. Try URL path: /r/:slug/...
+  const match = window.location.pathname.match(/^\/r\/([^/]+)/);
+  if (match) return match[1];
+  // 2. Fallback: ?tenant= query param (widget demo, external use)
   return new URLSearchParams(window.location.search).get('tenant');
 }
 
@@ -282,6 +286,23 @@ export async function uploadLogo(file: File) {
 
 export async function deleteLogo() {
   const response = await api.delete("/api/settings/logo");
+  return response.data;
+}
+
+// === ADMIN (platform) API ===
+
+export async function getAdminRestaurants(): Promise<Restaurant[]> {
+  const response = await api.get("/api/admin/restaurants");
+  return response.data;
+}
+
+export async function updateAdminRestaurant(id: number, payload: { status?: string; name?: string }): Promise<Restaurant> {
+  const response = await api.put(`/api/admin/restaurants/${id}`, payload);
+  return response.data;
+}
+
+export async function updateAdminRestaurantModules(id: number, payload: { reservations_enabled?: boolean; menu_enabled?: boolean; website_enabled?: boolean }): Promise<Restaurant> {
+  const response = await api.put(`/api/admin/restaurants/${id}/modules`, payload);
   return response.data;
 }
 

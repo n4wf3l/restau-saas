@@ -4,8 +4,6 @@ import { useAuth } from "../contexts/AuthContext";
 import toast from "react-hot-toast";
 import { PasswordToggle } from "../components/ui/PasswordToggle";
 import { Spinner } from "../components/ui/Spinner";
-import { usePublicSettings } from "../contexts/PublicSettingsContext";
-import { API_BASE_URL } from "../lib/api";
 
 const inputClass =
   "w-full bg-transparent border border-cream-400/30 rounded-none px-4 py-3.5 text-cream-100 text-sm font-body placeholder-cream-400/40 focus:outline-none focus:border-cream-400/60 transition-colors min-h-[48px]";
@@ -16,9 +14,6 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
-  const ps = usePublicSettings();
-  const restaurantName = ps?.restaurant_name ?? 'RR Ice';
-  const logoSrc = ps?.logo_url ? (ps.logo_url.startsWith('http') ? ps.logo_url : `${API_BASE_URL}${ps.logo_url}`) : '/logo.png';
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -48,21 +43,24 @@ export default function Login() {
         backgroundSize: '32px 32px',
       }} />
 
+      {/* Animated ambient glow */}
+      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-coffee-600/10 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-cream-400/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+
       {/* Card */}
       <div className="relative w-full max-w-md">
         {/* Logo */}
-        <div className="flex justify-center mb-10">
-          <Link to="/">
-            <img
-              src={logoSrc}
-              alt={restaurantName}
-              className="w-20 h-20 object-contain opacity-90 hover:opacity-100 transition-opacity"
-            />
+        <div className="flex justify-center mb-10 opacity-0 animate-hero-fade-up" style={{ animationDelay: '100ms', animationFillMode: 'forwards' }}>
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 bg-gradient-to-br from-coffee-400 to-coffee-600 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
+              <span className="text-white font-display font-bold text-lg">N</span>
+            </div>
+            <span className="text-cream-200 font-display font-bold text-xl tracking-wide">NA Innovations</span>
           </Link>
         </div>
 
         {/* Title */}
-        <div className="text-center mb-10">
+        <div className="text-center mb-10 opacity-0 animate-hero-fade-up" style={{ animationDelay: '250ms', animationFillMode: 'forwards' }}>
           <p className="text-cream-500 text-xs tracking-[0.35em] uppercase mb-3 font-body">
             Espace Admin
           </p>
@@ -72,9 +70,9 @@ export default function Login() {
         </div>
 
         {/* Form Card */}
-        <div className="border border-cream-400/15 bg-cream-400/[0.02] p-8 md:p-10">
+        <div className="border border-cream-400/15 bg-cream-400/[0.02] p-8 md:p-10 opacity-0 animate-hero-fade-up" style={{ animationDelay: '400ms', animationFillMode: 'forwards' }}>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
+            <div className="opacity-0 animate-hero-fade-up" style={{ animationDelay: '500ms', animationFillMode: 'forwards' }}>
               <label htmlFor="email" className="block text-cream-500 text-xs tracking-[0.2em] uppercase mb-2.5 font-body">
                 Email
               </label>
@@ -89,7 +87,7 @@ export default function Login() {
               />
             </div>
 
-            <div>
+            <div className="opacity-0 animate-hero-fade-up" style={{ animationDelay: '570ms', animationFillMode: 'forwards' }}>
               <label htmlFor="password" className="block text-cream-500 text-xs tracking-[0.2em] uppercase mb-2.5 font-body">
                 Mot de passe
               </label>
@@ -107,25 +105,27 @@ export default function Login() {
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-4 bg-cream-400/10 border border-cream-400/40 text-cream-300 text-sm tracking-[0.15em] uppercase font-body font-semibold hover:bg-cream-400/20 active:bg-cream-400/25 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300 rounded-none min-h-[52px]"
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-3">
-                  <Spinner size="xs" className="text-current" />
-                  Connexion...
-                </span>
-              ) : (
-                "Se connecter"
-              )}
-            </button>
+            <div className="opacity-0 animate-hero-fade-up" style={{ animationDelay: '640ms', animationFillMode: 'forwards' }}>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-4 bg-cream-400/10 border border-cream-400/40 text-cream-300 text-sm tracking-[0.15em] uppercase font-body font-semibold hover:bg-cream-400/20 active:bg-cream-400/25 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300 rounded-none min-h-[52px]"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-3">
+                    <Spinner size="xs" className="text-current" />
+                    Connexion...
+                  </span>
+                ) : (
+                  "Se connecter"
+                )}
+              </button>
+            </div>
           </form>
         </div>
 
         {/* Register link */}
-        <p className="mt-8 text-center text-cream-400/50 font-body text-sm">
+        <p className="mt-8 text-center text-cream-400/50 font-body text-sm opacity-0 animate-hero-fade-up" style={{ animationDelay: '780ms', animationFillMode: 'forwards' }}>
           Pas encore de compte ?{" "}
           <Link
             to="/register"
@@ -136,7 +136,7 @@ export default function Login() {
         </p>
 
         {/* Back to site */}
-        <div className="mt-6 text-center">
+        <div className="mt-6 text-center opacity-0 animate-hero-fade-up" style={{ animationDelay: '900ms', animationFillMode: 'forwards' }}>
           <Link
             to="/"
             className="text-cream-400/40 hover:text-cream-400/70 font-body text-xs tracking-[0.15em] uppercase transition-colors"

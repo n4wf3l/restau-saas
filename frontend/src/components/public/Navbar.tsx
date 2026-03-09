@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { CTAButton } from './CTAButton';
 import { usePublicSettings } from '../../contexts/PublicSettingsContext';
+import { useRestaurantBasePath } from '../../hooks/useRestaurantBasePath';
 import { API_BASE_URL } from '../../lib/api';
 
 interface NavbarProps {
@@ -11,12 +12,14 @@ interface NavbarProps {
 
 type NavLink = { label: string } & ({ href: string; to?: never } | { to: string; href?: never });
 
-const navLinks: NavLink[] = [
-  { label: 'Accueil', to: '/' },
-  { label: 'Galerie', to: '/gallery' },
-  { label: 'Menu', to: '/menu' },
-  { label: 'Contact', to: '/contact' },
-];
+function buildNavLinks(base: string): NavLink[] {
+  return [
+    { label: 'Accueil', to: base },
+    { label: 'Galerie', to: `${base}/gallery` },
+    { label: 'Menu', to: `${base}/menu` },
+    { label: 'Contact', to: `${base}/contact` },
+  ];
+}
 
 const LANGUAGES = [
   { code: 'FR', label: 'FR' },
@@ -29,6 +32,8 @@ export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
   const [activeLang, setActiveLang] = useState('FR');
   const [langPickerOpen, setLangPickerOpen] = useState(false);
   const location = useLocation();
+  const basePath = useRestaurantBasePath();
+  const navLinks = buildNavLinks(basePath);
   const ps = usePublicSettings();
   const restaurantName = ps?.restaurant_name ?? 'RR Ice';
   const logoSrc = ps?.logo_url ? (ps.logo_url.startsWith('http') ? ps.logo_url : `${API_BASE_URL}${ps.logo_url}`) : '/logo.png';
@@ -76,7 +81,7 @@ export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
           {/* Desktop Layout */}
           <div className="hidden md:flex items-center h-20">
             <div className="flex-1 flex justify-center items-center border-r border-cream-400/30 px-8">
-              <Link to="/" className="flex items-center gap-2">
+              <Link to={basePath} className="flex items-center gap-2">
                 <img src={logoSrc} alt={restaurantName} className="w-12 h-12 object-contain" />
               </Link>
             </div>

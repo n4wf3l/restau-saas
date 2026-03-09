@@ -14,10 +14,11 @@ class UserObserver
 {
     public function created(User $user): void
     {
-        // Each new user gets their own restaurant
+        // Each new user gets their own restaurant (pending activation by admin)
         $restaurant = Restaurant::create([
-            'name' => 'Mon Restaurant',
-            'slug' => Str::slug($user->name) . '-' . $user->id,
+            'name'   => $user->name,
+            'slug'   => Str::slug($user->name) . '-' . $user->id,
+            'status' => 'pending',
         ]);
 
         // Default domain (optional, for dev)

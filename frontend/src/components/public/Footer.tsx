@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { CTAButton } from './CTAButton';
 import { usePublicSettings } from '../../contexts/PublicSettingsContext';
+import { useRestaurantBasePath } from '../../hooks/useRestaurantBasePath';
 import { Spinner } from '../ui/Spinner';
 import type { OpeningHours } from '../../lib/types';
 
@@ -141,6 +142,7 @@ interface FooterProps {
 }
 
 export function Footer({ onReservationClick, hideReservation }: FooterProps) {
+  const basePath = useRestaurantBasePath();
   const publicSettings = usePublicSettings();
   const loadingHours = !publicSettings;
   const hoursLines = publicSettings?.opening_hours ? formatHoursGroups(publicSettings.opening_hours) : [];
@@ -216,10 +218,10 @@ export function Footer({ onReservationClick, hideReservation }: FooterProps) {
 
           {/* Legal + Admin links */}
           <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mb-8">
-            <Link to="/privacy" className="text-cream-400/35 hover:text-cream-400/60 font-body text-xs tracking-wide transition-colors">
+            <Link to={`${basePath}/privacy`} className="text-cream-400/35 hover:text-cream-400/60 font-body text-xs tracking-wide transition-colors">
               Confidentialité
             </Link>
-            <Link to="/terms" className="text-cream-400/35 hover:text-cream-400/60 font-body text-xs tracking-wide transition-colors">
+            <Link to={`${basePath}/terms`} className="text-cream-400/35 hover:text-cream-400/60 font-body text-xs tracking-wide transition-colors">
               Conditions générales
             </Link>
             <Link to="/login" className="text-cream-400/35 hover:text-cream-400/60 font-body text-xs tracking-wide transition-colors">

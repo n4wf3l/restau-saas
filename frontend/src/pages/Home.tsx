@@ -5,6 +5,7 @@ import { Footer } from '../components/public/Footer';
 import { CTAButton } from '../components/public/CTAButton';
 import { usePublicSettings } from '../contexts/PublicSettingsContext';
 import { useSiteImages } from '../contexts/SiteImagesContext';
+import { useRestaurantBasePath } from '../hooks/useRestaurantBasePath';
 import { ImageLightbox, type LightboxImage } from '../components/ui/ImageLightbox';
 import { API_BASE_URL } from '../lib/api';
 
@@ -50,6 +51,7 @@ export default function Home() {
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [lightbox, setLightbox] = useState<{ images: LightboxImage[]; index: number } | null>(null);
+  const basePath = useRestaurantBasePath();
   const publicSettings = usePublicSettings();
   const restaurantName = publicSettings?.restaurant_name ?? 'RR Ice';
   const logoSrc = publicSettings?.logo_url ? (publicSettings.logo_url.startsWith('http') ? publicSettings.logo_url : `${API_BASE_URL}${publicSettings.logo_url}`) : '/logo.png';
@@ -128,7 +130,7 @@ export default function Home() {
             Découvrez une expérience culinaire exceptionnelle dans une ambiance élégante et intime
           </p>
           <div className="flex justify-center opacity-0 animate-hero-fade-up" style={{ animationDelay: '900ms' }}>
-            <CTAButton href="/menu">Découvrir la carte</CTAButton>
+            <CTAButton href={`${basePath}/menu`}>Découvrir la carte</CTAButton>
           </div>
         </div>
       </section>
@@ -194,7 +196,7 @@ export default function Home() {
           {/* CTA Button */}
           <ScrollReveal>
             <div className="text-center">
-              <CTAButton href="/gallery">Voir la galerie</CTAButton>
+              <CTAButton href={`${basePath}/gallery`}>Voir la galerie</CTAButton>
             </div>
           </ScrollReveal>
         </div>
@@ -243,7 +245,7 @@ export default function Home() {
 
           <ScrollReveal>
             <div className="text-center mt-12">
-              <CTAButton href="/menu">Voir le menu complet</CTAButton>
+              <CTAButton href={`${basePath}/menu`}>Voir le menu complet</CTAButton>
             </div>
           </ScrollReveal>
         </div>

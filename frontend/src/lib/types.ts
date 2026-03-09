@@ -1,7 +1,34 @@
+export interface RestaurantModules {
+  id: number;
+  restaurant_id: number;
+  reservations_enabled: boolean;
+  menu_enabled: boolean;
+  website_enabled: boolean;
+}
+
+export interface Restaurant {
+  id: number;
+  name: string;
+  slug: string;
+  logo_url: string | null;
+  status: 'pending' | 'active' | 'suspended';
+  modules: RestaurantModules | null;
+  settings?: {
+    restaurant_name: string;
+    logo_url: string | null;
+  } | null;
+  users?: User[];
+  created_at: string;
+  updated_at: string;
+}
+
 export interface User {
   id: number;
   name: string;
   email: string;
+  role: 'admin' | 'user';
+  restaurant_id: number | null;
+  restaurant: Restaurant | null;
   email_verified_at: string | null;
   created_at: string;
   updated_at: string;
@@ -12,6 +39,7 @@ export interface RegisterPayload {
   email: string;
   password: string;
   password_confirmation: string;
+  logo?: File;
 }
 
 export interface FloorPlanFloor {

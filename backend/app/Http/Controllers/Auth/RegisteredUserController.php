@@ -24,6 +24,7 @@ class RegisteredUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'logo' => ['nullable', 'image', 'max:5120'],
         ]);
 
         $user = User::create([
@@ -33,6 +34,18 @@ class RegisteredUserController extends Controller
         ]);
 
         event(new Registered($user));
+
+        // UserObserver creates restaurant + settings — now update with registration data
+        $user->refresh();
+        $settings = $user->restaurant?->settings;
+        if ($settings) {
+            $updates = ['restaurant_name' => $request->name];
+            if ($request->hasFile('logo')) {
+                $path = $request->file('logo')->store('logos', 'public');
+                $updates['logo_url'] = '/storage/' . $path;
+            }
+            $settings->update($updates);
+        }
 
         Auth::login($user);
 

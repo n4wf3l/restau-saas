@@ -4,9 +4,11 @@ import { Footer } from '../components/public/Footer';
 import { ReservationModal } from '../components/public/ReservationModal';
 import { Link } from 'react-router-dom';
 import { usePublicSettings } from '../contexts/PublicSettingsContext';
+import { useRestaurantBasePath } from '../hooks/useRestaurantBasePath';
 
 export default function PrivacyPage() {
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
+  const basePath = useRestaurantBasePath();
   const restaurantName = usePublicSettings()?.restaurant_name ?? 'RR Ice';
 
   return (
@@ -161,7 +163,7 @@ export default function PrivacyPage() {
               <p>
                 Pour toute question relative à cette politique de confidentialité, vous pouvez nous contacter
                 via notre{' '}
-                <Link to="/contact" className="text-cream-400/80 hover:text-cream-300 underline underline-offset-4 decoration-cream-400/30 transition-colors">
+                <Link to={`${basePath}/contact`} className="text-cream-400/80 hover:text-cream-300 underline underline-offset-4 decoration-cream-400/30 transition-colors">
                   page de contact
                 </Link>
                 {' '}ou par email à{' '}

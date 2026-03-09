@@ -35,10 +35,19 @@ Route::middleware('tenant')->group(function () {
 
 // ─── Auth user route — tenant via authenticated user ───
 Route::middleware(['auth:sanctum', 'auth.tenant'])->get('/user', function (Request $request) {
-    return $request->user();
+    $user = $request->user();
+    $user->load(['restaurant.modules', 'restaurant.settings:id,restaurant_id,restaurant_name,logo_url']);
+    return $user;
 });
 
-// ─── Admin routes — tenant via authenticated user ───
+// ─── Platform admin routes ───
+Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
+    Route::get('/restaurants', [\App\Http\Controllers\Api\AdminController::class, 'index']);
+    Route::put('/restaurants/{restaurant}', [\App\Http\Controllers\Api\AdminController::class, 'update']);
+    Route::put('/restaurants/{restaurant}/modules', [\App\Http\Controllers\Api\AdminController::class, 'updateModules']);
+});
+
+// ─── Restaurant owner routes — tenant via authenticated user ───
 Route::middleware(['auth:sanctum', 'auth.tenant'])->group(function () {
     // Floor Plan routes
     Route::get('/floor-plans/current', [FloorPlanController::class, 'current']);

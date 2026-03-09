@@ -39,7 +39,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (payload: RegisterPayload) => {
     await csrf();
-    await api.post("/register", payload);
+    if (payload.logo) {
+      const fd = new FormData();
+      fd.append('name', payload.name);
+      fd.append('email', payload.email);
+      fd.append('password', payload.password);
+      fd.append('password_confirmation', payload.password_confirmation);
+      fd.append('logo', payload.logo);
+      await api.post("/register", fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+    } else {
+      await api.post("/register", payload);
+    }
     await refreshMe();
   };
 
