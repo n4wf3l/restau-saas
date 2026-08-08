@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Navbar } from '../components/public/Navbar';
 import { Footer } from '../components/public/Footer';
 import { ReservationModal } from '../components/public/ReservationModal';
@@ -46,6 +47,7 @@ function ScrollReveal({
 
 
 export default function GalleryPage() {
+  const { t } = useTranslation();
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const publicSettings = usePublicSettings();
@@ -57,8 +59,16 @@ export default function GalleryPage() {
   }));
   const hideReservation = publicSettings ? !publicSettings.reservations_enabled : false;
 
+  // Moroccan zellij medallion — large khatam (8-point star) + inner octagon + center dot.
+  // Tile 320px with generous space around each star so it reads as a decorative medallion,
+  // not wallpaper. Cream color at low opacity to stay subtle over coffee-950.
+  const zellijPattern = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g fill='none' stroke='%23d4b18a' stroke-width='1.4' stroke-opacity='0.18'><polygon points='160,60 260,160 160,260 60,160'/><polygon points='89.3,89.3 230.7,89.3 230.7,230.7 89.3,230.7'/><polygon points='197,175 175,197 145,197 123,175 123,145 145,123 175,123 197,145'/></g><circle cx='160' cy='160' r='2.5' fill='%23d4b18a' fill-opacity='0.28'/></svg>\")";
+
   return (
-    <div className="bg-coffee-950 text-white min-h-screen">
+    <div
+      className="bg-coffee-950 text-white min-h-screen"
+      style={{ backgroundImage: zellijPattern, backgroundRepeat: 'repeat', backgroundSize: '320px 320px' }}
+    >
       <Navbar onReservationClick={() => setIsReservationModalOpen(true)} hideReservation={hideReservation} />
       {!hideReservation && <ReservationModal isOpen={isReservationModalOpen} onClose={() => setIsReservationModalOpen(false)} />}
 
@@ -66,17 +76,17 @@ export default function GalleryPage() {
       <section className="pt-24 md:pt-32 pb-12 md:pb-16 px-4 text-center">
         <ScrollReveal>
           <p className="text-cream-500 text-xs tracking-[0.35em] uppercase mb-4 font-body">
-            Galerie
+            {t('gallery.eyebrow')}
           </p>
         </ScrollReveal>
         <ScrollReveal delay={100}>
           <h1 className="text-3xl md:text-6xl font-display font-bold text-cream-100 mb-4 md:mb-6 tracking-wide">
-            Notre Univers
+            {t('gallery.title')}
           </h1>
         </ScrollReveal>
         <ScrollReveal delay={200}>
           <p className="text-cream-400/70 font-body text-base md:text-lg max-w-xl mx-auto leading-relaxed">
-            Plongez dans l'atmosphère de {restaurantName} à travers nos photos
+            {t('gallery.desc', { restaurantName })}
           </p>
         </ScrollReveal>
       </section>
@@ -110,7 +120,7 @@ export default function GalleryPage() {
           {!hideReservation && (
             <ScrollReveal delay={100}>
               <div className="text-center mt-16">
-                <CTAButton onClick={() => setIsReservationModalOpen(true)}>Réserver une table</CTAButton>
+                <CTAButton onClick={() => setIsReservationModalOpen(true)}>{t('gallery.reserveCta')}</CTAButton>
               </div>
             </ScrollReveal>
           )}

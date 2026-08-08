@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { CTAButton } from './CTAButton';
 import { usePublicSettings } from '../../contexts/PublicSettingsContext';
 import { useRestaurantBasePath } from '../../hooks/useRestaurantBasePath';
@@ -98,28 +99,23 @@ const SOCIAL_LABELS: Record<string, string> = {
 };
 
 const DAY_KEYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-const DAY_SHORT: Record<string, string> = {
-  monday: 'Lun', tuesday: 'Mar', wednesday: 'Mer', thursday: 'Jeu',
-  friday: 'Ven', saturday: 'Sam', sunday: 'Dim',
-};
 
-function formatTime(t: string): string {
-  return t.replace(':', 'h');
+function formatTime(time: string): string {
+  return time.replace(':', 'h');
 }
 
-/** Group consecutive days with same hours into ranges like "Lun - Jeu: 11h00 - 23h00" */
-function formatHoursGroups(hours: OpeningHours): string[] {
+/** Group consecutive days with same hours into ranges. Day names come from i18n. */
+function formatHoursGroups(hours: OpeningHours, dayName: (k: string) => string, closedLabel: string): string[] {
   const lines: string[] = [];
   let i = 0;
   while (i < DAY_KEYS.length) {
     const key = DAY_KEYS[i];
     const dh = hours[key];
     if (!dh || dh.closed) {
-      lines.push(`${DAY_SHORT[key]}: Fermé`);
+      lines.push(`${dayName(key)}: ${closedLabel}`);
       i++;
       continue;
     }
-    // Find consecutive days with same hours
     let j = i + 1;
     while (j < DAY_KEYS.length) {
       const nk = DAY_KEYS[j];
@@ -128,8 +124,8 @@ function formatHoursGroups(hours: OpeningHours): string[] {
       j++;
     }
     const range = j - 1 > i
-      ? `${DAY_SHORT[DAY_KEYS[i]]} - ${DAY_SHORT[DAY_KEYS[j - 1]]}`
-      : DAY_SHORT[key];
+      ? `${dayName(DAY_KEYS[i])} — ${dayName(DAY_KEYS[j - 1])}`
+      : dayName(key);
     lines.push(`${range}: ${formatTime(dh.open)} - ${formatTime(dh.close)}`);
     i = j;
   }
@@ -142,10 +138,13 @@ interface FooterProps {
 }
 
 export function Footer({ onReservationClick, hideReservation }: FooterProps) {
+  const { t } = useTranslation();
   const basePath = useRestaurantBasePath();
   const publicSettings = usePublicSettings();
   const loadingHours = !publicSettings;
-  const hoursLines = publicSettings?.opening_hours ? formatHoursGroups(publicSettings.opening_hours) : [];
+  const hoursLines = publicSettings?.opening_hours
+    ? formatHoursGroups(publicSettings.opening_hours, (k) => t(`days.${k}`), t('contact.hours.closed'))
+    : [];
   const hasClosures = (publicSettings?.closure_dates && publicSettings.closure_dates.length > 0) ?? false;
   const socialLinks = publicSettings?.social_links ?? null;
 
@@ -160,7 +159,7 @@ export function Footer({ onReservationClick, hideReservation }: FooterProps) {
         <div className="max-w-2xl mx-auto text-center">
           {/* Address */}
           <p className="text-cream-400/80 font-body text-sm md:text-base mb-8">
-            Ghandouri - Tanger, Maroc
+            {t('footer.address')}
           </p>
 
           {/* Hours */}
@@ -171,7 +170,7 @@ export function Footer({ onReservationClick, hideReservation }: FooterProps) {
           ) : hoursLines.length > 0 ? (
             <>
               <p className="text-cream-100 font-body font-semibold text-sm md:text-base mb-3">
-                Horaire d'ouverture :
+                {t('footer.hoursTitle')}
               </p>
               <div className="text-cream-400/70 font-body text-sm md:text-base space-y-1 mb-4">
                 {hoursLines.map((line, i) => (
@@ -180,7 +179,7 @@ export function Footer({ onReservationClick, hideReservation }: FooterProps) {
               </div>
               {hasClosures && (
                 <p className="text-cream-400/70 font-body text-sm md:text-base mb-12">
-                  Fermetures exceptionnelles — consultez la page de réservation
+                  {t('footer.closuresNotice')}
                 </p>
               )}
               {!hasClosures && <div className="mb-12" />}
@@ -192,7 +191,7 @@ export function Footer({ onReservationClick, hideReservation }: FooterProps) {
           {/* CTA */}
           {!hideReservation && (
             <div className="mb-12">
-              <CTAButton onClick={onReservationClick}>Réserver une table</CTAButton>
+              <CTAButton onClick={onReservationClick}>{t('footer.reserve')}</CTAButton>
             </div>
           )}
           {hideReservation && <div className="mb-12" />}
@@ -206,6 +205,7 @@ export function Footer({ onReservationClick, hideReservation }: FooterProps) {
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
+                  aria-label={SOCIAL_LABELS[key] || key}
                   className="w-12 h-12 rounded-full border border-cream-400/40 flex items-center justify-center text-cream-400/70 hover:bg-cream-400/10 active:bg-cream-400/20 hover:text-cream-300 transition-all duration-300"
                   title={SOCIAL_LABELS[key] || key}
                 >
@@ -219,13 +219,13 @@ export function Footer({ onReservationClick, hideReservation }: FooterProps) {
           {/* Legal + Admin links */}
           <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mb-8">
             <Link to={`${basePath}/privacy`} className="text-cream-400/35 hover:text-cream-400/60 font-body text-xs tracking-wide transition-colors">
-              Confidentialité
+              {t('footer.privacy')}
             </Link>
             <Link to={`${basePath}/terms`} className="text-cream-400/35 hover:text-cream-400/60 font-body text-xs tracking-wide transition-colors">
-              Conditions générales
+              {t('footer.terms')}
             </Link>
             <Link to="/login" className="text-cream-400/35 hover:text-cream-400/60 font-body text-xs tracking-wide transition-colors">
-              Espace admin
+              {t('footer.admin')}
             </Link>
           </div>
 
@@ -235,10 +235,10 @@ export function Footer({ onReservationClick, hideReservation }: FooterProps) {
           {/* Bottom credit — NA Innovations promo */}
           <div className="text-center">
             <p className="text-cream-400/40 font-body text-xs tracking-wide mb-1">
-              Plateforme sur mesure par
+              {t('footer.creditPrefix')}
             </p>
             <p className="text-cream-400/60 font-body text-sm font-semibold tracking-wide">
-              NA Innovations
+              {t('footer.creditCompany')}
             </p>
           </div>
         </div>

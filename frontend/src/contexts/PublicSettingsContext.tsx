@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import type { ReactNode } from "react";
-import { getPublicSettings } from "../lib/api";
+import { getPublicSettings, getTenantSlug } from "../lib/api";
 import type { OpeningHours, ClosureDate, SocialLinks } from "../lib/types";
 
 export interface PublicSettings {
@@ -24,12 +24,34 @@ interface PublicSettingsContextValue {
 
 const PublicSettingsContext = createContext<PublicSettingsContextValue>({ settings: null, refresh: () => {} });
 
+function settingsCacheKey(): string | null {
+  const slug = getTenantSlug();
+  return slug ? `publicSettings:${slug}` : null;
+}
+
+function readSettingsCache(): PublicSettings | null {
+  const key = settingsCacheKey();
+  if (!key) return null;
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as PublicSettings) : null;
+  } catch {
+    return null;
+  }
+}
+
 export function PublicSettingsProvider({ children }: { children: ReactNode }) {
-  const [settings, setSettings] = useState<PublicSettings | null>(null);
+  const [settings, setSettings] = useState<PublicSettings | null>(() => readSettingsCache());
 
   const refresh = useCallback(() => {
     getPublicSettings()
-      .then((s) => setSettings(s))
+      .then((s) => {
+        setSettings(s);
+        const key = settingsCacheKey();
+        if (key) {
+          try { localStorage.setItem(key, JSON.stringify(s)); } catch { /* quota */ }
+        }
+      })
       .catch(() => {});
   }, []);
 

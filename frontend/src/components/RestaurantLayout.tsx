@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Outlet, useParams } from 'react-router-dom';
 import { PublicSettingsProvider } from '../contexts/PublicSettingsContext';
 import { SiteImagesProvider } from '../contexts/SiteImagesContext';
@@ -8,6 +9,13 @@ import { SiteImagesProvider } from '../contexts/SiteImagesContext';
  */
 export function RestaurantLayout() {
   const { slug } = useParams<{ slug: string }>();
+
+  // Remember the last visited tenant so global routes like /login can apply its branding.
+  useEffect(() => {
+    if (slug) {
+      try { localStorage.setItem('lastTenant', slug); } catch { /* storage disabled */ }
+    }
+  }, [slug]);
 
   if (!slug) {
     return (

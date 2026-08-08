@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Navbar } from '../components/public/Navbar';
 import { ReservationModal } from '../components/public/ReservationModal';
 import { Footer } from '../components/public/Footer';
@@ -48,6 +49,7 @@ function ScrollReveal({
 
 
 export default function Home() {
+  const { t } = useTranslation();
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [lightbox, setLightbox] = useState<{ images: LightboxImage[]; index: number } | null>(null);
@@ -97,19 +99,35 @@ export default function Home() {
         id="hero"
         className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden"
       >
+        {/* Instant placeholder — always visible, no pure-black flash while images load */}
+        <div className="absolute inset-0 bg-gradient-to-br from-coffee-950 via-coffee-900 to-black" />
+
         {/* Background Slider */}
         {heroImages.map((image, index) => (
           <div
             key={image}
-            className={`absolute inset-0 transition-opacity duration-1000 ${
+            className={`absolute inset-0 transition-opacity duration-1000 animate-hero-zoom ${
               index === currentImageIndex ? 'opacity-100' : 'opacity-0'
             }`}
             style={{
-              backgroundImage: `linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.6) 100%), url("${image}")`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
+              willChange: 'transform',
+              transformOrigin: 'center',
             }}
-          />
+          >
+            <img
+              src={image}
+              alt=""
+              loading={index === 0 ? 'eager' : 'lazy'}
+              fetchPriority={index === 0 ? 'high' : 'low'}
+              decoding="async"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            {/* Dark overlay on top of the image */}
+            <div
+              className="absolute inset-0"
+              style={{ background: 'linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.6) 100%)' }}
+            />
+          </div>
         ))}
 
         {/* Content */}
@@ -127,10 +145,10 @@ export default function Home() {
             {restaurantName}
           </h1>
           <p className="text-base md:text-xl text-cream-300 mb-8 md:mb-10 max-w-2xl mx-auto leading-relaxed px-2 opacity-0 animate-hero-fade-up" style={{ animationDelay: '700ms' }}>
-            Découvrez une expérience culinaire exceptionnelle dans une ambiance élégante et intime
+            {t('home.hero.tagline')}
           </p>
           <div className="flex justify-center opacity-0 animate-hero-fade-up" style={{ animationDelay: '900ms' }}>
-            <CTAButton href={`${basePath}/menu`}>Découvrir la carte</CTAButton>
+            <CTAButton href={`${basePath}/menu`}>{t('home.hero.menuCta')}</CTAButton>
           </div>
         </div>
       </section>
@@ -160,16 +178,13 @@ export default function Home() {
           <ScrollReveal>
             <div className="text-center mb-16">
               <p className="text-cream-500 text-xs tracking-[0.35em] uppercase mb-4 font-body">
-                À Propos
+                {t('home.about.eyebrow')}
               </p>
               <h2 className="text-4xl md:text-6xl font-display font-bold text-cream-100 mb-6 tracking-wide">
-                Notre Restaurant
+                {t('home.about.title')}
               </h2>
               <p className="text-cream-400/70 font-body text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-                Situé au cœur de Ghandouri à Tanger, {restaurantName} vous accueille dans un cadre
-                élégant avec une terrasse panoramique offrant une vue imprenable sur la
-                corniche, du port jusqu'au cap Mnar, avec l'Espagne en toile de fond
-                depuis notre 2e étage.
+                {t('home.about.desc', { restaurantName })}
               </p>
             </div>
           </ScrollReveal>
@@ -196,7 +211,7 @@ export default function Home() {
           {/* CTA Button */}
           <ScrollReveal>
             <div className="text-center">
-              <CTAButton href={`${basePath}/gallery`}>Voir la galerie</CTAButton>
+              <CTAButton href={`${basePath}/gallery`}>{t('home.about.galleryCta')}</CTAButton>
             </div>
           </ScrollReveal>
         </div>
@@ -216,11 +231,10 @@ export default function Home() {
         <div className="max-w-6xl mx-auto">
           <ScrollReveal>
             <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 text-white">
-              Notre Carte
+              {t('home.menu.title')}
             </h2>
             <p className="text-gray-400 text-center mb-12 text-lg max-w-2xl mx-auto leading-relaxed">
-              Une restauration 100% halal basée essentiellement sur le travail de la
-              viande de qualité et la viande maturée. Découvrez nos plats signatures.
+              {t('home.menu.desc')}
             </p>
           </ScrollReveal>
 
@@ -245,7 +259,7 @@ export default function Home() {
 
           <ScrollReveal>
             <div className="text-center mt-12">
-              <CTAButton href={`${basePath}/menu`}>Voir le menu complet</CTAButton>
+              <CTAButton href={`${basePath}/menu`}>{t('home.menu.cta')}</CTAButton>
             </div>
           </ScrollReveal>
         </div>
@@ -260,7 +274,7 @@ export default function Home() {
               <div className="relative overflow-hidden h-56 md:h-[550px]">
                 <img
                   src="/rr-ice18.png"
-                  alt="Ambiance du restaurant"
+                  alt=""
                   className="absolute inset-0 w-full h-full object-cover"
                 />
               </div>
@@ -271,23 +285,21 @@ export default function Home() {
               <div className="max-w-md text-center">
                 <ScrollReveal delay={100}>
                   <p className="text-cream-500 text-xs tracking-[0.35em] uppercase mb-4 font-body">
-                    Réservation
+                    {t('home.reservation.eyebrow')}
                   </p>
                 </ScrollReveal>
                 <ScrollReveal delay={200}>
                   <h2 className="text-3xl md:text-5xl font-display font-bold text-cream-100 mb-6 tracking-wide leading-tight">
-                    Réservez Votre Table
+                    {t('home.reservation.title')}
                   </h2>
                 </ScrollReveal>
                 <ScrollReveal delay={300}>
                   <p className="text-cream-400/70 font-body text-sm md:text-base leading-relaxed mb-10">
-                    Choisissez la table exacte qui vous convient grâce à notre plan de
-                    salle interactif. Sélectionnez votre créneau, votre emplacement
-                    préféré et vivez une expérience sur mesure dès votre arrivée.
+                    {t('home.reservation.desc')}
                   </p>
                 </ScrollReveal>
                 <ScrollReveal delay={400}>
-                  <CTAButton onClick={() => setIsReservationModalOpen(true)}>Réserver maintenant</CTAButton>
+                  <CTAButton onClick={() => setIsReservationModalOpen(true)}>{t('home.reservation.cta')}</CTAButton>
                 </ScrollReveal>
               </div>
             </div>
@@ -317,7 +329,7 @@ export default function Home() {
             onClick={() => setIsReservationModalOpen(true)}
             className="w-full py-4 bg-cream-500 text-coffee-950 font-body font-bold text-sm tracking-[0.15em] uppercase active:bg-cream-600 transition-colors"
           >
-            Réserver une table
+            {t('home.reservation.mobileButton')}
           </button>
         </div>
       )}
@@ -325,7 +337,7 @@ export default function Home() {
       {/* Scroll to top */}
       <button
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        aria-label="Retour en haut"
+        aria-label={t('common.scrollTop')}
         className={`fixed bottom-20 md:bottom-8 right-5 z-40 w-11 h-11 rounded-full border border-cream-400/30 bg-coffee-950/80 backdrop-blur-md flex items-center justify-center text-cream-400/70 hover:text-cream-200 hover:border-cream-400/60 hover:bg-coffee-950 active:scale-90 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
         }`}

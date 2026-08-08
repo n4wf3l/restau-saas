@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Navbar } from '../components/public/Navbar';
 import { Footer } from '../components/public/Footer';
 import { ReservationModal } from '../components/public/ReservationModal';
 import { getPublicMenuItems, API_BASE_URL } from '../lib/api';
 import { usePublicSettings } from '../contexts/PublicSettingsContext';
 import type { MenuItem } from '../lib/types';
-import { MagnifyingGlassIcon, XMarkIcon, Bars3Icon, Squares2X2Icon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, XMarkIcon, Bars3Icon, Squares2X2Icon, DocumentTextIcon } from '@heroicons/react/24/outline';
 import { ImageLightbox, type LightboxImage } from '../components/ui/ImageLightbox';
 
 // ─── Scroll Reveal ───
@@ -46,6 +47,7 @@ function ScrollReveal({
 }
 
 export default function PublicMenuPage() {
+  const { t } = useTranslation();
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -60,6 +62,17 @@ export default function PublicMenuPage() {
 
   // Lightbox state
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  // PDF modal state
+  const [isPdfOpen, setIsPdfOpen] = useState(false);
+  useEffect(() => {
+    if (!isPdfOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setIsPdfOpen(false); };
+    document.addEventListener('keydown', onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = prev; };
+  }, [isPdfOpen]);
 
   // Refs for scrollspy
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
@@ -185,9 +198,17 @@ export default function PublicMenuPage() {
     }
   }, []);
 
+  // Moroccan shamsa medallion — 12-point rosette (used in high-end madrasa/mosque zellij).
+  // Grand 400px tile: outer ring frame + 12-point star + inner dodecagon + center dot.
+  // Distinct from the 8-point khatam on the gallery page.
+  const shamsaPattern = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'><g fill='none' stroke='%23d4b18a' stroke-width='1.4' stroke-opacity='0.18'><circle cx='200' cy='200' r='148'/><polygon points='200,60 219,128 270,79 253,147 321,130 272,181 340,200 272,219 321,270 253,253 270,321 219,272 200,340 181,272 130,321 147,253 79,270 128,219 60,200 128,181 79,130 147,147 130,79 181,128'/><polygon points='200,165 218,170 230,183 235,200 230,218 218,230 200,235 183,230 170,218 165,200 170,183 183,170'/></g><circle cx='200' cy='200' r='2.5' fill='%23d4b18a' fill-opacity='0.28'/></svg>\")";
+
   // ─── Render ───
   return (
-    <div className="bg-coffee-950 text-white min-h-screen">
+    <div
+      className="bg-coffee-950 text-white min-h-screen"
+      style={{ backgroundImage: shamsaPattern, backgroundRepeat: 'repeat', backgroundSize: '400px 400px' }}
+    >
       <Navbar onReservationClick={() => setIsReservationModalOpen(true)} />
       <ReservationModal isOpen={isReservationModalOpen} onClose={() => setIsReservationModalOpen(false)} />
 
@@ -195,34 +216,60 @@ export default function PublicMenuPage() {
       <section className="pt-32 pb-12 px-4 text-center">
         <ScrollReveal>
           <p className="text-cream-500 text-xs tracking-[0.35em] uppercase mb-4 font-body">
-            La Carte
+            {t('menu.eyebrow')}
           </p>
         </ScrollReveal>
         <ScrollReveal delay={100}>
           <h1 className="text-4xl md:text-6xl font-display font-bold text-cream-100 mb-6 tracking-wide">
-            Notre Menu
+            {t('menu.title')}
           </h1>
         </ScrollReveal>
         <ScrollReveal delay={200}>
           <p className="text-cream-400/70 font-body text-base md:text-lg max-w-xl mx-auto leading-relaxed">
-            Une restauration 100% halal basée sur des produits frais et de qualité
+            {t('menu.desc')}
           </p>
         </ScrollReveal>
       </section>
 
-      {/* PDF Menu */}
+      {/* PDF Menu — button opens fullscreen modal viewer */}
       {pdfVisible && menuPdfUrl && (
         <ScrollReveal delay={300}>
-          <div className="max-w-4xl mx-auto px-4 mb-12">
-            <div className="border border-cream-400/20 rounded-lg overflow-hidden bg-black/30">
-              <iframe
-                src={`${API_BASE_URL}${menuPdfUrl}`}
-                className="w-full h-[600px] md:h-[800px]"
-                title="Menu PDF"
-              />
-            </div>
+          <div className="max-w-4xl mx-auto px-4 mb-12 flex justify-center">
+            <button
+              onClick={() => setIsPdfOpen(true)}
+              className="group inline-flex items-center gap-3 px-8 py-3.5 border border-cream-400/40 text-cream-200 text-sm font-body tracking-[0.15em] uppercase hover:bg-cream-400/10 hover:border-cream-400/70 transition-all duration-300"
+            >
+              <DocumentTextIcon className="w-5 h-5 text-cream-400 group-hover:text-cream-200 transition-colors" />
+              {t('menu.pdfButton')}
+            </button>
           </div>
         </ScrollReveal>
+      )}
+
+      {/* PDF Fullscreen Modal */}
+      {pdfVisible && menuPdfUrl && isPdfOpen && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center p-2 sm:p-6 bg-black/85 backdrop-blur-md animate-overlay-fade-in"
+          onClick={() => setIsPdfOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-5xl h-full max-h-[95vh] bg-coffee-950 border border-cream-400/20 rounded-lg overflow-hidden shadow-2xl animate-modal-slide-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setIsPdfOpen(false)}
+              className="absolute top-3 right-3 z-10 w-11 h-11 flex items-center justify-center rounded-full bg-coffee-950/80 hover:bg-coffee-900 text-cream-400/70 hover:text-cream-100 transition-colors"
+              aria-label={t('common.close')}
+            >
+              <XMarkIcon className="w-6 h-6" />
+            </button>
+            <iframe
+              src={`${API_BASE_URL}${menuPdfUrl}`}
+              className="w-full h-full"
+              title={t('menu.pdfViewerTitle')}
+            />
+          </div>
+        </div>
       )}
 
       {/* Search + View Toggle */}
@@ -230,29 +277,36 @@ export default function PublicMenuPage() {
       <ScrollReveal delay={300}>
         <div className="max-w-4xl mx-auto px-4 mb-8 flex gap-3 items-center">
           <div className="relative flex-1">
-            <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-cream-400/50" />
+            <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-cream-400/50" aria-hidden="true" />
+            <label htmlFor="menu-search" className="sr-only">{t('menu.searchAria')}</label>
             <input
-              type="text"
-              placeholder="Rechercher un plat..."
+              id="menu-search"
+              type="search"
+              placeholder={t('menu.searchPlaceholder')}
+              aria-label={t('menu.searchAria')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-12 pr-4 py-3 bg-transparent border border-cream-400/20 text-cream-100 text-sm font-body placeholder-cream-400/40 focus:outline-none focus:border-cream-400/50 transition-colors"
             />
           </div>
-          <div className="flex border border-cream-400/20">
+          <div className="flex border border-cream-400/20" role="group" aria-label={t('menu.viewGroupAria')}>
             <button
               onClick={() => setViewMode('list')}
-              className={`p-3 transition-colors ${viewMode === 'list' ? 'bg-cream-400/15 text-cream-200' : 'text-cream-400/40 hover:text-cream-400/70'}`}
-              title="Vue liste"
+              aria-label={t('menu.viewListAria')}
+              aria-pressed={viewMode === 'list'}
+              className={`p-3 transition-colors focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-inset ${viewMode === 'list' ? 'bg-cream-400/15 text-cream-200' : 'text-cream-400/40 hover:text-cream-400/70'}`}
+              title={t('menu.viewListTitle')}
             >
-              <Bars3Icon className="w-5 h-5" />
+              <Bars3Icon className="w-5 h-5" aria-hidden="true" />
             </button>
             <button
               onClick={() => setViewMode('card')}
-              className={`p-3 transition-colors ${viewMode === 'card' ? 'bg-cream-400/15 text-cream-200' : 'text-cream-400/40 hover:text-cream-400/70'}`}
-              title="Vue carte"
+              aria-label={t('menu.viewCardAria')}
+              aria-pressed={viewMode === 'card'}
+              className={`p-3 transition-colors focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-inset ${viewMode === 'card' ? 'bg-cream-400/15 text-cream-200' : 'text-cream-400/40 hover:text-cream-400/70'}`}
+              title={t('menu.viewCardTitle')}
             >
-              <Squares2X2Icon className="w-5 h-5" />
+              <Squares2X2Icon className="w-5 h-5" aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -399,6 +453,7 @@ interface MenuItemRowProps {
 }
 
 function MenuItemRow({ item, onDetailClick }: MenuItemRowProps) {
+  const { t } = useTranslation();
   const [isClamped, setIsClamped] = useState(false);
   const ingredientsRef = useRef<HTMLParagraphElement>(null);
 
@@ -422,7 +477,7 @@ function MenuItemRow({ item, onDetailClick }: MenuItemRowProps) {
 
         {item.is_halal && (
           <span className="shrink-0 px-1.5 py-0.5 text-[9px] tracking-wider uppercase font-body border border-emerald-400/40 text-emerald-400/80">
-            Halal
+            {t('menu.halal')}
           </span>
         )}
 
@@ -448,7 +503,7 @@ function MenuItemRow({ item, onDetailClick }: MenuItemRowProps) {
               onClick={(e) => { e.stopPropagation(); onDetailClick(); }}
               className="shrink-0 text-cream-500/60 hover:text-cream-400 active:text-cream-300 text-sm font-body underline underline-offset-2 transition-colors py-1 px-2"
             >
-              voir plus
+              {t('menu.itemMore')}
             </button>
           )}
         </div>
@@ -462,6 +517,7 @@ function MenuItemRow({ item, onDetailClick }: MenuItemRowProps) {
 // ─────────────────────────────────────────────────────────
 
 function MenuItemCard({ item, onDetailClick, onImageClick }: MenuItemRowProps) {
+  const { t } = useTranslation();
   return (
     <div
       className="group border border-cream-400/15 hover:border-cream-400/30 bg-cream-400/[0.03] hover:bg-cream-400/[0.06] transition-all duration-200 cursor-pointer"
@@ -497,7 +553,7 @@ function MenuItemCard({ item, onDetailClick, onImageClick }: MenuItemRowProps) {
         <div className="flex gap-1.5 mb-3">
           {item.is_halal && (
             <span className="px-1.5 py-0.5 text-[9px] tracking-wider uppercase font-body border border-emerald-400/40 text-emerald-400/80">
-              Halal
+              {t('menu.halal')}
             </span>
           )}
         </div>
@@ -524,6 +580,7 @@ interface ItemDetailDrawerProps {
 }
 
 function ItemDetailDrawer({ item, onClose, onImageClick }: ItemDetailDrawerProps) {
+  const { t } = useTranslation();
   const [closing, setClosing] = useState(false);
 
   const handleClose = useCallback(() => {
@@ -583,7 +640,7 @@ function ItemDetailDrawer({ item, onClose, onImageClick }: ItemDetailDrawerProps
           <div className="flex gap-2 mb-4">
             {item.is_halal && (
               <span className="px-2 py-1 text-[10px] tracking-wider uppercase font-body border border-emerald-400/40 text-emerald-400/80">
-                Halal
+                {t('menu.halal')}
               </span>
             )}
             {item.category && (
@@ -597,7 +654,7 @@ function ItemDetailDrawer({ item, onClose, onImageClick }: ItemDetailDrawerProps
           {item.ingredients && (
             <div>
               <p className="text-cream-500 text-xs tracking-[0.2em] uppercase mb-2 font-body">
-                Ingrédients
+                {t('menu.ingredients')}
               </p>
               <p className="text-cream-400/70 font-body text-sm leading-relaxed">
                 {item.ingredients}
@@ -636,16 +693,17 @@ function LoadingSkeleton() {
 }
 
 function EmptyState({ searchQuery }: { searchQuery: string }) {
+  const { t } = useTranslation();
   return (
     <div className="text-center py-20">
       <MagnifyingGlassIcon className="w-12 h-12 mx-auto text-cream-400/30 mb-4" />
       <h3 className="text-lg font-display font-semibold text-cream-100 mb-2">
-        Aucun plat trouvé
+        {t('menu.emptyTitle')}
       </h3>
       <p className="text-cream-400/60 font-body text-sm">
         {searchQuery
-          ? `Aucun résultat pour « ${searchQuery} »`
-          : 'Le menu est en cours de préparation'}
+          ? t('menu.emptyNoSearch', { query: searchQuery })
+          : t('menu.emptyNoMenu')}
       </p>
     </div>
   );

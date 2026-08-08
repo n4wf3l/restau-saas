@@ -8,10 +8,32 @@
     <!-- Google Fonts - Elegant typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Lora:wght@400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Preload the first hero image from localStorage cache before React mounts.
+      // Cache is written by SiteImagesContext on each visit (stale-while-revalidate),
+      // so this stays in sync with whatever the admin last set in the dashboard.
+      (function () {
+        try {
+          var m = location.pathname.match(/^\/r\/([^/]+)/);
+          if (!m) return;
+          var raw = localStorage.getItem('siteImages:' + m[1]);
+          if (!raw) return;
+          var data = JSON.parse(raw);
+          var url = data && data.hero && data.hero[0] && data.hero[0].image_url;
+          if (!url) return;
+          var link = document.createElement('link');
+          link.rel = 'preload';
+          link.as = 'image';
+          link.href = url;
+          link.fetchPriority = 'high';
+          document.head.appendChild(link);
+        } catch (e) { /* corrupt cache or storage disabled — ignore */ }
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
