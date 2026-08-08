@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 export interface LightboxImage {
@@ -81,20 +81,55 @@ export function ImageLightbox({ images, currentIndex, onClose }: ImageLightboxPr
     return () => { document.body.style.overflow = ''; };
   }, []);
 
+  // Focus management: save trigger, focus first element on mount, restore on unmount, trap Tab.
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    closeBtnRef.current?.focus();
+
+    const trapTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab' || !dialogRef.current) return;
+      const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', trapTab);
+    return () => {
+      document.removeEventListener('keydown', trapTab);
+      previouslyFocused?.focus?.();
+    };
+  }, []);
+
   const image = images[index];
 
   return (
     <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label={image.alt ? `Image agrandie : ${image.alt}` : 'Image agrandie'}
       className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center animate-overlay-fade-in"
       onClick={onClose}
     >
       {/* Close */}
       <button
+        ref={closeBtnRef}
         onClick={onClose}
-        className="absolute top-4 right-4 text-cream-400/60 hover:text-cream-200 active:text-cream-100 transition-colors z-10 p-2 min-w-[48px] min-h-[48px] flex items-center justify-center"
+        className="absolute top-4 right-4 text-cream-400/60 hover:text-cream-200 active:text-cream-100 focus:outline-none focus:ring-2 focus:ring-cream-400 transition-colors z-10 p-2 min-w-[48px] min-h-[48px] flex items-center justify-center"
         aria-label="Fermer"
       >
-        <XMarkIcon className="w-7 h-7" />
+        <XMarkIcon className="w-7 h-7" aria-hidden="true" />
       </button>
 
       {/* Counter */}
@@ -111,7 +146,7 @@ export function ImageLightbox({ images, currentIndex, onClose }: ImageLightboxPr
           className="absolute left-2 md:left-8 top-1/2 -translate-y-1/2 p-3 text-cream-400/50 hover:text-cream-200 active:text-cream-100 transition-colors z-10 min-w-[48px] min-h-[48px] flex items-center justify-center"
           aria-label="Image précédente"
         >
-          <ChevronLeftIcon className="w-8 h-8 md:w-10 md:h-10" />
+          <ChevronLeftIcon className="w-8 h-8 md:w-10 md:h-10" aria-hidden="true" />
         </button>
       )}
 
@@ -140,7 +175,7 @@ export function ImageLightbox({ images, currentIndex, onClose }: ImageLightboxPr
           className="absolute right-2 md:right-8 top-1/2 -translate-y-1/2 p-3 text-cream-400/50 hover:text-cream-200 active:text-cream-100 transition-colors z-10 min-w-[48px] min-h-[48px] flex items-center justify-center"
           aria-label="Image suivante"
         >
-          <ChevronRightIcon className="w-8 h-8 md:w-10 md:h-10" />
+          <ChevronRightIcon className="w-8 h-8 md:w-10 md:h-10" aria-hidden="true" />
         </button>
       )}
 

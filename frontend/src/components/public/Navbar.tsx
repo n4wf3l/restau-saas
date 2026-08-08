@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { CTAButton } from './CTAButton';
 import { usePublicSettings } from '../../contexts/PublicSettingsContext';
 import { useRestaurantBasePath } from '../../hooks/useRestaurantBasePath';
@@ -12,28 +13,25 @@ interface NavbarProps {
 
 type NavLink = { label: string } & ({ href: string; to?: never } | { to: string; href?: never });
 
-function buildNavLinks(base: string): NavLink[] {
-  return [
-    { label: 'Accueil', to: base },
-    { label: 'Galerie', to: `${base}/gallery` },
-    { label: 'Menu', to: `${base}/menu` },
-    { label: 'Contact', to: `${base}/contact` },
-  ];
-}
-
 const LANGUAGES = [
-  { code: 'FR', label: 'FR' },
-  { code: 'EN', label: 'EN' },
-  { code: 'AR', label: 'AR' },
-];
+  { code: 'fr', label: 'FR', nameKey: 'lang.french' },
+  { code: 'en', label: 'EN', nameKey: 'lang.english' },
+  { code: 'ar', label: 'AR', nameKey: 'lang.arabic' },
+] as const;
 
 export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeLang, setActiveLang] = useState('FR');
   const [langPickerOpen, setLangPickerOpen] = useState(false);
+  const { t, i18n } = useTranslation();
   const location = useLocation();
   const basePath = useRestaurantBasePath();
-  const navLinks = buildNavLinks(basePath);
+  const activeLang = (LANGUAGES.find(l => l.code === i18n.language)?.label) ?? 'EN';
+  const navLinks: NavLink[] = [
+    { label: t('nav.home'), to: basePath },
+    { label: t('nav.gallery'), to: `${basePath}/gallery` },
+    { label: t('nav.menu'), to: `${basePath}/menu` },
+    { label: t('nav.contact'), to: `${basePath}/contact` },
+  ];
   const ps = usePublicSettings();
   const restaurantName = ps?.restaurant_name ?? 'RR Ice';
   const logoSrc = ps?.logo_url ? (ps.logo_url.startsWith('http') ? ps.logo_url : `${API_BASE_URL}${ps.logo_url}`) : '/logo.png';
@@ -94,12 +92,15 @@ export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
               {/* Language Trigger — Desktop */}
               <button
                 onClick={() => setLangPickerOpen(true)}
-                className="w-9 h-9 rounded-full border border-cream-400/30 flex items-center justify-center text-[11px] tracking-[0.15em] uppercase text-cream-300 font-semibold hover:border-cream-400/60 hover:bg-cream-400/5 transition-all duration-300"
+                aria-label={t('nav.langAria', { lang: activeLang })}
+                aria-haspopup="dialog"
+                aria-expanded={langPickerOpen}
+                className="w-9 h-9 rounded-full border border-cream-400/30 flex items-center justify-center text-[11px] tracking-[0.15em] uppercase text-cream-300 font-semibold hover:border-cream-400/60 hover:bg-cream-400/5 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-2 focus:ring-offset-black transition-all duration-300"
               >
                 {activeLang}
               </button>
 
-              {!hideReservation && <CTAButton onClick={onReservationClick}>Réserver</CTAButton>}
+              {!hideReservation && <CTAButton onClick={onReservationClick}>{t('nav.reserve')}</CTAButton>}
             </div>
           </div>
 
@@ -113,7 +114,7 @@ export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="relative z-50 w-12 h-12 flex items-center justify-center"
-              aria-label={isOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+              aria-label={isOpen ? t('nav.hamburgerClose') : t('nav.hamburgerOpen')}
             >
               <div className="w-6 h-5 flex flex-col justify-between">
                 <span className={`block h-[2px] bg-white rounded-full transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] origin-center ${
@@ -135,18 +136,23 @@ export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
       {/* FULLSCREEN MOBILE MENU                             */}
       {/* ═══════════════════════════════════════════════════ */}
       <div
-        className={`fixed inset-0 z-40 md:hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-          isOpen
-            ? 'opacity-100 pointer-events-auto'
-            : 'opacity-0 pointer-events-none'
-        }`}
+        className="fixed inset-0 z-40 md:hidden"
+        style={{ pointerEvents: isOpen ? 'auto' : 'none' }}
+        onClick={() => setIsOpen(false)}
       >
-        {/* Blurred backdrop */}
-        <div className={`absolute inset-0 backdrop-blur-2xl bg-black/60 transition-all duration-700 ${
-          isOpen ? 'opacity-100' : 'opacity-0'
-        }`} />
+        {/* Blurred backdrop — owns the visual fade (opacity + blur transition together, no parent opacity gate) */}
+        <div
+          className="absolute inset-0 bg-black/60"
+          style={{
+            opacity: isOpen ? 1 : 0,
+            backdropFilter: `blur(${isOpen ? 24 : 0}px)`,
+            WebkitBackdropFilter: `blur(${isOpen ? 24 : 0}px)`,
+            transition: 'opacity 700ms cubic-bezier(0.4,0,0.2,1), backdrop-filter 700ms cubic-bezier(0.4,0,0.2,1), -webkit-backdrop-filter 700ms cubic-bezier(0.4,0,0.2,1)',
+            willChange: 'backdrop-filter, opacity',
+          }}
+        />
 
-        {/* Content */}
+        {/* Content — clicks on empty areas bubble up to close */}
         <div className="relative h-full flex flex-col justify-center items-center px-8">
 
           {/* Nav Links — large, staggered */}
@@ -207,7 +213,7 @@ export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
               style={{ animationDelay: `${navLinks.length * 80 + 100}ms` }}
             >
               <CTAButton onClick={() => { onReservationClick(); setIsOpen(false); }} className="px-16 py-5 text-sm">
-                Réserver
+                {t('nav.reserve')}
               </CTAButton>
             </div>
           )}
@@ -219,7 +225,9 @@ export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
           >
             <button
               onClick={() => { setIsOpen(false); setTimeout(() => setLangPickerOpen(true), 300); }}
-              className="w-14 h-14 rounded-full border border-cream-400/30 flex items-center justify-center text-sm tracking-[0.15em] uppercase text-cream-300 font-semibold font-body hover:border-cream-400/60 hover:bg-cream-400/5 transition-all duration-300"
+              aria-label={t('nav.langAria', { lang: activeLang })}
+              aria-haspopup="dialog"
+              className="w-14 h-14 rounded-full border border-cream-400/30 flex items-center justify-center text-sm tracking-[0.15em] uppercase text-cream-300 font-semibold font-body hover:border-cream-400/60 hover:bg-cream-400/5 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-2 focus:ring-offset-black transition-all duration-300"
             >
               {activeLang}
             </button>
@@ -231,24 +239,27 @@ export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
       {/* FULLSCREEN LANGUAGE PICKER                         */}
       {/* ═══════════════════════════════════════════════════ */}
       <div
-        className={`fixed inset-0 z-[60] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-          langPickerOpen
-            ? 'opacity-100 pointer-events-auto'
-            : 'opacity-0 pointer-events-none'
-        }`}
+        className="fixed inset-0 z-[60]"
+        style={{ pointerEvents: langPickerOpen ? 'auto' : 'none' }}
+        onClick={() => setLangPickerOpen(false)}
       >
-        {/* Blurred backdrop */}
+        {/* Blurred backdrop — owns the visual fade (opacity + blur transition together, no parent opacity gate) */}
         <div
-          className={`absolute inset-0 backdrop-blur-2xl bg-black/70 transition-all duration-700 ${
-            langPickerOpen ? 'opacity-100' : 'opacity-0'
-          }`}
-          onClick={() => setLangPickerOpen(false)}
+          className="absolute inset-0 bg-black/70"
+          style={{
+            opacity: langPickerOpen ? 1 : 0,
+            backdropFilter: `blur(${langPickerOpen ? 24 : 0}px)`,
+            WebkitBackdropFilter: `blur(${langPickerOpen ? 24 : 0}px)`,
+            transition: 'opacity 700ms cubic-bezier(0.4,0,0.2,1), backdrop-filter 700ms cubic-bezier(0.4,0,0.2,1), -webkit-backdrop-filter 700ms cubic-bezier(0.4,0,0.2,1)',
+            willChange: 'backdrop-filter, opacity',
+          }}
         />
 
         {/* Close button */}
         <button
           onClick={() => setLangPickerOpen(false)}
-          className="absolute top-5 right-5 md:top-8 md:right-8 z-10 w-12 h-12 flex items-center justify-center text-cream-400/60 hover:text-cream-200 transition-colors"
+          className="absolute top-5 right-5 md:top-8 md:right-8 z-10 w-12 h-12 flex items-center justify-center text-cream-400/60 hover:text-cream-200 transition-opacity duration-500"
+          style={{ opacity: langPickerOpen ? 1 : 0 }}
           aria-label="Fermer"
         >
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -256,34 +267,40 @@ export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
           </svg>
         </button>
 
-        {/* Content */}
-        <div className="relative h-full flex flex-col items-center justify-center">
+        {/* Content — clicks on empty areas (title, gaps) bubble up to close */}
+        <div
+          className="relative h-full flex flex-col items-center justify-center transition-opacity duration-500 ease-out"
+          style={{ opacity: langPickerOpen ? 1 : 0, transitionDelay: langPickerOpen ? '100ms' : '0ms' }}
+        >
           <p className="text-cream-500 text-xs tracking-[0.35em] uppercase mb-10 font-body">
-            Langue
+            {t('lang.picker')}
           </p>
 
           <div className="flex flex-col items-center gap-4">
-            {LANGUAGES.map((lang, index) => (
-              <button
-                key={lang.code}
-                onClick={() => { setActiveLang(lang.code); setLangPickerOpen(false); }}
-                className={`group flex items-center gap-5 px-10 py-4 rounded-none border transition-all duration-300 min-w-[200px] md:min-w-[260px] justify-center ${
-                  langPickerOpen ? 'animate-menu-reveal' : 'opacity-0'
-                } ${
-                  activeLang === lang.code
-                    ? 'border-cream-400/50 bg-cream-400/10 text-cream-200'
-                    : 'border-cream-400/15 text-cream-400/60 hover:border-cream-400/40 hover:text-cream-300 hover:bg-cream-400/5'
-                }`}
-                style={{ animationDelay: `${index * 80 + 100}ms` }}
-              >
-                <span className="text-2xl md:text-3xl font-display font-bold tracking-wider">
-                  {lang.code === 'FR' ? 'Français' : lang.code === 'EN' ? 'English' : 'العربية'}
-                </span>
-                {activeLang === lang.code && (
-                  <span className="w-2 h-2 rounded-full bg-cream-400 shrink-0" />
-                )}
-              </button>
-            ))}
+            {LANGUAGES.map((lang, index) => {
+              const isActive = i18n.language === lang.code;
+              return (
+                <button
+                  key={lang.code}
+                  onClick={() => { i18n.changeLanguage(lang.code); setLangPickerOpen(false); }}
+                  className={`group flex items-center gap-5 px-10 py-4 rounded-none border transition-all duration-300 min-w-[200px] md:min-w-[260px] justify-center ${
+                    langPickerOpen ? 'animate-menu-reveal' : 'opacity-0'
+                  } ${
+                    isActive
+                      ? 'border-cream-400/50 bg-cream-400/10 text-cream-200'
+                      : 'border-cream-400/15 text-cream-400/60 hover:border-cream-400/40 hover:text-cream-300 hover:bg-cream-400/5'
+                  }`}
+                  style={{ animationDelay: `${index * 80 + 100}ms` }}
+                >
+                  <span className="text-2xl md:text-3xl font-display font-bold tracking-wider">
+                    {t(lang.nameKey)}
+                  </span>
+                  {isActive && (
+                    <span className="w-2 h-2 rounded-full bg-cream-400 shrink-0" />
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>

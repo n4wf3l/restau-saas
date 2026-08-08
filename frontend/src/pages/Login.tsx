@@ -1,9 +1,37 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState, useMemo } from "react";
+import { useNavigate, Link, useSearchParams, useParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import toast from "react-hot-toast";
 import { PasswordToggle } from "../components/ui/PasswordToggle";
 import { Spinner } from "../components/ui/Spinner";
+import { API_BASE_URL } from "../lib/api";
+
+// Read the branding to show above the login form.
+// Priority: URL path /r/:slug/login > ?tenant=slug query > localStorage lastTenant > SaaS default.
+// Data source: the publicSettings:${slug} cache that PublicSettingsContext keeps warm.
+function useLoginBranding(): { name: string; logoUrl: string | null; slug: string | null } {
+  const [params] = useSearchParams();
+  const { slug: pathSlug } = useParams<{ slug: string }>();
+  return useMemo(() => {
+    const slug = pathSlug || params.get('tenant') || (() => {
+      try { return localStorage.getItem('lastTenant'); } catch { return null; }
+    })();
+    if (!slug) return { name: 'NA Innovations', logoUrl: null, slug: null };
+    let name = 'Restaurant';
+    let logoUrl: string | null = null;
+    try {
+      const raw = localStorage.getItem(`publicSettings:${slug}`);
+      if (raw) {
+        const s = JSON.parse(raw) as { restaurant_name?: string; logo_url?: string | null };
+        if (s.restaurant_name) name = s.restaurant_name;
+        if (s.logo_url) logoUrl = s.logo_url.startsWith('http') ? s.logo_url : `${API_BASE_URL}${s.logo_url}`;
+      }
+    } catch { /* corrupt cache */ }
+    // Match Home page behavior: fall back to /logo.png static asset when tenant has no uploaded logo
+    if (!logoUrl) logoUrl = '/logo.png';
+    return { name, logoUrl, slug };
+  }, [params, pathSlug]);
+}
 
 const inputClass =
   "w-full bg-transparent border border-cream-400/30 rounded-none px-4 py-3.5 text-cream-100 text-sm font-body placeholder-cream-400/40 focus:outline-none focus:border-cream-400/60 transition-colors min-h-[48px]";
@@ -15,6 +43,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const branding = useLoginBranding();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,13 +78,24 @@ export default function Login() {
 
       {/* Card */}
       <div className="relative w-full max-w-md">
-        {/* Logo */}
+        {/* Logo — tenant-aware: restaurant branding if visited previously, else SaaS default */}
         <div className="flex justify-center mb-10 opacity-0 animate-hero-fade-up" style={{ animationDelay: '100ms', animationFillMode: 'forwards' }}>
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 bg-gradient-to-br from-coffee-400 to-coffee-600 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
-              <span className="text-white font-display font-bold text-lg">N</span>
-            </div>
-            <span className="text-cream-200 font-display font-bold text-xl tracking-wide">NA Innovations</span>
+          <Link
+            to={branding.slug ? `/r/${branding.slug}` : "/"}
+            className="flex items-center gap-3 group"
+          >
+            {branding.logoUrl ? (
+              <img
+                src={branding.logoUrl}
+                alt={branding.name}
+                className="w-10 h-10 object-contain group-hover:scale-105 transition-transform"
+              />
+            ) : (
+              <div className="w-10 h-10 bg-gradient-to-br from-coffee-400 to-coffee-600 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
+                <span className="text-white font-display font-bold text-lg">{branding.name.charAt(0)}</span>
+              </div>
+            )}
+            <span className="text-cream-200 font-display font-bold text-xl tracking-wide">{branding.name}</span>
           </Link>
         </div>
 

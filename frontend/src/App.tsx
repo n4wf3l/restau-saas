@@ -87,9 +87,13 @@ function App() {
                 <Route path="terms" element={<TermsPage />} />
               </Route>
 
-              {/* Auth */}
+              {/* Auth — global routes */}
               <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
               <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
+
+              {/* Auth — tenant-scoped: /r/:slug/login shows that restaurant's branding */}
+              <Route path="/r/:slug/login" element={<GuestRoute><Login /></GuestRoute>} />
+              <Route path="/r/:slug/register" element={<GuestRoute><Register /></GuestRoute>} />
 
               {/* Admin dashboard */}
               <Route

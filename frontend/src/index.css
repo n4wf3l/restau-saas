@@ -2,6 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Smooth anchor scrolling everywhere. Browsers honor prefers-reduced-motion automatically. */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Arabic: swap font stack to Tajawal (Latin serif fonts don't cover Arabic properly). */
+html[lang="ar"] body,
+html[lang="ar"] h1,
+html[lang="ar"] h2,
+html[lang="ar"] h3,
+html[lang="ar"] h4,
+html[lang="ar"] h5,
+html[lang="ar"] h6 {
+  font-family: 'Tajawal', 'Segoe UI', system-ui, sans-serif;
+}
+
 :root {
   font-family: 'Lora', serif;
   line-height: 1.6;

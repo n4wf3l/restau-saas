@@ -129,16 +129,24 @@ export default function PublicReservation() {
             ) : tables.length === 0 ? (
               <p className="text-gray-500">Aucune table disponible</p>
             ) : (
-              <div className="space-y-3">
+              <div role="radiogroup" aria-label="Sélectionner une table" className="space-y-3">
                 {tables.map((table) => {
                   const available = isTableAvailable(table);
+                  const isSelected = selectedTable === table.id;
+                  const statusLabel = available
+                    ? `${table.available_seats} places disponibles sur ${table.total_seats}`
+                    : `${table.occupied_seats} sur ${table.total_seats} places occupées, table complète`;
                   return (
                     <button
                       key={table.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={isSelected}
+                      aria-label={`${table.name}, ${table.floor}, ${statusLabel}${isSelected ? ', sélectionnée' : ''}`}
                       onClick={() => setSelectedTable(table.id)}
                       disabled={!available}
-                      className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
-                        selectedTable === table.id
+                      className={`w-full text-left p-4 rounded-lg border-2 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                        isSelected
                           ? "border-blue-500 bg-blue-50"
                           : available
                           ? "border-gray-200 hover:border-gray-300"
@@ -156,6 +164,7 @@ export default function PublicReservation() {
                           </p>
                         </div>
                         <span
+                          aria-hidden="true"
                           className={`px-3 py-1 rounded-full text-xs font-medium ${
                             available
                               ? "bg-green-100 text-green-700"

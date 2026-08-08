@@ -94,6 +94,10 @@ export default {
           from: { opacity: '0', transform: 'scale(0.85)' },
           to: { opacity: '1', transform: 'scale(1)' },
         },
+        heroZoom: {
+          '0%': { transform: 'scale(1)' },
+          '100%': { transform: 'scale(1.08)' },
+        },
         overlayFadeIn: {
           from: { opacity: '0' },
           to: { opacity: '1' },
@@ -124,6 +128,7 @@ export default {
         'menu-line': 'menuLine 0.6s cubic-bezier(0.16,1,0.3,1) forwards',
         'hero-scale': 'heroScale 1s cubic-bezier(0.16,1,0.3,1) forwards',
         'hero-fade-up': 'heroFadeUp 0.8s cubic-bezier(0.16,1,0.3,1) forwards',
+        'hero-zoom': 'heroZoom 12s ease-in-out infinite alternate',
         'overlay-fade-in': 'overlayFadeIn 0.2s ease-out',
         'modal-slide-in': 'modalSlideIn 0.25s cubic-bezier(0.16,1,0.3,1)',
         'dropdown-reveal': 'dropdownReveal 0.15s cubic-bezier(0.16,1,0.3,1)',

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { 
-  XMarkIcon, 
-  CalendarDaysIcon, 
+import { useTranslation } from 'react-i18next';
+import {
+  XMarkIcon,
+  CalendarDaysIcon,
   ClockIcon,
   MapPinIcon,
   UserIcon,
@@ -27,15 +28,17 @@ interface ReservationModalProps {
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
-const OCCASIONS: Record<OccasionType, { label: string; IconComponent: any }> = {
-  romantic: { label: 'Romantique', IconComponent: HeartIcon },
-  baby_chair: { label: 'Chaise bébé', IconComponent: UserIcon },
-  birthday: { label: 'Anniversaire', IconComponent: GiftIcon },
-  quiet: { label: 'Calme', IconComponent: SpeakerXMarkIcon },
-  business: { label: 'Business', IconComponent: BriefcaseIcon },
+// Occasion labels come from i18n at render time — this is just the icon mapping
+const OCCASION_META: Record<OccasionType, { labelKey: string; IconComponent: any }> = {
+  romantic:   { labelKey: 'reservation.step4.occasion.romantic',  IconComponent: HeartIcon },
+  baby_chair: { labelKey: 'reservation.step4.occasion.babyChair', IconComponent: UserIcon },
+  birthday:   { labelKey: 'reservation.step4.occasion.birthday',  IconComponent: GiftIcon },
+  quiet:      { labelKey: 'reservation.step4.occasion.quiet',     IconComponent: SpeakerXMarkIcon },
+  business:   { labelKey: 'reservation.step4.occasion.business',  IconComponent: BriefcaseIcon },
 };
 
 export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
+  const { t } = useTranslation();
   // ─────────────────────────────────────────────────────────
   // STATE MANAGEMENT
   // ─────────────────────────────────────────────────────────
@@ -99,7 +102,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
           ...prev, 
           partySize: selectedTable.available_seats 
         }));
-        toast('Nombre de convives ajusté à la capacité de la table', { icon: 'ℹ️' });
+        toast(t('reservation.partySizeAdjusted'), { icon: 'ℹ️' });
       }
     }
   }, [formData.selectedTableId, availability, formData.partySize]);
@@ -233,14 +236,14 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
           arrival_time: arrivalDateTime,
           party_size: formData.partySize,
           notes: [
-            ...formData.occasion?.map(o => OCCASIONS[o].label) || [],
+            ...formData.occasion?.map(o => t(OCCASION_META[o].labelKey)) || [],
             formData.specialNotes,
           ].filter(Boolean).join(' | ') || undefined,
           event_details: formData.eventDetails || '',
         };
 
         await createEventReservation(eventPayload);
-        toast.success('Demande d\'événement envoyée ! Le restaurant vous contactera.', { duration: 5000 });
+        toast.success(t('reservation.successEvent'), { duration: 5000 });
         onClose();
 
         setCurrentStep(1);
@@ -261,7 +264,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
 
       // ─── Normal flow (auto/manual): unchanged ───
       if (!availability || !availability.available) {
-        toast.error('Veuillez vérifier la disponibilité d\'abord');
+        toast.error(t('reservation.errorCheckAvailability'));
         return;
       }
 
@@ -274,7 +277,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
       }
 
       if (!tableId) {
-        toast.error('Aucune table disponible');
+        toast.error(t('reservation.errorNoTable'));
         return;
       }
 
@@ -286,13 +289,13 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
         arrival_time: arrivalDateTime,
         party_size: formData.partySize,
         notes: [
-          ...formData.occasion?.map(o => OCCASIONS[o].label) || [],
+          ...formData.occasion?.map(o => t(OCCASION_META[o].labelKey)) || [],
           formData.specialNotes,
         ].filter(Boolean).join(' | '),
       };
 
       await createReservation(payload);
-      toast.success('Réservation confirmée!');
+      toast.success(t('reservation.success'));
       onClose();
       
       // Reset form
@@ -311,9 +314,9 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
       });
     } catch (error: any) {
       if (error.response?.status === 429) {
-        toast.error('Trop de réservations envoyées. Veuillez réessayer dans une minute.');
+        toast.error(t('reservation.errorTooMany'));
       } else {
-        toast.error(error.response?.data?.message || error.response?.data?.error || 'Erreur lors de la réservation');
+        toast.error(error.response?.data?.message || error.response?.data?.error || t('reservation.errorGeneric'));
       }
     } finally {
       setLoading(false);
@@ -346,11 +349,11 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
   // ─────────────────────────────────────────────────────────
 
   const steps = [
-    { number: 1, label: 'Créneau', icon: CalendarDaysIcon },
-    { number: 2, label: 'Placement', icon: MapPinIcon },
-    { number: 3, label: 'Informations', icon: UserIcon },
-    { number: 4, label: 'Options', icon: SparklesIcon },
-    { number: 5, label: 'Confirmation', icon: CheckCircleIcon },
+    { number: 1, label: t('reservation.steps.slot'),          icon: CalendarDaysIcon },
+    { number: 2, label: t('reservation.steps.placement'),     icon: MapPinIcon },
+    { number: 3, label: t('reservation.steps.info'),          icon: UserIcon },
+    { number: 4, label: t('reservation.steps.options'),       icon: SparklesIcon },
+    { number: 5, label: t('reservation.steps.confirmation'),  icon: CheckCircleIcon },
   ];
 
   return (
@@ -369,7 +372,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
         
         {/* Header with close button */}
         <div className="sticky top-0 bg-transparent border-b border-cream-400/20 p-6 flex items-center justify-between z-10">
-          <h2 className="text-2xl font-display font-bold text-cream-100">Réserver une Table</h2>
+          <h2 className="text-2xl font-display font-bold text-cream-100">{t('reservation.header')}</h2>
           <button onClick={onClose} className="text-cream-400 hover:text-cream-100 transition bg-transparent p-2 -mr-2 min-w-[44px] min-h-[44px] flex items-center justify-center">
             <XMarkIcon className="w-6 h-6" />
           </button>
@@ -407,14 +410,14 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
             <section className="animate-fadeIn">
               <h3 className="text-lg font-display font-semibold text-cream-100 mb-4 flex items-center gap-2">
                 <CalendarDaysIcon className="w-5 h-5 text-cream-400" />
-                Votre créneau
+                {t('reservation.step1.title')}
               </h3>
 
               <div className="space-y-4">
                 {/* Date */}
                 <div>
                   <label className="block text-sm font-medium text-cream-300 mb-2">
-                    Date *
+                    {t('reservation.step1.dateLabel')}
                   </label>
                   <input
                     type="date"
@@ -432,7 +435,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                   {/* Heure */}
                   <div>
                     <label className="block text-sm font-medium text-cream-300 mb-2">
-                      Heure *
+                      {t('reservation.step1.timeLabel')}
                     </label>
                     <select
                       value={formData.time}
@@ -464,7 +467,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                   {/* Convives */}
                   <div>
                     <label className="block text-sm font-medium text-cream-300 mb-2">
-                      Convives *
+                      {t('reservation.step1.partySizeLabel')}
                     </label>
                     <div className="flex items-center gap-2">
                       <button
@@ -512,7 +515,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                   disabled={!canProceedToStep2()}
                   className="px-6 py-3.5 bg-coffee-600 hover:bg-coffee-500 active:bg-coffee-700 disabled:opacity-30 disabled:cursor-not-allowed text-cream-50 font-bold rounded-lg transition flex items-center gap-2 min-h-[48px]"
                 >
-                  Continuer
+                  {t('common.next')}
                   <ArrowRightIcon className="w-5 h-5" />
                 </button>
               </div>
@@ -526,7 +529,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
             <section className="animate-fadeIn">
               <h3 className="text-lg font-display font-semibold text-cream-100 mb-4 flex items-center gap-2">
                 <MapPinIcon className="w-5 h-5 text-cream-400" />
-                Placement
+                {t('reservation.step2.title')}
               </h3>
 
               {(() => {
@@ -548,9 +551,9 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                     className="mt-1 w-4 h-4 text-cream-400 focus:ring-cream-400"
                   />
                   <div className="flex-1">
-                    <div className="font-semibold text-cream-100">Placement automatique {hasAvailableTables && '(recommandé)'}</div>
+                    <div className="font-semibold text-cream-100">{t('reservation.step2.autoLabel')}</div>
                     <div className="text-sm text-cream-400 mt-1">
-                      {hasAvailableTables ? 'On vous attribue la meilleure table disponible' : 'Aucune table ne peut accueillir ce nombre de convives'}
+                      {hasAvailableTables ? t('reservation.step2.autoAvailable') : t('reservation.step2.autoUnavailable')}
                     </div>
                   </div>
                 </label>
@@ -570,9 +573,9 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                     className="mt-1 w-4 h-4 text-cream-400 focus:ring-cream-400"
                   />
                   <div className="flex-1">
-                    <div className="font-semibold text-cream-100">Je veux choisir ma table</div>
+                    <div className="font-semibold text-cream-100">{t('reservation.step2.manualLabel')}</div>
                     <div className="text-sm text-cream-400 mt-1">
-                      {hasAvailableTables ? 'Sélectionnez votre table préférée' : 'Indisponible pour ce nombre de convives'}
+                      {hasAvailableTables ? t('reservation.step2.manualAvailable') : t('reservation.step2.manualUnavailable')}
                     </div>
                   </div>
                 </label>
@@ -590,7 +593,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                     className="mt-1 w-4 h-4 text-cream-400 focus:ring-cream-400"
                   />
                   <div className="flex-1">
-                    <div className="font-semibold text-cream-100">Événement (anniversaire, groupe...)</div>
+                    <div className="font-semibold text-cream-100">{t('reservation.step2.eventLabel')}</div>
                     <div className="text-sm text-cream-400 mt-1">
                       Pour les groupes de 4+ personnes, on s'occupe du placement
                     </div>
@@ -601,14 +604,14 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                 {formData.placementMode === 'event' && (
                   <div className="animate-fadeIn">
                     <label className="block text-sm font-medium text-cream-300 mb-2">
-                      Décrivez votre événement *
+                      {t('reservation.step2.eventTextareaLabel')}
                     </label>
                     <textarea
                       value={formData.eventDetails || ''}
                       onChange={(e) => updateField('eventDetails', e.target.value)}
                       className="w-full px-4 py-3 bg-transparent border border-cream-400/30 rounded-lg text-cream-100 placeholder-cream-500 focus:ring-1 focus:ring-cream-400 transition resize-none"
                       rows={3}
-                      placeholder="Type d'événement, nombre de personnes, besoins spéciaux..."
+                      placeholder={t('reservation.step2.eventPlaceholder')}
                       required
                     />
                   </div>
@@ -642,10 +645,10 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                                   onClick={(e) => { e.stopPropagation(); setPreviewTableId(previewTableId === table.id ? null : table.id); }}
                                   className="text-[10px] px-2 py-0.5 border border-cream-400/30 rounded text-cream-400/70 hover:text-cream-200 hover:border-cream-400/60 bg-transparent transition whitespace-nowrap"
                                 >
-                                  {previewTableId === table.id ? 'Masquer' : 'Voir sur plan'}
+                                  {previewTableId === table.id ? t('reservation.step2.hideOnPlan') : t('reservation.step2.showOnPlan')}
                                 </button>
                                 <span className="text-sm opacity-75">
-                                  {table.available_seats} dispo
+                                  {table.available_seats} {t('reservation.step2.availableShort')}
                                 </span>
                               </div>
                             </div>
@@ -672,7 +675,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                   className="px-6 py-3.5 bg-transparent border border-cream-400/30 hover:border-cream-400 active:bg-cream-400/10 text-cream-100 font-bold rounded-lg transition flex items-center gap-2 min-h-[48px]"
                 >
                   <ArrowLeftIcon className="w-5 h-5" />
-                  Retour
+                  {t('common.back')}
                 </button>
                 <button
                   type="button"
@@ -680,7 +683,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                   disabled={!canProceedToStep3()}
                   className="px-6 py-3.5 bg-coffee-600 hover:bg-coffee-500 active:bg-coffee-700 disabled:opacity-30 disabled:cursor-not-allowed text-cream-50 font-bold rounded-lg transition flex items-center gap-2 min-h-[48px]"
                 >
-                  Continuer
+                  {t('common.next')}
                   <ArrowRightIcon className="w-5 h-5" />
                 </button>
               </div>
@@ -694,48 +697,48 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
             <section className="animate-fadeIn">
               <h3 className="text-lg font-display font-semibold text-cream-100 mb-4 flex items-center gap-2">
                 <UserIcon className="w-5 h-5 text-cream-400" />
-                Vos informations
+                {t('reservation.step3.title')}
               </h3>
 
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-cream-300 mb-2">
-                    Nom complet *
+                    {t('reservation.step3.fullNameLabel')}
                   </label>
                   <input
                     type="text"
                     value={formData.customerName}
                     onChange={(e) => updateField('customerName', e.target.value)}
                     className="w-full px-4 py-3 bg-transparent border border-cream-400/30 rounded-lg text-cream-100 placeholder-cream-500 focus:ring-1 focus:ring-cream-400 transition"
-                    placeholder="Jean Dupont"
+                    placeholder={t('reservation.step3.fullNamePlaceholder')}
                     required
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-cream-300 mb-2">
-                    Email *
+                    {t('reservation.step3.emailLabel')}
                   </label>
                   <input
                     type="email"
                     value={formData.customerEmail}
                     onChange={(e) => updateField('customerEmail', e.target.value)}
                     className="w-full px-4 py-3 bg-transparent border border-cream-400/30 rounded-lg text-cream-100 placeholder-cream-500 focus:ring-1 focus:ring-cream-400 transition"
-                    placeholder="jean@example.com"
+                    placeholder={t('reservation.step3.emailPlaceholder')}
                     required
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-cream-300 mb-2">
-                    Téléphone *
+                    {t('reservation.step3.phoneLabel')}
                   </label>
                   <input
                     type="tel"
                     value={formData.customerPhone}
                     onChange={(e) => updateField('customerPhone', e.target.value)}
                     className="w-full px-4 py-3 bg-transparent border border-cream-400/30 rounded-lg text-cream-100 placeholder-cream-500 focus:ring-1 focus:ring-cream-400 transition"
-                    placeholder="+33 1 23 45 67 89"
+                    placeholder={t('reservation.step3.phonePlaceholder')}
                     required
                   />
                 </div>
@@ -749,7 +752,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                   className="px-6 py-3.5 bg-transparent border border-cream-400/30 hover:border-cream-400 active:bg-cream-400/10 text-cream-100 font-bold rounded-lg transition flex items-center gap-2 min-h-[48px]"
                 >
                   <ArrowLeftIcon className="w-5 h-5" />
-                  Retour
+                  {t('common.back')}
                 </button>
                 <button
                   type="button"
@@ -757,7 +760,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                   disabled={!canProceedToStep4()}
                   className="px-6 py-3.5 bg-coffee-600 hover:bg-coffee-500 active:bg-coffee-700 disabled:opacity-30 disabled:cursor-not-allowed text-cream-50 font-bold rounded-lg transition flex items-center gap-2 min-h-[48px]"
                 >
-                  Continuer
+                  {t('common.next')}
                   <ArrowRightIcon className="w-5 h-5" />
                 </button>
               </div>
@@ -771,13 +774,14 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
             <section className="animate-fadeIn">
               <h3 className="text-lg font-display font-semibold text-cream-100 mb-4 flex items-center gap-2">
                 <SparklesIcon className="w-5 h-5 text-cream-400" />
-                Demandes spéciales <span className="text-sm text-cream-400 font-normal">(optionnel)</span>
+                {t('reservation.step4.title')}
               </h3>
 
               {/* Occasion chips */}
               <div className="flex flex-wrap gap-2 mb-4">
-                {(Object.keys(OCCASIONS) as OccasionType[]).map(occasion => {
-                  const { IconComponent, label } = OCCASIONS[occasion];
+                {(Object.keys(OCCASION_META) as OccasionType[]).map(occasion => {
+                  const { IconComponent, labelKey } = OCCASION_META[occasion];
+                  const label = t(labelKey);
                   const isSelected = formData.occasion?.includes(occasion);
                   return (
                     <button
@@ -800,14 +804,14 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
               {/* Notes */}
               <div>
                 <label className="block text-sm font-medium text-cream-300 mb-2">
-                  Autres demandes
+                  {t('reservation.step4.notesLabel')}
                 </label>
                 <textarea
                   value={formData.specialNotes}
                   onChange={(e) => updateField('specialNotes', e.target.value)}
                   className="w-full px-4 py-3 bg-transparent border border-cream-400/30 rounded-lg text-cream-100 placeholder-cream-500 focus:ring-1 focus:ring-cream-400 transition resize-none"
                   rows={3}
-                  placeholder="Déco spéciale, allergie, etc."
+                  placeholder={t('reservation.step4.notesPlaceholder')}
                 />
               </div>
 
@@ -819,14 +823,14 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                   className="px-6 py-3.5 bg-transparent border border-cream-400/30 hover:border-cream-400 active:bg-cream-400/10 text-cream-100 font-bold rounded-lg transition flex items-center gap-2 min-h-[48px]"
                 >
                   <ArrowLeftIcon className="w-5 h-5" />
-                  Retour
+                  {t('common.back')}
                 </button>
                 <button
                   type="button"
                   onClick={goToNextStep}
                   className="px-6 py-3.5 bg-coffee-600 hover:bg-coffee-500 active:bg-coffee-700 text-cream-50 font-bold rounded-lg transition flex items-center gap-2 min-h-[48px]"
                 >
-                  Continuer
+                  {t('common.next')}
                   <ArrowRightIcon className="w-5 h-5" />
                 </button>
               </div>
@@ -842,20 +846,20 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
               <div className="border border-cream-400/30 rounded-lg p-6">
                 <h3 className="text-xl font-display font-bold text-cream-100 mb-4 flex items-center gap-2">
                   <CheckCircleIcon className="w-6 h-6 text-cream-400" />
-                  Récapitulatif de votre réservation
+                  {t('reservation.step5.title')}
                 </h3>
                 <div className="space-y-3 text-cream-200">
                   <div className="flex items-start gap-3">
                     <CalendarDaysIcon className="w-5 h-5 text-cream-400 flex-shrink-0 mt-0.5" />
                     <div>
-                      <div className="font-semibold text-cream-100">Date et heure</div>
+                      <div className="font-semibold text-cream-100">{t('reservation.step5.dateTime')}</div>
                       <div>{new Date(formData.date).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} à {formData.time}</div>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <UserIcon className="w-5 h-5 text-cream-400 flex-shrink-0 mt-0.5" />
                     <div>
-                      <div className="font-semibold text-cream-100">Convives</div>
+                      <div className="font-semibold text-cream-100">{t('reservation.step5.guests')}</div>
                       <div>{formData.partySize} personne{formData.partySize > 1 ? 's' : ''}</div>
                     </div>
                   </div>
@@ -863,12 +867,12 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                     <MapPinIcon className="w-5 h-5 text-cream-400 flex-shrink-0 mt-0.5" />
                     <div>
                       <div className="font-semibold text-cream-100">
-                        {formData.placementMode === 'event' ? 'Événement' : 'Table'}
+                        {formData.placementMode === 'event' ? t('reservation.step5.tableEvent') : t('reservation.step5.table')}
                       </div>
                       {formData.placementMode === 'event' ? (
-                        <div className="text-cream-300">Le restaurant organisera le placement pour vous</div>
+                        <div className="text-cream-300">{t('reservation.step5.tableEventNote')}</div>
                       ) : (
-                        <div>{getAssignedTableName()} ({formData.placementMode === 'auto' ? 'Placement automatique' : 'Choix manuel'})</div>
+                        <div>{getAssignedTableName()} ({formData.placementMode === 'auto' ? t('reservation.step5.tableAuto') : t('reservation.step5.tableManual')})</div>
                       )}
                       {formData.placementMode === 'event' && formData.eventDetails && (
                         <div className="text-sm text-cream-400 mt-1 italic">« {formData.eventDetails} »</div>
@@ -878,7 +882,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                   <div className="flex items-start gap-3">
                     <UserIcon className="w-5 h-5 text-cream-400 flex-shrink-0 mt-0.5" />
                     <div>
-                      <div className="font-semibold text-cream-100">Informations de contact</div>
+                      <div className="font-semibold text-cream-100">{t('reservation.step5.contact')}</div>
                       <div>{formData.customerName}</div>
                       <div className="text-sm">{formData.customerEmail}</div>
                       <div className="text-sm">{formData.customerPhone}</div>
@@ -888,12 +892,12 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                     <div className="flex items-start gap-3">
                       <SparklesIcon className="w-5 h-5 text-cream-400 flex-shrink-0 mt-0.5" />
                       <div>
-                        <div className="font-semibold text-cream-100">Demandes spéciales</div>
+                        <div className="font-semibold text-cream-100">{t('reservation.step5.special')}</div>
                         {formData.occasion && formData.occasion.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-1">
                             {formData.occasion.map(occ => (
                               <span key={occ} className="text-xs bg-coffee-500/30 px-2 py-0.5 rounded">
-                                {OCCASIONS[occ].label}
+                                {t(OCCASION_META[occ].labelKey)}
                               </span>
                             ))}
                           </div>
@@ -910,16 +914,14 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
               {/* Info message */}
               {formData.placementMode === 'event' ? (
                 <div className="border border-violet-400/30 bg-violet-500/[0.06] rounded-lg p-4 space-y-2">
-                  <p className="text-violet-300 text-sm font-semibold">Ceci est une demande d'événement</p>
+                  <p className="text-violet-300 text-sm font-semibold">{t('reservation.step5.eventInfoTitle')}</p>
                   <p className="text-cream-400 text-sm">
                     Aucune table n'est réservée automatiquement. Le restaurant vous contactera pour organiser le placement et confirmer les détails.
                   </p>
                 </div>
               ) : (
                 <div className="border border-cream-400/30 rounded-lg p-4">
-                  <p className="text-cream-300 text-sm">
-                    Un email de confirmation sera envoyé à <strong className="text-cream-100">{formData.customerEmail}</strong>
-                  </p>
+                  <p className="text-cream-300 text-sm" dangerouslySetInnerHTML={{ __html: t('reservation.step5.emailConfirm', { email: `<strong class="text-cream-100">${formData.customerEmail}</strong>` }) }} />
                 </div>
               )}
 
@@ -931,7 +933,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                   className="px-6 py-3.5 bg-transparent border border-cream-400/30 hover:border-cream-400 active:bg-cream-400/10 text-cream-100 font-bold rounded-lg transition flex items-center gap-2 min-h-[48px]"
                 >
                   <ArrowLeftIcon className="w-5 h-5" />
-                  Retour
+                  {t('common.back')}
                 </button>
                 <button
                   type="submit"
@@ -941,12 +943,12 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                   {loading ? (
                     <>
                       <ClockIcon className="animate-spin w-6 h-6" />
-                      {formData.placementMode === 'event' ? 'Envoi en cours...' : 'Confirmation en cours...'}
+                      {formData.placementMode === 'event' ? t('reservation.step5.submitEventSending') : t('reservation.step5.submitRegularSending')}
                     </>
                   ) : (
                     <>
                       <CheckCircleIcon className="w-6 h-6" />
-                      {formData.placementMode === 'event' ? 'Envoyer la demande' : 'Confirmer la réservation'}
+                      {formData.placementMode === 'event' ? t('reservation.step5.submitEventButton') : t('reservation.step5.submitRegularButton')}
                     </>
                   )}
                 </button>
@@ -1036,17 +1038,18 @@ interface AvailabilityFeedbackProps {
   onTimeChange: (time: string) => void;
 }
 
-function AvailabilityFeedback({ 
-  availability, 
-  checking, 
+function AvailabilityFeedback({
+  availability,
+  checking,
   formData,
   onTimeChange
 }: AvailabilityFeedbackProps) {
+  const { t } = useTranslation();
   if (checking) {
     return (
       <div className="flex items-center gap-2 text-cream-400 text-sm bg-transparent rounded-lg p-3 border border-cream-400/30">
         <ClockIcon className="animate-spin h-5 w-5 text-cream-400" />
-        Vérification des disponibilités...
+        {t('reservation.step1.checking')}
       </div>
     );
   }
@@ -1063,7 +1066,7 @@ function AvailabilityFeedback({
         <div className="bg-transparent border border-cream-400/30 rounded-lg p-3">
           <div className="text-cream-400 text-sm font-medium flex items-center gap-2">
             <XCircleIcon className="w-5 h-5 flex-shrink-0" />
-            Aucune table ne peut accueillir {formData.partySize} personnes à cette heure
+            {t('reservation.step1.noTables', { count: formData.partySize })}
           </div>
         </div>
       );
@@ -1073,7 +1076,7 @@ function AvailabilityFeedback({
       <div className="bg-transparent border border-cream-400/30 rounded-lg p-3">
         <div className="text-cream-300 text-sm flex items-center gap-2">
           <CheckCircleIcon className="w-5 h-5 flex-shrink-0 text-cream-400" />
-          <span><strong className="text-cream-100">{suitableTables.length} table{suitableTables.length > 1 ? 's' : ''} disponible{suitableTables.length > 1 ? 's' : ''}</strong> pour {formData.partySize} personne{formData.partySize > 1 ? 's' : ''}</span>
+          <span>{t('reservation.step1.available', { count: suitableTables.length, guests: formData.partySize })}</span>
         </div>
         <div className="text-cream-400 text-xs mt-1">
           {suitableTables.slice(0, 3).map(t => t.name).join(', ')}
@@ -1088,11 +1091,11 @@ function AvailabilityFeedback({
     <div className="bg-transparent border border-cream-400/30 rounded-lg p-3 space-y-2">
       <div className="text-cream-400 text-sm font-medium flex items-center gap-2">
         <XCircleIcon className="w-5 h-5 flex-shrink-0" />
-        Aucune table disponible à {formData.time}
+        {t('reservation.noSlots', { time: formData.time })}
       </div>
       {availability.suggestedSlots && availability.suggestedSlots.length > 0 && (
         <div className="text-cream-400 text-xs">
-          <div className="font-medium mb-1">Créneaux proches disponibles:</div>
+          <div className="font-medium mb-1">{t('reservation.suggestedSlots')}</div>
           <div className="flex flex-wrap gap-1">
             {availability.suggestedSlots.map(slot => (
               <button
