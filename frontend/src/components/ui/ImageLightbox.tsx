@@ -126,7 +126,7 @@ export function ImageLightbox({ images, currentIndex, onClose }: ImageLightboxPr
       <button
         ref={closeBtnRef}
         onClick={onClose}
-        className="absolute top-4 right-4 text-cream-400/60 hover:text-cream-200 active:text-cream-100 focus:outline-none focus:ring-2 focus:ring-cream-400 transition-colors z-10 p-2 min-w-[48px] min-h-[48px] flex items-center justify-center"
+        className="absolute top-4 right-4 text-secondary hover:text-primary active:text-primary focus:outline-none focus:ring-2 focus:ring-brand transition-colors z-10 p-2 min-w-[48px] min-h-[48px] flex items-center justify-center"
         aria-label="Fermer"
       >
         <XMarkIcon className="w-7 h-7" aria-hidden="true" />
@@ -134,7 +134,7 @@ export function ImageLightbox({ images, currentIndex, onClose }: ImageLightboxPr
 
       {/* Counter */}
       {!single && (
-        <div className="absolute top-6 left-6 text-cream-400/50 text-xs font-body tracking-widest z-10">
+        <div className="absolute top-6 left-6 text-tertiary text-xs font-body tracking-widest z-10">
           {index + 1} / {total}
         </div>
       )}
@@ -143,7 +143,7 @@ export function ImageLightbox({ images, currentIndex, onClose }: ImageLightboxPr
       {!single && (
         <button
           onClick={(e) => { e.stopPropagation(); goPrev(); }}
-          className="absolute left-2 md:left-8 top-1/2 -translate-y-1/2 p-3 text-cream-400/50 hover:text-cream-200 active:text-cream-100 transition-colors z-10 min-w-[48px] min-h-[48px] flex items-center justify-center"
+          className="absolute left-2 md:left-8 top-1/2 -translate-y-1/2 p-3 text-tertiary hover:text-primary active:text-primary transition-colors z-10 min-w-[48px] min-h-[48px] flex items-center justify-center"
           aria-label="Image précédente"
         >
           <ChevronLeftIcon className="w-8 h-8 md:w-10 md:h-10" aria-hidden="true" />
@@ -172,7 +172,7 @@ export function ImageLightbox({ images, currentIndex, onClose }: ImageLightboxPr
       {!single && (
         <button
           onClick={(e) => { e.stopPropagation(); goNext(); }}
-          className="absolute right-2 md:right-8 top-1/2 -translate-y-1/2 p-3 text-cream-400/50 hover:text-cream-200 active:text-cream-100 transition-colors z-10 min-w-[48px] min-h-[48px] flex items-center justify-center"
+          className="absolute right-2 md:right-8 top-1/2 -translate-y-1/2 p-3 text-tertiary hover:text-primary active:text-primary transition-colors z-10 min-w-[48px] min-h-[48px] flex items-center justify-center"
           aria-label="Image suivante"
         >
           <ChevronRightIcon className="w-8 h-8 md:w-10 md:h-10" aria-hidden="true" />
@@ -182,7 +182,7 @@ export function ImageLightbox({ images, currentIndex, onClose }: ImageLightboxPr
       {/* Caption */}
       {image.alt && (
         <div className="absolute bottom-8 left-0 right-0 text-center pointer-events-none">
-          <p className="text-cream-400/60 text-sm font-body tracking-wider">
+          <p className="text-secondary text-sm font-body tracking-wider">
             {image.alt}
           </p>
         </div>
@@ -195,7 +195,7 @@ export function ImageLightbox({ images, currentIndex, onClose }: ImageLightboxPr
             <span
               key={i}
               className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
-                i === index ? 'bg-cream-300 scale-125' : 'bg-cream-400/30'
+                i === index ? 'bg-brand scale-125' : 'bg-tint'
               }`}
             />
           ))}

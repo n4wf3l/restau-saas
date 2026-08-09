@@ -204,27 +204,6 @@ export default function SaasLandingPage() {
             ))}
           </div>
           <div className="flex items-center gap-3">
-            <button
-              onClick={toggleTheme}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
-                isDark ? 'text-cream-400/60 hover:text-cream-200 hover:bg-cream-400/10' : 'text-coffee-400 hover:text-coffee-700 hover:bg-coffee-50'
-              }`}
-              aria-label="Toggle theme"
-            >
-              {isDark ? icons.sun : icons.moon}
-            </button>
-            <Link
-              to="/r/rr-ice"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`hidden sm:inline-flex items-center gap-1.5 text-sm tracking-wide transition-colors ${isDark ? 'text-cream-300 hover:text-cream-100' : 'text-coffee-600 hover:text-coffee-900'}`}
-            >
-              View demo
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
-                <path fillRule="evenodd" d="M4.25 5.5a.75.75 0 0 0-.75.75v8.5c0 .414.336.75.75.75h8.5a.75.75 0 0 0 .75-.75v-4a.75.75 0 0 1 1.5 0v4A2.25 2.25 0 0 1 12.75 17h-8.5A2.25 2.25 0 0 1 2 14.75v-8.5A2.25 2.25 0 0 1 4.25 4h5a.75.75 0 0 1 0 1.5h-5Z" clipRule="evenodd" />
-                <path fillRule="evenodd" d="M6.194 12.753a.75.75 0 0 0 1.06.053L16.5 4.44v2.81a.75.75 0 0 0 1.5 0v-4.5a.75.75 0 0 0-.75-.75h-4.5a.75.75 0 0 0 0 1.5h2.553l-9.056 8.194a.75.75 0 0 0-.053 1.06Z" clipRule="evenodd" />
-              </svg>
-            </Link>
             <Link
               to="/login"
               className={`hidden sm:inline text-sm tracking-wide transition-colors ${isDark ? 'text-cream-400/70 hover:text-cream-200' : 'text-coffee-500 hover:text-coffee-800'}`}
@@ -787,6 +766,19 @@ export default function SaasLandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* Floating theme toggle — bottom-left of the viewport, out of the navbar */}
+      <button
+        onClick={toggleTheme}
+        aria-label="Toggle theme"
+        className={`fixed bottom-5 left-5 md:bottom-6 md:left-6 z-50 w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-md shadow-lg transition-all hover:scale-105 active:scale-95 ${
+          isDark
+            ? 'bg-coffee-900/70 border border-cream-400/25 text-cream-300 hover:text-cream-100 hover:bg-coffee-900'
+            : 'bg-white/80 border border-coffee-200 text-coffee-600 hover:text-coffee-900 hover:bg-white'
+        }`}
+      >
+        {isDark ? icons.sun : icons.moon}
+      </button>
     </div>
   );
 }

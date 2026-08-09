@@ -56,6 +56,8 @@ class SettingsController extends Controller
                     'social_links'             => $settings->social_links,
                     'restaurant_name'          => $settings->restaurant_name ?? 'Mon Restaurant',
                     'logo_url'                 => $settings->logo_url,
+                    'theme'                    => $settings->theme ?? 'coffee',
+                    'layout'                   => $settings->layout ?? 'classic',
                 ]);
             }
 
@@ -71,6 +73,8 @@ class SettingsController extends Controller
                 'social_links'             => null,
                 'restaurant_name'          => 'Mon Restaurant',
                 'logo_url'                 => null,
+                'theme'                    => 'coffee',
+                'layout'                   => 'classic',
             ]);
         });
     }

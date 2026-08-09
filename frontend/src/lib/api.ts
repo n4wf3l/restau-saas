@@ -3,6 +3,19 @@ import type { Reservation, PublicTable, ReservationPayload, EventReservationPayl
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL || window.location.origin;
 
+/**
+ * Resolves a stored logo/image URL to a usable src.
+ * - Absolute URL (http/https) → passthrough
+ * - Backend-uploaded asset (starts with /storage) → prefix with API_BASE_URL
+ * - Anything else (e.g. /logo.png) → treated as a frontend static asset → passthrough
+ */
+export function resolveLogoUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (url.startsWith('http')) return url;
+  if (url.startsWith('/storage')) return `${API_BASE_URL}${url}`;
+  return url;
+}
+
 // Tenant slug for public API calls — read from URL path /r/:slug or ?tenant= query param
 export function getTenantSlug(): string | null {
   // 1. Try URL path: /r/:slug/...

@@ -7,7 +7,66 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Arabic: swap font stack to Tajawal (Latin serif fonts don't cover Arabic properly). */
+/* ═══════════════════════════════════════════════════════════════════════
+   Theme presets — applied via data-theme on the RestaurantLayout root.
+   Semantic tokens (--surface-page, --text-primary, --font-display, etc.)
+   are consumed by Tailwind utilities defined in tailwind.config.js.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Default theme (coffee) — matches the original RR Ice look */
+:root,
+[data-theme="coffee"] {
+  --surface-page: #2d201a;
+  --surface-elevated: rgba(45 32 26 / 0.5);
+  --surface-tint: rgba(0 0 0 / 0.2);
+  --text-primary: #faf7f2;
+  --text-secondary: rgba(227 204 173 / 0.7);
+  --text-tertiary: rgba(227 204 173 / 0.5);
+  --text-accent: #d4b18a;
+  --border-subtle: rgba(227 204 173 / 0.3);
+  --border-strong: rgba(227 204 173 / 0.6);
+  --brand-primary: #d4b18a;
+  --brand-primary-hover: #c49668;
+  --font-display: 'Playfair Display', serif;
+  --font-body: 'Lora', serif;
+}
+
+/* Noir — deep black / warm amber, upscale minimalist (Chez Chegrouni default) */
+[data-theme="noir"] {
+  --surface-page: #0a0a0a;
+  --surface-elevated: rgba(23 23 23 / 0.7);
+  --surface-tint: rgba(0 0 0 / 0.35);
+  --text-primary: #fafafa;
+  --text-secondary: rgba(229 229 229 / 0.7);
+  --text-tertiary: rgba(212 212 212 / 0.45);
+  --text-accent: #fbbf24;
+  --border-subtle: rgba(212 212 212 / 0.15);
+  --border-strong: rgba(251 191 36 / 0.4);
+  --brand-primary: #fbbf24;
+  --brand-primary-hover: #f59e0b;
+  --font-display: 'Cormorant Garamond', serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+/* Sable — light Mediterranean sand, warm orange accent */
+[data-theme="sable"] {
+  --surface-page: #faf7f2;
+  --surface-elevated: rgba(255 255 255 / 0.7);
+  --surface-tint: rgba(120 53 15 / 0.04);
+  --text-primary: #1c1917;
+  --text-secondary: rgba(68 64 60 / 0.8);
+  --text-tertiary: rgba(87 83 78 / 0.6);
+  --text-accent: #c2410c;
+  --border-subtle: rgba(28 25 23 / 0.12);
+  --border-strong: rgba(194 65 12 / 0.4);
+  --brand-primary: #ea580c;
+  --brand-primary-hover: #c2410c;
+  --font-display: 'Fraunces', serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+/* Arabic: swap font stack to Tajawal (Latin serif fonts don't cover Arabic properly).
+   This overrides --font-display / --font-body from the current theme. */
 html[lang="ar"] body,
 html[lang="ar"] h1,
 html[lang="ar"] h2,

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Navbar } from '../components/public/Navbar';
+import { PublicNav } from '../components/public/PublicNav';
 import { Footer } from '../components/public/Footer';
 import { ReservationModal } from '../components/public/ReservationModal';
 import { CTAButton } from '../components/public/CTAButton';
@@ -49,7 +49,7 @@ function ScrollReveal({
 type FormTab = 'contact' | 'recruitment';
 
 const inputClass =
-  'w-full bg-transparent border border-cream-400/30 rounded-none px-4 py-3.5 text-cream-100 text-sm font-body placeholder-cream-400/40 focus:outline-none focus:border-cream-400/70 transition-colors min-h-[48px]';
+  'w-full bg-transparent border border-subtle rounded-none px-4 py-3.5 text-primary text-sm font-body placeholder:text-tertiary focus:outline-none focus:border-subtle transition-colors min-h-[48px]';
 
 const DAY_ORDER = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
@@ -123,8 +123,8 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="relative bg-coffee-950 text-white min-h-screen overflow-hidden">
-      <Navbar onReservationClick={() => setIsReservationModalOpen(true)} hideReservation={hideReservation} />
+    <div className="relative bg-page text-white min-h-screen overflow-hidden">
+      <PublicNav onReservationClick={() => setIsReservationModalOpen(true)} hideReservation={hideReservation} />
       {!hideReservation && <ReservationModal isOpen={isReservationModalOpen} onClose={() => setIsReservationModalOpen(false)} />}
 
       {/* Decorative Morocco outline (with Sahara) — top-right, single instance, hidden on small screens.
@@ -156,17 +156,17 @@ export default function ContactPage() {
       {/* Hero */}
       <section className="relative z-10 pt-32 pb-16 px-4 text-center">
         <ScrollReveal>
-          <p className="text-cream-500 text-xs tracking-[0.35em] uppercase mb-4 font-body">
+          <p className="text-accent text-xs tracking-[0.35em] uppercase mb-4 font-body">
             {t('contact.eyebrow')}
           </p>
         </ScrollReveal>
         <ScrollReveal delay={100}>
-          <h1 className="text-4xl md:text-6xl font-display font-bold text-cream-100 mb-6 tracking-wide">
+          <h1 className="text-4xl md:text-6xl font-display font-bold text-primary mb-6 tracking-wide">
             {t('contact.title')}
           </h1>
         </ScrollReveal>
         <ScrollReveal delay={200}>
-          <p className="text-cream-400/70 font-body text-base md:text-lg max-w-xl mx-auto leading-relaxed">
+          <p className="text-secondary font-body text-base md:text-lg max-w-xl mx-auto leading-relaxed">
             {t('contact.desc')}
           </p>
         </ScrollReveal>
@@ -179,28 +179,28 @@ export default function ContactPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
             {/* Address */}
             <ScrollReveal delay={0}>
-              <div className="border border-cream-400/15 p-6 text-center h-full">
-                <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border border-cream-400/30 rounded-full">
-                  <svg className="w-4 h-4 text-cream-400/70" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <div className="border border-subtle p-6 text-center h-full">
+                <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border border-subtle rounded-full">
+                  <svg className="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
                   </svg>
                 </div>
-                <p className="text-cream-500 text-xs tracking-[0.25em] uppercase mb-2 font-body">{t('contact.address.label')}</p>
-                <p className="text-cream-400/70 font-body text-sm">{t('contact.address.value')}</p>
+                <p className="text-accent text-xs tracking-[0.25em] uppercase mb-2 font-body">{t('contact.address.label')}</p>
+                <p className="text-secondary font-body text-sm">{t('contact.address.value')}</p>
               </div>
             </ScrollReveal>
 
             {/* Phone */}
             <ScrollReveal delay={100}>
-              <div className="border border-cream-400/15 p-6 text-center h-full">
-                <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border border-cream-400/30 rounded-full">
-                  <svg className="w-4 h-4 text-cream-400/70" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <div className="border border-subtle p-6 text-center h-full">
+                <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border border-subtle rounded-full">
+                  <svg className="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
                   </svg>
                 </div>
-                <p className="text-cream-500 text-xs tracking-[0.25em] uppercase mb-2 font-body">{t('contact.phone.label')}</p>
-                <a href="tel:+212539301039" className="text-cream-400/70 hover:text-cream-300 font-body text-sm transition-colors">
+                <p className="text-accent text-xs tracking-[0.25em] uppercase mb-2 font-body">{t('contact.phone.label')}</p>
+                <a href="tel:+212539301039" className="text-secondary hover:text-primary font-body text-sm transition-colors">
                   +212 5393-01039
                 </a>
               </div>
@@ -208,13 +208,13 @@ export default function ContactPage() {
 
             {/* WhatsApp */}
             <ScrollReveal delay={200}>
-              <div className="border border-cream-400/15 p-6 text-center h-full">
+              <div className="border border-subtle p-6 text-center h-full">
                 <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border border-emerald-400/30 rounded-full">
                   <svg className="w-4 h-4 text-emerald-400/70" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z" />
                   </svg>
                 </div>
-                <p className="text-cream-500 text-xs tracking-[0.25em] uppercase mb-2 font-body">{t('contact.whatsapp.label')}</p>
+                <p className="text-accent text-xs tracking-[0.25em] uppercase mb-2 font-body">{t('contact.whatsapp.label')}</p>
                 <a
                   href="https://wa.me/212539301039"
                   target="_blank"
@@ -228,14 +228,14 @@ export default function ContactPage() {
 
             {/* Email */}
             <ScrollReveal delay={300}>
-              <div className="border border-cream-400/15 p-6 text-center h-full">
-                <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border border-cream-400/30 rounded-full">
-                  <svg className="w-4 h-4 text-cream-400/70" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <div className="border border-subtle p-6 text-center h-full">
+                <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border border-subtle rounded-full">
+                  <svg className="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
                   </svg>
                 </div>
-                <p className="text-cream-500 text-xs tracking-[0.25em] uppercase mb-2 font-body">{t('contact.email.label')}</p>
-                <a href="mailto:rr.restauration@gmail.com" className="text-cream-400/70 hover:text-cream-300 font-body text-sm transition-colors">
+                <p className="text-accent text-xs tracking-[0.25em] uppercase mb-2 font-body">{t('contact.email.label')}</p>
+                <a href="mailto:rr.restauration@gmail.com" className="text-secondary hover:text-primary font-body text-sm transition-colors">
                   rr.restauration@gmail.com
                 </a>
               </div>
@@ -246,14 +246,14 @@ export default function ContactPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
             {/* Opening Hours */}
             <ScrollReveal>
-              <div className="border border-cream-400/15 p-8 h-full">
-                <h3 className="text-lg font-display font-bold text-cream-100 mb-6 tracking-wide">
+              <div className="border border-subtle p-8 h-full">
+                <h3 className="text-lg font-display font-bold text-primary mb-6 tracking-wide">
                   {t('contact.hours.title')}
                 </h3>
                 <div className="space-y-3 font-body text-sm">
                   {loadingHours ? (
                     <div className="flex justify-center py-6">
-                      <svg className="animate-spin w-5 h-5 text-cream-400/50" viewBox="0 0 24 24" fill="none">
+                      <svg className="animate-spin w-5 h-5 text-tertiary" viewBox="0 0 24 24" fill="none">
                         <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
                         <path className="opacity-80" d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
                       </svg>
@@ -262,14 +262,14 @@ export default function ContactPage() {
                     const dh = openingHours[key];
                     return (
                       <div key={key} className="flex items-center justify-between">
-                        <span className="text-cream-400/70">{t(`days.${key}`)}</span>
-                        <span className="text-cream-200">
+                        <span className="text-secondary">{t(`days.${key}`)}</span>
+                        <span className="text-primary">
                           {dh?.closed ? t('contact.hours.closed') : dh ? `${formatTime(dh.open)} – ${formatTime(dh.close)}` : '—'}
                         </span>
                       </div>
                     );
                   }) : (
-                    <p className="text-cream-400/50 italic">{t('contact.hours.notConfigured')}</p>
+                    <p className="text-tertiary italic">{t('contact.hours.notConfigured')}</p>
                   )}
                 </div>
               </div>
@@ -277,7 +277,7 @@ export default function ContactPage() {
 
             {/* Google Maps */}
             <ScrollReveal delay={150}>
-              <div className="border border-cream-400/15 overflow-hidden h-full">
+              <div className="border border-subtle overflow-hidden h-full">
                 <iframe
                   title={`${restaurantName} — Ghandouri, Tanger`}
                   src="https://www.google.com/maps?q=35.788289172557704,-5.7599687317466195&z=17&output=embed"
@@ -306,10 +306,10 @@ export default function ContactPage() {
                   aria-controls={`panel-${tab.key}`}
                   id={`tab-${tab.key}`}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`px-6 md:px-8 py-3.5 bg-transparent rounded-none border text-sm md:text-xs tracking-[0.15em] md:tracking-[0.2em] uppercase font-body transition-all duration-300 cursor-pointer min-h-[48px] focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-2 focus:ring-offset-coffee-950 ${
+                  className={`px-6 md:px-8 py-3.5 bg-transparent rounded-none border text-sm md:text-xs tracking-[0.15em] md:tracking-[0.2em] uppercase font-body transition-all duration-300 cursor-pointer min-h-[48px] focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:ring-offset-page ${
                     activeTab === tab.key
-                      ? 'border-cream-400/60 text-cream-400'
-                      : 'border-cream-400/20 text-cream-400/40 hover:border-cream-400/40 hover:text-cream-400/60'
+                      ? 'border-subtle text-accent'
+                      : 'border-subtle text-tertiary hover:border-subtle hover:text-secondary'
                   }`}
                 >
                   {tab.label}
@@ -402,7 +402,7 @@ export default function ContactPage() {
                 className="max-w-2xl mx-auto space-y-5 animate-fadeIn"
               >
                 <div className="text-center mb-6">
-                  <p className="text-cream-400/60 font-body text-sm leading-relaxed max-w-lg mx-auto">
+                  <p className="text-secondary font-body text-sm leading-relaxed max-w-lg mx-auto">
                     {t('contact.recruitment.intro')}
                   </p>
                 </div>

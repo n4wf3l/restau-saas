@@ -4,7 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import toast from "react-hot-toast";
 import { PasswordToggle } from "../components/ui/PasswordToggle";
 import { Spinner } from "../components/ui/Spinner";
-import { API_BASE_URL } from "../lib/api";
+import { resolveLogoUrl } from "../lib/api";
 
 // Read the branding to show above the login form.
 // Priority: URL path /r/:slug/login > ?tenant=slug query > localStorage lastTenant > SaaS default.
@@ -24,11 +24,9 @@ function useLoginBranding(): { name: string; logoUrl: string | null; slug: strin
       if (raw) {
         const s = JSON.parse(raw) as { restaurant_name?: string; logo_url?: string | null };
         if (s.restaurant_name) name = s.restaurant_name;
-        if (s.logo_url) logoUrl = s.logo_url.startsWith('http') ? s.logo_url : `${API_BASE_URL}${s.logo_url}`;
+        if (s.logo_url) logoUrl = resolveLogoUrl(s.logo_url);
       }
     } catch { /* corrupt cache */ }
-    // Match Home page behavior: fall back to /logo.png static asset when tenant has no uploaded logo
-    if (!logoUrl) logoUrl = '/logo.png';
     return { name, logoUrl, slug };
   }, [params, pathSlug]);
 }

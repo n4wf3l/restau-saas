@@ -25,7 +25,12 @@ class RestaurantSetting extends Model
         'social_links',
         'restaurant_name',
         'logo_url',
+        'theme',
+        'layout',
     ];
+
+    public const AVAILABLE_THEMES = ['coffee', 'noir', 'sable'];
+    public const AVAILABLE_LAYOUTS = ['classic', 'cinematic'];
 
     protected $casts = [
         'reservations_enabled' => 'boolean',

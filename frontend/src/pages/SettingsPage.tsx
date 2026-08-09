@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { getSettings, updateSettings, uploadLogo, deleteLogo, API_BASE_URL } from "../lib/api";
+import { getSettings, updateSettings, uploadLogo, deleteLogo, resolveLogoUrl } from "../lib/api";
 import { useRefreshPublicSettings } from "../contexts/PublicSettingsContext";
 import type { RestaurantSettings, OpeningHours, DayHours, ClosureDate, SocialLinks, SocialLink } from "../lib/types";
 import toast from "react-hot-toast";
@@ -227,6 +227,8 @@ export default function SettingsPage() {
         menu_pdf_visible: settings.menu_pdf_visible,
         social_links: settings.social_links,
         restaurant_name: settings.restaurant_name,
+        theme: settings.theme,
+        layout: settings.layout,
       } as any);
       setSettings(updated);
       setSavedSettings(updated);
@@ -368,11 +370,22 @@ export default function SettingsPage() {
                     Logo
                   </label>
                   <div className="flex items-center gap-4">
-                    <img
-                      src={settings.logo_url ? (settings.logo_url.startsWith('http') ? settings.logo_url : `${API_BASE_URL}${settings.logo_url}`) : '/logo.png'}
-                      alt="Logo"
-                      className="w-16 h-16 object-contain rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800"
-                    />
+                    {settings.logo_url ? (
+                      <img
+                        src={resolveLogoUrl(settings.logo_url) || ''}
+                        alt="Logo"
+                        className="w-16 h-16 object-contain rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800"
+                      />
+                    ) : (
+                      <div
+                        className="w-16 h-16 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex items-center justify-center"
+                        aria-label="Aucun logo"
+                      >
+                        <span className="text-2xl font-display font-bold text-coffee-500 dark:text-coffee-400">
+                          {(settings.restaurant_name || '·').charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex gap-2">
                       <label className={`px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors ${logoUploading ? 'opacity-50 cursor-not-allowed' : ''} bg-coffee-600 hover:bg-coffee-500 text-white`}>
                         {logoUploading ? <Spinner size="xs" className="text-white" /> : 'Changer'}
@@ -423,6 +436,137 @@ export default function SettingsPage() {
                   </div>
                   <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                     JPG, PNG — Max 5 Mo. Utilisé dans la navbar, l'accueil et les pages de connexion.
+                  </p>
+                </div>
+
+                {/* Theme picker */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 dark:text-cream-50 mb-1.5">
+                    Thème visuel du site public
+                  </label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {([
+                      { key: 'coffee', name: 'Coffee', bg: '#2d201a', accent: '#d4b18a', font: '"Playfair Display", serif' },
+                      { key: 'noir',   name: 'Noir',   bg: '#0a0a0a', accent: '#fbbf24', font: '"Cormorant Garamond", serif' },
+                      { key: 'sable',  name: 'Sable',  bg: '#faf7f2', accent: '#c2410c', font: '"Fraunces", serif' },
+                    ] as const).map(preset => {
+                      const isSelected = (settings.theme || 'coffee') === preset.key;
+                      return (
+                        <button
+                          key={preset.key}
+                          type="button"
+                          onClick={() => handleUpdate('theme', preset.key)}
+                          className={`relative rounded-lg overflow-hidden border-2 transition-all text-left ${
+                            isSelected
+                              ? 'border-coffee-600 ring-2 ring-coffee-500/40'
+                              : 'border-gray-200 dark:border-gray-700 hover:border-coffee-400'
+                          }`}
+                          style={{ backgroundColor: preset.bg }}
+                        >
+                          <div className="p-4 h-24 flex flex-col justify-between">
+                            <span
+                              className="text-lg font-bold"
+                              style={{ color: preset.accent, fontFamily: preset.font }}
+                            >
+                              Aa
+                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="w-3 h-3 rounded-full" style={{ backgroundColor: preset.accent }} />
+                              <span
+                                className="text-xs font-medium"
+                                style={{ color: preset.bg === '#faf7f2' ? '#1c1917' : '#fafafa' }}
+                              >
+                                {preset.name}
+                              </span>
+                            </div>
+                          </div>
+                          {isSelected && (
+                            <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-coffee-600 text-white flex items-center justify-center text-xs">
+                              ✓
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                    Change les couleurs et la typographie du site public (visible immédiatement).
+                  </p>
+                </div>
+
+                {/* Layout picker — Classic vs Cinematic */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 dark:text-cream-50 mb-1.5">
+                    Layout du site public
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {([
+                      {
+                        key: 'classic',
+                        name: 'Classic',
+                        desc: "Sections empilées, galeries, aperçu carte, encart réservation.",
+                        preview: (
+                          <div className="space-y-1.5">
+                            <div className="h-8 rounded bg-white/30" />
+                            <div className="grid grid-cols-3 gap-1">
+                              <div className="h-6 rounded bg-white/25" />
+                              <div className="h-6 rounded bg-white/25" />
+                              <div className="h-6 rounded bg-white/25" />
+                            </div>
+                            <div className="h-5 rounded bg-white/20" />
+                            <div className="h-4 rounded bg-white/15 w-2/3" />
+                          </div>
+                        ),
+                      },
+                      {
+                        key: 'cinematic',
+                        name: 'Cinematic',
+                        desc: 'Storytelling scroll immersif : images fullscreen pinnées, texte qui monte, transitions crossfade.',
+                        preview: (
+                          <div className="space-y-1.5">
+                            <div className="h-16 rounded bg-gradient-to-b from-white/40 to-white/10 relative">
+                              <div className="absolute bottom-1 left-2 right-4 h-1.5 bg-white/60 rounded" />
+                              <div className="absolute bottom-3 left-2 h-1 w-1/3 bg-white/40 rounded" />
+                            </div>
+                            <div className="h-6 rounded bg-white/15" />
+                          </div>
+                        ),
+                      },
+                    ] as const).map(preset => {
+                      const isSelected = (settings.layout || 'classic') === preset.key;
+                      return (
+                        <button
+                          key={preset.key}
+                          type="button"
+                          onClick={() => handleUpdate('layout', preset.key)}
+                          className={`relative rounded-lg overflow-hidden border-2 transition-all text-left p-4 ${
+                            isSelected
+                              ? 'border-coffee-600 ring-2 ring-coffee-500/40 bg-coffee-500/10 dark:bg-coffee-500/5'
+                              : 'border-gray-200 dark:border-gray-700 hover:border-coffee-400 bg-gray-50 dark:bg-gray-800/50'
+                          }`}
+                        >
+                          <div className="mb-3 h-24 rounded bg-gray-800 p-2 overflow-hidden">
+                            {preset.preview}
+                          </div>
+                          <div className="flex items-baseline justify-between mb-1">
+                            <span className="font-semibold text-gray-900 dark:text-cream-100">
+                              {preset.name}
+                            </span>
+                            {isSelected && (
+                              <span className="w-5 h-5 rounded-full bg-coffee-600 text-white flex items-center justify-center text-xs">
+                                ✓
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                            {preset.desc}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                    Le layout Cinematic est optimisé pour restaurants haut de gamme avec photographie forte.
                   </p>
                 </div>
               </div>
