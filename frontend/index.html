@@ -8,21 +8,35 @@
     <!-- Google Fonts - Elegant typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Lora:wght@400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Lora:wght@400;500;600;700&family=Tajawal:wght@400;500;700;800&family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet" />
   </head>
   <body>
     <div id="root"></div>
     <script>
-      // Preload the first hero image from localStorage cache before React mounts.
-      // Cache is written by SiteImagesContext on each visit (stale-while-revalidate),
+      // Runs before React mounts. On /r/:slug pages, do two things from localStorage cache:
+      //   1. Apply the tenant's theme (data-theme on <html>) so first paint uses the right palette.
+      //   2. Preload the first hero image so it can start downloading immediately.
+      // Cache is written by PublicSettingsContext/SiteImagesContext (stale-while-revalidate),
       // so this stays in sync with whatever the admin last set in the dashboard.
       (function () {
         try {
           var m = location.pathname.match(/^\/r\/([^/]+)/);
           if (!m) return;
-          var raw = localStorage.getItem('siteImages:' + m[1]);
-          if (!raw) return;
-          var data = JSON.parse(raw);
+          var slug = m[1];
+
+          // Theme
+          var settingsRaw = localStorage.getItem('publicSettings:' + slug);
+          if (settingsRaw) {
+            var settings = JSON.parse(settingsRaw);
+            if (settings && settings.theme) {
+              document.documentElement.setAttribute('data-theme', settings.theme);
+            }
+          }
+
+          // Hero image preload
+          var imagesRaw = localStorage.getItem('siteImages:' + slug);
+          if (!imagesRaw) return;
+          var data = JSON.parse(imagesRaw);
           var url = data && data.hero && data.hero[0] && data.hero[0].image_url;
           if (!url) return;
           var link = document.createElement('link');

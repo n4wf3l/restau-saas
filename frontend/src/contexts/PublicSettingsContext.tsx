@@ -3,6 +3,9 @@ import type { ReactNode } from "react";
 import { getPublicSettings, getTenantSlug } from "../lib/api";
 import type { OpeningHours, ClosureDate, SocialLinks } from "../lib/types";
 
+export type ThemeName = 'coffee' | 'noir' | 'sable';
+export type LayoutName = 'classic' | 'cinematic';
+
 export interface PublicSettings {
   reservations_enabled: boolean;
   auto_optimize_tables: boolean;
@@ -15,6 +18,8 @@ export interface PublicSettings {
   social_links: SocialLinks | null;
   restaurant_name: string;
   logo_url: string | null;
+  theme: ThemeName;
+  layout: LayoutName;
 }
 
 interface PublicSettingsContextValue {

@@ -42,10 +42,25 @@ export default {
           input: 'var(--surface-input)',
           'input-border': 'var(--surface-input-border)',
         },
+        // Semantic theme tokens — resolved to CSS variables set per data-theme in index.css.
+        // Use these in public site components so the palette swaps by tenant.
+        page: 'var(--surface-page)',
+        elevated: 'var(--surface-elevated)',
+        tint: 'var(--surface-tint)',
+        primary: 'var(--text-primary)',
+        secondary: 'var(--text-secondary)',
+        tertiary: 'var(--text-tertiary)',
+        accent: 'var(--text-accent)',
+        subtle: 'var(--border-subtle)',
+        strong: 'var(--border-strong)',
+        brand: {
+          DEFAULT: 'var(--brand-primary)',
+          hover: 'var(--brand-primary-hover)',
+        },
       },
       fontFamily: {
-        display: ['Playfair Display', 'serif'],
-        body: ['Lora', 'serif'],
+        display: ['var(--font-display)', 'Playfair Display', 'serif'],
+        body: ['var(--font-body)', 'Lora', 'serif'],
       },
       boxShadow: {
         // Light mode — layered, soft
@@ -98,6 +113,11 @@ export default {
           '0%': { transform: 'scale(1)' },
           '100%': { transform: 'scale(1.08)' },
         },
+        scrollHint: {
+          '0%':   { transform: 'translateY(-100%)' },
+          '60%':  { transform: 'translateY(200%)' },
+          '100%': { transform: 'translateY(200%)' },
+        },
         overlayFadeIn: {
           from: { opacity: '0' },
           to: { opacity: '1' },
@@ -129,6 +149,7 @@ export default {
         'hero-scale': 'heroScale 1s cubic-bezier(0.16,1,0.3,1) forwards',
         'hero-fade-up': 'heroFadeUp 0.8s cubic-bezier(0.16,1,0.3,1) forwards',
         'hero-zoom': 'heroZoom 12s ease-in-out infinite alternate',
+        'scroll-hint': 'scrollHint 2.4s cubic-bezier(0.65,0.05,0.36,1) infinite',
         'overlay-fade-in': 'overlayFadeIn 0.2s ease-out',
         'modal-slide-in': 'modalSlideIn 0.25s cubic-bezier(0.16,1,0.3,1)',
         'dropdown-reveal': 'dropdownReveal 0.15s cubic-bezier(0.16,1,0.3,1)',

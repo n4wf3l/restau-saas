@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\RestaurantSetting;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateSettingsRequest extends FormRequest
 {
@@ -32,6 +34,8 @@ class UpdateSettingsRequest extends FormRequest
             'menu_pdf_visible'         => 'sometimes|boolean',
             'social_links'             => 'sometimes|nullable|array',
             'restaurant_name'          => 'sometimes|string|max:100',
+            'theme'                    => ['sometimes', 'string', Rule::in(RestaurantSetting::AVAILABLE_THEMES)],
+            'layout'                   => ['sometimes', 'string', Rule::in(RestaurantSetting::AVAILABLE_LAYOUTS)],
         ];
     }
 }

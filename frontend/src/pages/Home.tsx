@@ -8,7 +8,7 @@ import { usePublicSettings } from '../contexts/PublicSettingsContext';
 import { useSiteImages } from '../contexts/SiteImagesContext';
 import { useRestaurantBasePath } from '../hooks/useRestaurantBasePath';
 import { ImageLightbox, type LightboxImage } from '../components/ui/ImageLightbox';
-import { API_BASE_URL } from '../lib/api';
+import { resolveLogoUrl } from '../lib/api';
 
 // ─── Scroll Reveal ───
 function ScrollReveal({
@@ -55,8 +55,8 @@ export default function Home() {
   const [lightbox, setLightbox] = useState<{ images: LightboxImage[]; index: number } | null>(null);
   const basePath = useRestaurantBasePath();
   const publicSettings = usePublicSettings();
-  const restaurantName = publicSettings?.restaurant_name ?? 'RR Ice';
-  const logoSrc = publicSettings?.logo_url ? (publicSettings.logo_url.startsWith('http') ? publicSettings.logo_url : `${API_BASE_URL}${publicSettings.logo_url}`) : '/logo.png';
+  const restaurantName = publicSettings?.restaurant_name ?? '';
+  const logoSrc = resolveLogoUrl(publicSettings?.logo_url);
   const siteImages = useSiteImages();
 
   const heroImages = (siteImages?.hero ?? []).map(img => img.image_url);
@@ -100,7 +100,7 @@ export default function Home() {
         className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden"
       >
         {/* Instant placeholder — always visible, no pure-black flash while images load */}
-        <div className="absolute inset-0 bg-gradient-to-br from-coffee-950 via-coffee-900 to-black" />
+        <div className="absolute inset-0 bg-page" />
 
         {/* Background Slider */}
         {heroImages.map((image, index) => (
@@ -132,19 +132,30 @@ export default function Home() {
 
         {/* Content */}
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          {/* Logo */}
+          {/* Logo — image if uploaded, else themed initial-letter placeholder */}
           <div className="flex justify-center mb-8 opacity-0 animate-hero-scale" style={{ animationDelay: '200ms' }}>
-            <img
-              src={logoSrc}
-              alt={restaurantName}
-              className="w-32 h-32 md:w-52 md:h-52 object-contain drop-shadow-2xl"
-            />
+            {logoSrc ? (
+              <img
+                src={logoSrc}
+                alt={restaurantName}
+                className="w-32 h-32 md:w-52 md:h-52 object-contain drop-shadow-2xl"
+              />
+            ) : (
+              <div
+                className="w-32 h-32 md:w-52 md:h-52 rounded-full border-2 border-brand bg-elevated flex items-center justify-center drop-shadow-2xl"
+                aria-label={restaurantName}
+              >
+                <span className="font-display font-bold text-6xl md:text-8xl text-brand">
+                  {restaurantName ? restaurantName.charAt(0).toUpperCase() : '·'}
+                </span>
+              </div>
+            )}
           </div>
 
-          <h1 className="text-3xl md:text-6xl font-display font-bold mb-4 md:mb-6 text-cream-200 tracking-wider opacity-0 animate-hero-fade-up" style={{ animationDelay: '500ms' }}>
+          <h1 className="text-3xl md:text-6xl font-display font-bold mb-4 md:mb-6 text-primary tracking-wider opacity-0 animate-hero-fade-up" style={{ animationDelay: '500ms' }}>
             {restaurantName}
           </h1>
-          <p className="text-base md:text-xl text-cream-300 mb-8 md:mb-10 max-w-2xl mx-auto leading-relaxed px-2 opacity-0 animate-hero-fade-up" style={{ animationDelay: '700ms' }}>
+          <p className="text-base md:text-xl text-primary mb-8 md:mb-10 max-w-2xl mx-auto leading-relaxed px-2 opacity-0 animate-hero-fade-up" style={{ animationDelay: '700ms' }}>
             {t('home.hero.tagline')}
           </p>
           <div className="flex justify-center opacity-0 animate-hero-fade-up" style={{ animationDelay: '900ms' }}>
@@ -158,32 +169,32 @@ export default function Home() {
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="text-center">
             <div className="text-5xl font-display font-bold text-coffee-400 mb-2">20+</div>
-            <p className="text-cream-400 text-lg">Ans de Tradition</p>
+            <p className="text-accent text-lg">Ans de Tradition</p>
           </div>
           <div className="text-center">
             <div className="text-5xl font-display font-bold text-coffee-400 mb-2">⭐ 4.9</div>
-            <p className="text-cream-400 text-lg">Notes Clients</p>
+            <p className="text-accent text-lg">Notes Clients</p>
           </div>
           <div className="text-center">
             <div className="text-5xl font-display font-bold text-coffee-400 mb-2">150+</div>
-            <p className="text-cream-400 text-lg">Plats Différents</p>
+            <p className="text-accent text-lg">Plats Différents</p>
           </div>
         </div>
       </section>
 
       {/* Gallery Section */}
-      <section id="gallery" className="py-16 md:py-28 px-4 bg-coffee-950">
+      <section id="gallery" className="py-16 md:py-28 px-4 bg-page">
         <div className="max-w-5xl mx-auto">
           {/* Title block */}
           <ScrollReveal>
             <div className="text-center mb-16">
-              <p className="text-cream-500 text-xs tracking-[0.35em] uppercase mb-4 font-body">
+              <p className="text-accent text-xs tracking-[0.35em] uppercase mb-4 font-body">
                 {t('home.about.eyebrow')}
               </p>
-              <h2 className="text-4xl md:text-6xl font-display font-bold text-cream-100 mb-6 tracking-wide">
+              <h2 className="text-4xl md:text-6xl font-display font-bold text-primary mb-6 tracking-wide">
                 {t('home.about.title')}
               </h2>
-              <p className="text-cream-400/70 font-body text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+              <p className="text-secondary font-body text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
                 {t('home.about.desc', { restaurantName })}
               </p>
             </div>
@@ -284,17 +295,17 @@ export default function Home() {
             <div className="flex items-center justify-center px-8 md:px-16 py-16 md:py-24 bg-[#0d1b2a]">
               <div className="max-w-md text-center">
                 <ScrollReveal delay={100}>
-                  <p className="text-cream-500 text-xs tracking-[0.35em] uppercase mb-4 font-body">
+                  <p className="text-accent text-xs tracking-[0.35em] uppercase mb-4 font-body">
                     {t('home.reservation.eyebrow')}
                   </p>
                 </ScrollReveal>
                 <ScrollReveal delay={200}>
-                  <h2 className="text-3xl md:text-5xl font-display font-bold text-cream-100 mb-6 tracking-wide leading-tight">
+                  <h2 className="text-3xl md:text-5xl font-display font-bold text-primary mb-6 tracking-wide leading-tight">
                     {t('home.reservation.title')}
                   </h2>
                 </ScrollReveal>
                 <ScrollReveal delay={300}>
-                  <p className="text-cream-400/70 font-body text-sm md:text-base leading-relaxed mb-10">
+                  <p className="text-secondary font-body text-sm md:text-base leading-relaxed mb-10">
                     {t('home.reservation.desc')}
                   </p>
                 </ScrollReveal>
@@ -319,7 +330,7 @@ export default function Home() {
         >
           <source src="/eau.mp4" type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-coffee-950/70" />
+        <div className="absolute inset-0 bg-page" />
       </section>
 
       {/* Sticky Mobile CTA — always accessible */}
@@ -327,7 +338,7 @@ export default function Home() {
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 p-3 bg-gradient-to-t from-black via-black/95 to-transparent">
           <button
             onClick={() => setIsReservationModalOpen(true)}
-            className="w-full py-4 bg-cream-500 text-coffee-950 font-body font-bold text-sm tracking-[0.15em] uppercase active:bg-cream-600 transition-colors"
+            className="w-full py-4 bg-brand text-page font-body font-bold text-sm tracking-[0.15em] uppercase hover:bg-brand-hover active:bg-brand-hover transition-colors"
           >
             {t('home.reservation.mobileButton')}
           </button>
@@ -338,7 +349,7 @@ export default function Home() {
       <button
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         aria-label={t('common.scrollTop')}
-        className={`fixed bottom-20 md:bottom-8 right-5 z-40 w-11 h-11 rounded-full border border-cream-400/30 bg-coffee-950/80 backdrop-blur-md flex items-center justify-center text-cream-400/70 hover:text-cream-200 hover:border-cream-400/60 hover:bg-coffee-950 active:scale-90 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        className={`fixed bottom-20 md:bottom-8 right-5 z-40 w-11 h-11 rounded-full border border-subtle bg-page backdrop-blur-md flex items-center justify-center text-secondary hover:text-primary hover:border-subtle hover:bg-page active:scale-90 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
         }`}
       >

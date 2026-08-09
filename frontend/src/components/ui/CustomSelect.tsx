@@ -78,13 +78,13 @@ export function CustomSelect({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={ariaLabel ?? placeholder}
-        className={`w-full bg-transparent border border-cream-400/30 rounded-none px-4 py-3.5 text-sm font-body focus:outline-none focus:border-cream-400/70 transition-colors min-h-[48px] flex items-center justify-between gap-3 text-left ${
-          selected ? 'text-cream-100' : 'text-cream-400/40'
-        } ${open ? 'border-cream-400/70' : ''}`}
+        className={`w-full bg-transparent border border-subtle rounded-none px-4 py-3.5 text-sm font-body focus:outline-none focus:border-subtle transition-colors min-h-[48px] flex items-center justify-between gap-3 text-left ${
+          selected ? 'text-primary' : 'text-tertiary'
+        } ${open ? 'border-subtle' : ''}`}
       >
         <span className="truncate">{selected ? selected.label : placeholder}</span>
         <ChevronDownIcon
-          className={`w-4 h-4 shrink-0 text-cream-400/60 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+          className={`w-4 h-4 shrink-0 text-secondary transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
         />
       </button>
 
@@ -92,7 +92,7 @@ export function CustomSelect({
       {open && (
         <ul
           role="listbox"
-          className="absolute left-0 right-0 top-full mt-1 z-30 max-h-64 overflow-y-auto bg-coffee-900 border border-cream-400/25 shadow-2xl animate-dropdown-reveal"
+          className="absolute left-0 right-0 top-full mt-1 z-30 max-h-64 overflow-y-auto bg-elevated border border-subtle shadow-2xl animate-dropdown-reveal"
         >
           {options.map((o) => {
             const isActive = o.value === value;
@@ -104,11 +104,11 @@ export function CustomSelect({
                 onClick={() => { onChange(o.value); setOpen(false); }}
                 className={`px-4 py-3 text-sm font-body cursor-pointer flex items-center gap-2 transition-colors ${
                   isActive
-                    ? 'bg-cream-400/10 text-cream-100'
-                    : 'text-cream-300 hover:bg-cream-400/5 hover:text-cream-100'
+                    ? 'bg-tint text-primary'
+                    : 'text-primary hover:bg-tint hover:text-primary'
                 }`}
               >
-                {isActive && <span className="w-1.5 h-1.5 rounded-full bg-cream-400 shrink-0" />}
+                {isActive && <span className="w-1.5 h-1.5 rounded-full bg-brand shrink-0" />}
                 <span className={isActive ? '' : 'ml-3.5'}>{o.label}</span>
               </li>
             );

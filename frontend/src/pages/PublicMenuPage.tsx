@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Navbar } from '../components/public/Navbar';
+import { PublicNav } from '../components/public/PublicNav';
 import { Footer } from '../components/public/Footer';
 import { ReservationModal } from '../components/public/ReservationModal';
 import { getPublicMenuItems, API_BASE_URL } from '../lib/api';
@@ -206,26 +206,26 @@ export default function PublicMenuPage() {
   // ─── Render ───
   return (
     <div
-      className="bg-coffee-950 text-white min-h-screen"
+      className="bg-page text-white min-h-screen"
       style={{ backgroundImage: shamsaPattern, backgroundRepeat: 'repeat', backgroundSize: '400px 400px' }}
     >
-      <Navbar onReservationClick={() => setIsReservationModalOpen(true)} />
+      <PublicNav onReservationClick={() => setIsReservationModalOpen(true)} />
       <ReservationModal isOpen={isReservationModalOpen} onClose={() => setIsReservationModalOpen(false)} />
 
       {/* Hero */}
       <section className="pt-32 pb-12 px-4 text-center">
         <ScrollReveal>
-          <p className="text-cream-500 text-xs tracking-[0.35em] uppercase mb-4 font-body">
+          <p className="text-accent text-xs tracking-[0.35em] uppercase mb-4 font-body">
             {t('menu.eyebrow')}
           </p>
         </ScrollReveal>
         <ScrollReveal delay={100}>
-          <h1 className="text-4xl md:text-6xl font-display font-bold text-cream-100 mb-6 tracking-wide">
+          <h1 className="text-4xl md:text-6xl font-display font-bold text-primary mb-6 tracking-wide">
             {t('menu.title')}
           </h1>
         </ScrollReveal>
         <ScrollReveal delay={200}>
-          <p className="text-cream-400/70 font-body text-base md:text-lg max-w-xl mx-auto leading-relaxed">
+          <p className="text-secondary font-body text-base md:text-lg max-w-xl mx-auto leading-relaxed">
             {t('menu.desc')}
           </p>
         </ScrollReveal>
@@ -237,9 +237,9 @@ export default function PublicMenuPage() {
           <div className="max-w-4xl mx-auto px-4 mb-12 flex justify-center">
             <button
               onClick={() => setIsPdfOpen(true)}
-              className="group inline-flex items-center gap-3 px-8 py-3.5 border border-cream-400/40 text-cream-200 text-sm font-body tracking-[0.15em] uppercase hover:bg-cream-400/10 hover:border-cream-400/70 transition-all duration-300"
+              className="group inline-flex items-center gap-3 px-8 py-3.5 border border-subtle text-primary text-sm font-body tracking-[0.15em] uppercase hover:bg-tint hover:border-subtle transition-all duration-300"
             >
-              <DocumentTextIcon className="w-5 h-5 text-cream-400 group-hover:text-cream-200 transition-colors" />
+              <DocumentTextIcon className="w-5 h-5 text-accent group-hover:text-primary transition-colors" />
               {t('menu.pdfButton')}
             </button>
           </div>
@@ -253,12 +253,12 @@ export default function PublicMenuPage() {
           onClick={() => setIsPdfOpen(false)}
         >
           <div
-            className="relative w-full max-w-5xl h-full max-h-[95vh] bg-coffee-950 border border-cream-400/20 rounded-lg overflow-hidden shadow-2xl animate-modal-slide-in"
+            className="relative w-full max-w-5xl h-full max-h-[95vh] bg-page border border-subtle rounded-lg overflow-hidden shadow-2xl animate-modal-slide-in"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => setIsPdfOpen(false)}
-              className="absolute top-3 right-3 z-10 w-11 h-11 flex items-center justify-center rounded-full bg-coffee-950/80 hover:bg-coffee-900 text-cream-400/70 hover:text-cream-100 transition-colors"
+              className="absolute top-3 right-3 z-10 w-11 h-11 flex items-center justify-center rounded-full bg-page hover:bg-elevated text-secondary hover:text-primary transition-colors"
               aria-label={t('common.close')}
             >
               <XMarkIcon className="w-6 h-6" />
@@ -277,7 +277,7 @@ export default function PublicMenuPage() {
       <ScrollReveal delay={300}>
         <div className="max-w-4xl mx-auto px-4 mb-8 flex gap-3 items-center">
           <div className="relative flex-1">
-            <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-cream-400/50" aria-hidden="true" />
+            <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-tertiary" aria-hidden="true" />
             <label htmlFor="menu-search" className="sr-only">{t('menu.searchAria')}</label>
             <input
               id="menu-search"
@@ -286,15 +286,15 @@ export default function PublicMenuPage() {
               aria-label={t('menu.searchAria')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-transparent border border-cream-400/20 text-cream-100 text-sm font-body placeholder-cream-400/40 focus:outline-none focus:border-cream-400/50 transition-colors"
+              className="w-full pl-12 pr-4 py-3 bg-transparent border border-subtle text-primary text-sm font-body placeholder:text-tertiary focus:outline-none focus:border-subtle transition-colors"
             />
           </div>
-          <div className="flex border border-cream-400/20" role="group" aria-label={t('menu.viewGroupAria')}>
+          <div className="flex border border-subtle" role="group" aria-label={t('menu.viewGroupAria')}>
             <button
               onClick={() => setViewMode('list')}
               aria-label={t('menu.viewListAria')}
               aria-pressed={viewMode === 'list'}
-              className={`p-3 transition-colors focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-inset ${viewMode === 'list' ? 'bg-cream-400/15 text-cream-200' : 'text-cream-400/40 hover:text-cream-400/70'}`}
+              className={`p-3 transition-colors focus:outline-none focus:ring-2 focus:ring-brand focus:ring-inset ${viewMode === 'list' ? 'bg-tint text-primary' : 'text-tertiary hover:text-secondary'}`}
               title={t('menu.viewListTitle')}
             >
               <Bars3Icon className="w-5 h-5" aria-hidden="true" />
@@ -303,7 +303,7 @@ export default function PublicMenuPage() {
               onClick={() => setViewMode('card')}
               aria-label={t('menu.viewCardAria')}
               aria-pressed={viewMode === 'card'}
-              className={`p-3 transition-colors focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-inset ${viewMode === 'card' ? 'bg-cream-400/15 text-cream-200' : 'text-cream-400/40 hover:text-cream-400/70'}`}
+              className={`p-3 transition-colors focus:outline-none focus:ring-2 focus:ring-brand focus:ring-inset ${viewMode === 'card' ? 'bg-tint text-primary' : 'text-tertiary hover:text-secondary'}`}
               title={t('menu.viewCardTitle')}
             >
               <Squares2X2Icon className="w-5 h-5" aria-hidden="true" />
@@ -313,7 +313,7 @@ export default function PublicMenuPage() {
       </ScrollReveal>
 
       {/* Mobile Category Chips */}
-      <div className="md:hidden sticky top-16 z-30 bg-coffee-950/95 backdrop-blur-sm border-b border-cream-400/10 px-4 py-3">
+      <div className="md:hidden sticky top-16 z-30 bg-page backdrop-blur-sm border-b border-subtle px-4 py-3">
         <div ref={chipContainerRef} className="flex gap-2 overflow-x-auto scrollbar-hide">
           {filteredCategories.map(cat => (
             <button
@@ -322,8 +322,8 @@ export default function PublicMenuPage() {
               onClick={() => scrollToCategory(cat)}
               className={`whitespace-nowrap px-4 py-2.5 text-xs tracking-[0.15em] uppercase font-body border transition-all shrink-0 min-h-[40px] ${
                 activeCategory === cat
-                  ? 'border-cream-400/60 text-cream-300 bg-cream-400/10'
-                  : 'border-cream-400/20 text-cream-400/50 hover:border-cream-400/40'
+                  ? 'border-subtle text-primary bg-tint'
+                  : 'border-subtle text-tertiary hover:border-subtle'
               }`}
             >
               {cat}
@@ -346,13 +346,13 @@ export default function PublicMenuPage() {
                     onClick={() => scrollToCategory(cat)}
                     className={`w-full text-left px-4 py-3 flex items-center justify-between transition-all duration-200 ${
                       activeCategory === cat
-                        ? 'text-cream-200 border-l-2 border-cream-400 bg-cream-400/5'
-                        : 'text-cream-400/60 border-l-2 border-transparent hover:text-cream-300 hover:border-cream-400/30'
+                        ? 'text-primary border-l-2 border-subtle bg-tint'
+                        : 'text-secondary border-l-2 border-transparent hover:text-primary hover:border-subtle'
                     }`}
                   >
                     <span className="text-sm font-body tracking-wide">{cat}</span>
                     <span className={`text-xs font-body tabular-nums ${
-                      activeCategory === cat ? 'text-cream-400' : 'text-cream-400/30'
+                      activeCategory === cat ? 'text-accent' : 'text-tertiary'
                     }`}>
                       {itemsByCategory.get(cat)?.length || 0}
                     </span>
@@ -378,8 +378,8 @@ export default function PublicMenuPage() {
                 >
                   {/* Category Header */}
                   <ScrollReveal>
-                    <div className="mb-6 pb-3 border-b border-cream-400/15">
-                      <h2 className="text-2xl md:text-3xl font-display font-bold text-cream-100 tracking-wide">
+                    <div className="mb-6 pb-3 border-b border-subtle">
+                      <h2 className="text-2xl md:text-3xl font-display font-bold text-primary tracking-wide">
                         {cat}
                       </h2>
                     </div>
@@ -387,7 +387,7 @@ export default function PublicMenuPage() {
 
                   {/* Items */}
                   {viewMode === 'list' ? (
-                    <div className="divide-y divide-cream-400/10">
+                    <div className="divide-y divide-subtle">
                       {itemsByCategory.get(cat)?.map((item, idx) => (
                         <ScrollReveal key={item.id} delay={idx * 60}>
                           <MenuItemRow
@@ -466,12 +466,12 @@ function MenuItemRow({ item, onDetailClick }: MenuItemRowProps) {
 
   return (
     <div
-      className="group py-4 px-2 -mx-2 hover:bg-cream-400/[0.03] active:bg-cream-400/[0.06] transition-colors duration-200 cursor-default"
+      className="group py-4 px-2 -mx-2 hover:bg-tint active:bg-tint transition-colors duration-200 cursor-default"
       onClick={item.ingredients ? onDetailClick : undefined}
     >
       {/* Name ........ Price */}
       <div className="flex items-baseline gap-3">
-        <span className="font-display font-bold text-cream-100 text-base md:text-lg shrink-0">
+        <span className="font-display font-bold text-primary text-base md:text-lg shrink-0">
           {item.name}
         </span>
 
@@ -482,9 +482,9 @@ function MenuItemRow({ item, onDetailClick }: MenuItemRowProps) {
         )}
 
         {/* Dotted leader */}
-        <span className="flex-1 border-b border-dotted border-cream-400/20 min-w-[2rem] translate-y-[-4px]" />
+        <span className="flex-1 border-b border-dotted border-subtle min-w-[2rem] translate-y-[-4px]" />
 
-        <span className="font-display font-bold text-cream-300 text-base md:text-lg shrink-0 tabular-nums">
+        <span className="font-display font-bold text-primary text-base md:text-lg shrink-0 tabular-nums">
           {Number(item.price).toFixed(2)}€
         </span>
       </div>
@@ -494,14 +494,14 @@ function MenuItemRow({ item, onDetailClick }: MenuItemRowProps) {
         <div className="mt-1.5 flex items-start gap-2">
           <p
             ref={ingredientsRef}
-            className="text-cream-400/50 font-body text-sm leading-relaxed line-clamp-2 flex-1"
+            className="text-tertiary font-body text-sm leading-relaxed line-clamp-2 flex-1"
           >
             {item.ingredients}
           </p>
           {isClamped && (
             <button
               onClick={(e) => { e.stopPropagation(); onDetailClick(); }}
-              className="shrink-0 text-cream-500/60 hover:text-cream-400 active:text-cream-300 text-sm font-body underline underline-offset-2 transition-colors py-1 px-2"
+              className="shrink-0 text-accent/60 hover:text-accent active:text-primary text-sm font-body underline underline-offset-2 transition-colors py-1 px-2"
             >
               {t('menu.itemMore')}
             </button>
@@ -520,7 +520,7 @@ function MenuItemCard({ item, onDetailClick, onImageClick }: MenuItemRowProps) {
   const { t } = useTranslation();
   return (
     <div
-      className="group border border-cream-400/15 hover:border-cream-400/30 bg-cream-400/[0.03] hover:bg-cream-400/[0.06] transition-all duration-200 cursor-pointer"
+      className="group border border-subtle hover:border-strong bg-tint hover:bg-elevated transition-all duration-200 cursor-pointer"
       onClick={onDetailClick}
     >
       {/* Image */}
@@ -541,10 +541,10 @@ function MenuItemCard({ item, onDetailClick, onImageClick }: MenuItemRowProps) {
       <div className="p-4">
         {/* Name + Price */}
         <div className="flex items-baseline justify-between gap-3 mb-2">
-          <h3 className="font-display font-bold text-cream-100 text-base leading-tight">
+          <h3 className="font-display font-bold text-primary text-base leading-tight">
             {item.name}
           </h3>
-          <span className="font-display font-bold text-cream-300 text-base shrink-0 tabular-nums">
+          <span className="font-display font-bold text-primary text-base shrink-0 tabular-nums">
             {Number(item.price).toFixed(2)}€
           </span>
         </div>
@@ -560,7 +560,7 @@ function MenuItemCard({ item, onDetailClick, onImageClick }: MenuItemRowProps) {
 
         {/* Ingredients */}
         {item.ingredients && (
-          <p className="text-cream-400/50 font-body text-sm leading-relaxed line-clamp-2">
+          <p className="text-tertiary font-body text-sm leading-relaxed line-clamp-2">
             {item.ingredients}
           </p>
         )}
@@ -605,7 +605,7 @@ function ItemDetailDrawer({ item, onClose, onImageClick }: ItemDetailDrawerProps
       <div className="absolute inset-0 bg-black/70" />
 
       <div
-        className={`relative w-full md:max-w-lg md:mx-4 bg-coffee-950 border-t md:border border-cream-400/20 md:rounded-lg overflow-hidden transition-all duration-250 ${closing ? 'opacity-0 translate-y-4 scale-95' : 'animate-slideUp'}`}
+        className={`relative w-full md:max-w-lg md:mx-4 bg-page border-t md:border border-subtle md:rounded-lg overflow-hidden transition-all duration-250 ${closing ? 'opacity-0 translate-y-4 scale-95' : 'animate-slideUp'}`}
         onClick={e => e.stopPropagation()}
       >
         {/* Image */}
@@ -622,16 +622,16 @@ function ItemDetailDrawer({ item, onClose, onImageClick }: ItemDetailDrawerProps
         <div className="p-6">
           <button
             onClick={handleClose}
-            className="absolute top-3 right-3 text-cream-400/60 hover:text-cream-200 active:text-cream-100 transition-colors bg-coffee-950/80 rounded-full p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="absolute top-3 right-3 text-secondary hover:text-primary active:text-primary transition-colors bg-page rounded-full p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center"
           >
             <XMarkIcon className="w-5 h-5" />
           </button>
 
           <div className="flex items-baseline justify-between mb-4 pr-10">
-            <h3 className="text-xl font-display font-bold text-cream-100">
+            <h3 className="text-xl font-display font-bold text-primary">
               {item.name}
             </h3>
-            <span className="font-display font-bold text-cream-300 text-xl shrink-0">
+            <span className="font-display font-bold text-primary text-xl shrink-0">
               {Number(item.price).toFixed(2)}€
             </span>
           </div>
@@ -644,7 +644,7 @@ function ItemDetailDrawer({ item, onClose, onImageClick }: ItemDetailDrawerProps
               </span>
             )}
             {item.category && (
-              <span className="px-2 py-1 text-[10px] tracking-wider uppercase font-body border border-cream-400/30 text-cream-400/60">
+              <span className="px-2 py-1 text-[10px] tracking-wider uppercase font-body border border-subtle text-secondary">
                 {item.category}
               </span>
             )}
@@ -653,10 +653,10 @@ function ItemDetailDrawer({ item, onClose, onImageClick }: ItemDetailDrawerProps
           {/* Full ingredients */}
           {item.ingredients && (
             <div>
-              <p className="text-cream-500 text-xs tracking-[0.2em] uppercase mb-2 font-body">
+              <p className="text-accent text-xs tracking-[0.2em] uppercase mb-2 font-body">
                 {t('menu.ingredients')}
               </p>
-              <p className="text-cream-400/70 font-body text-sm leading-relaxed">
+              <p className="text-secondary font-body text-sm leading-relaxed">
                 {item.ingredients}
               </p>
             </div>
@@ -676,13 +676,13 @@ function LoadingSkeleton() {
     <div className="space-y-12 animate-pulse">
       {[1, 2, 3].map(i => (
         <div key={i}>
-          <div className="h-8 w-48 bg-cream-400/10 rounded mb-6" />
+          <div className="h-8 w-48 bg-tint rounded mb-6" />
           <div className="space-y-4">
             {[1, 2, 3, 4].map(j => (
               <div key={j} className="flex items-baseline gap-4">
-                <div className="h-5 w-40 bg-cream-400/10 rounded" />
-                <div className="flex-1 h-px bg-cream-400/5" />
-                <div className="h-5 w-16 bg-cream-400/10 rounded" />
+                <div className="h-5 w-40 bg-tint rounded" />
+                <div className="flex-1 h-px bg-tint" />
+                <div className="h-5 w-16 bg-tint rounded" />
               </div>
             ))}
           </div>
@@ -696,11 +696,11 @@ function EmptyState({ searchQuery }: { searchQuery: string }) {
   const { t } = useTranslation();
   return (
     <div className="text-center py-20">
-      <MagnifyingGlassIcon className="w-12 h-12 mx-auto text-cream-400/30 mb-4" />
-      <h3 className="text-lg font-display font-semibold text-cream-100 mb-2">
+      <MagnifyingGlassIcon className="w-12 h-12 mx-auto text-tertiary mb-4" />
+      <h3 className="text-lg font-display font-semibold text-primary mb-2">
         {t('menu.emptyTitle')}
       </h3>
-      <p className="text-cream-400/60 font-body text-sm">
+      <p className="text-secondary font-body text-sm">
         {searchQuery
           ? t('menu.emptyNoSearch', { query: searchQuery })
           : t('menu.emptyNoMenu')}

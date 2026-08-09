@@ -239,6 +239,8 @@ export interface RestaurantSettings {
   social_links: SocialLinks | null;
   restaurant_name: string;
   logo_url: string | null;
+  theme: 'coffee' | 'noir' | 'sable';
+  layout: 'classic' | 'cinematic';
   created_at: string;
   updated_at: string;
 }

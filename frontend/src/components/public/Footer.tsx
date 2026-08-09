@@ -153,32 +153,32 @@ export function Footer({ onReservationClick, hideReservation }: FooterProps) {
     : [];
 
   return (
-    <footer className="bg-coffee-950 pb-24 md:pb-10 px-4">
-      <hr className="border-0 h-px bg-cream-400/30 mb-16 md:mb-24" />
+    <footer className="bg-page pb-24 md:pb-10 px-4">
+      <hr className="border-0 h-px bg-tint mb-16 md:mb-24" />
       <ScrollReveal>
         <div className="max-w-2xl mx-auto text-center">
           {/* Address */}
-          <p className="text-cream-400/80 font-body text-sm md:text-base mb-8">
+          <p className="text-secondary font-body text-sm md:text-base mb-8">
             {t('footer.address')}
           </p>
 
           {/* Hours */}
           {loadingHours ? (
             <div className="flex justify-center mb-12">
-              <Spinner size="sm" className="text-cream-400/50" />
+              <Spinner size="sm" className="text-tertiary" />
             </div>
           ) : hoursLines.length > 0 ? (
             <>
-              <p className="text-cream-100 font-body font-semibold text-sm md:text-base mb-3">
+              <p className="text-primary font-body font-semibold text-sm md:text-base mb-3">
                 {t('footer.hoursTitle')}
               </p>
-              <div className="text-cream-400/70 font-body text-sm md:text-base space-y-1 mb-4">
+              <div className="text-secondary font-body text-sm md:text-base space-y-1 mb-4">
                 {hoursLines.map((line, i) => (
                   <p key={i}>{line}</p>
                 ))}
               </div>
               {hasClosures && (
-                <p className="text-cream-400/70 font-body text-sm md:text-base mb-12">
+                <p className="text-secondary font-body text-sm md:text-base mb-12">
                   {t('footer.closuresNotice')}
                 </p>
               )}
@@ -206,7 +206,7 @@ export function Footer({ onReservationClick, hideReservation }: FooterProps) {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={SOCIAL_LABELS[key] || key}
-                  className="w-12 h-12 rounded-full border border-cream-400/40 flex items-center justify-center text-cream-400/70 hover:bg-cream-400/10 active:bg-cream-400/20 hover:text-cream-300 transition-all duration-300"
+                  className="w-12 h-12 rounded-full border border-subtle flex items-center justify-center text-secondary hover:bg-tint active:bg-tint hover:text-primary transition-all duration-300"
                   title={SOCIAL_LABELS[key] || key}
                 >
                   {SOCIAL_ICON_MAP[key]}
@@ -218,26 +218,26 @@ export function Footer({ onReservationClick, hideReservation }: FooterProps) {
 
           {/* Legal + Admin links */}
           <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mb-8">
-            <Link to={`${basePath}/privacy`} className="text-cream-400/35 hover:text-cream-400/60 font-body text-xs tracking-wide transition-colors">
+            <Link to={`${basePath}/privacy`} className="text-tertiary hover:text-secondary font-body text-xs tracking-wide transition-colors">
               {t('footer.privacy')}
             </Link>
-            <Link to={`${basePath}/terms`} className="text-cream-400/35 hover:text-cream-400/60 font-body text-xs tracking-wide transition-colors">
+            <Link to={`${basePath}/terms`} className="text-tertiary hover:text-secondary font-body text-xs tracking-wide transition-colors">
               {t('footer.terms')}
             </Link>
-            <Link to="/login" className="text-cream-400/35 hover:text-cream-400/60 font-body text-xs tracking-wide transition-colors">
+            <Link to="/login" className="text-tertiary hover:text-secondary font-body text-xs tracking-wide transition-colors">
               {t('footer.admin')}
             </Link>
           </div>
 
           {/* Separator */}
-          <div className="w-16 h-px bg-cream-400/15 mx-auto mb-8" />
+          <div className="w-16 h-px bg-tint mx-auto mb-8" />
 
           {/* Bottom credit — NA Innovations promo */}
           <div className="text-center">
-            <p className="text-cream-400/40 font-body text-xs tracking-wide mb-1">
+            <p className="text-tertiary font-body text-xs tracking-wide mb-1">
               {t('footer.creditPrefix')}
             </p>
-            <p className="text-cream-400/60 font-body text-sm font-semibold tracking-wide">
+            <p className="text-secondary font-body text-sm font-semibold tracking-wide">
               {t('footer.creditCompany')}
             </p>
           </div>

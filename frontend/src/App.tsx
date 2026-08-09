@@ -11,7 +11,7 @@ import "./App.css";
 
 // Lazy-loaded pages (code splitting)
 const SaasLandingPage = lazy(() => import("./pages/SaasLandingPage"));
-const Home = lazy(() => import("./pages/Home"));
+const HomeSwitch = lazy(() => import("./pages/HomeSwitch"));
 const GalleryPage = lazy(() => import("./pages/GalleryPage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
 const PublicReservation = lazy(() => import("./pages/PublicReservation"));
@@ -78,7 +78,7 @@ function App() {
 
               {/* Restaurant public site — /r/:slug/* */}
               <Route path="/r/:slug" element={<RestaurantLayout />}>
-                <Route index element={<Home />} />
+                <Route index element={<HomeSwitch />} />
                 <Route path="gallery" element={<GalleryPage />} />
                 <Route path="contact" element={<ContactPage />} />
                 <Route path="reservation" element={<PublicReservation />} />

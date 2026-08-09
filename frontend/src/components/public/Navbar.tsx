@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { CTAButton } from './CTAButton';
 import { usePublicSettings } from '../../contexts/PublicSettingsContext';
 import { useRestaurantBasePath } from '../../hooks/useRestaurantBasePath';
-import { API_BASE_URL } from '../../lib/api';
+import { resolveLogoUrl } from '../../lib/api';
 
 interface NavbarProps {
   onReservationClick: () => void;
@@ -33,8 +33,8 @@ export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
     { label: t('nav.contact'), to: `${basePath}/contact` },
   ];
   const ps = usePublicSettings();
-  const restaurantName = ps?.restaurant_name ?? 'RR Ice';
-  const logoSrc = ps?.logo_url ? (ps.logo_url.startsWith('http') ? ps.logo_url : `${API_BASE_URL}${ps.logo_url}`) : '/logo.png';
+  const restaurantName = ps?.restaurant_name ?? '';
+  const logoSrc = resolveLogoUrl(ps?.logo_url);
 
   // Lock body scroll when mobile menu or lang picker is open
   useEffect(() => {
@@ -52,7 +52,7 @@ export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
   }, [location.pathname]);
 
   const renderDesktopLink = (link: NavLink) => {
-    const cls = 'text-white hover:text-cream-300 transition-colors text-sm font-medium tracking-[0.25em] uppercase';
+    const cls = 'text-white hover:text-primary transition-colors text-sm font-medium tracking-[0.25em] uppercase';
     if (link.to) {
       return <Link key={link.label} to={link.to} className={cls}>{link.label}</Link>;
     }
@@ -78,13 +78,24 @@ export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
         <div className="max-w-full mx-auto">
           {/* Desktop Layout */}
           <div className="hidden md:flex items-center h-20">
-            <div className="flex-1 flex justify-center items-center border-r border-cream-400/30 px-8">
+            <div className="flex-1 flex justify-center items-center border-r border-subtle px-8">
               <Link to={basePath} className="flex items-center gap-2">
-                <img src={logoSrc} alt={restaurantName} className="w-12 h-12 object-contain" />
+                {logoSrc ? (
+                  <img src={logoSrc} alt={restaurantName} className="w-12 h-12 object-contain" />
+                ) : (
+                  <div
+                    className="w-12 h-12 rounded-full border border-brand bg-elevated flex items-center justify-center"
+                    aria-label={restaurantName}
+                  >
+                    <span className="font-display font-bold text-xl text-brand">
+                      {restaurantName ? restaurantName.charAt(0).toUpperCase() : '·'}
+                    </span>
+                  </div>
+                )}
               </Link>
             </div>
 
-            <div className="flex-[2] flex justify-center items-center gap-16 border-r border-cream-400/30 px-8">
+            <div className="flex-[2] flex justify-center items-center gap-16 border-r border-subtle px-8">
               {navLinks.map((link) => renderDesktopLink(link))}
             </div>
 
@@ -95,7 +106,7 @@ export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
                 aria-label={t('nav.langAria', { lang: activeLang })}
                 aria-haspopup="dialog"
                 aria-expanded={langPickerOpen}
-                className="w-9 h-9 rounded-full border border-cream-400/30 flex items-center justify-center text-[11px] tracking-[0.15em] uppercase text-cream-300 font-semibold hover:border-cream-400/60 hover:bg-cream-400/5 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-2 focus:ring-offset-black transition-all duration-300"
+                className="w-9 h-9 rounded-full border border-subtle flex items-center justify-center text-[11px] tracking-[0.15em] uppercase text-primary font-semibold hover:border-subtle hover:bg-tint focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:ring-offset-black transition-all duration-300"
               >
                 {activeLang}
               </button>
@@ -107,7 +118,18 @@ export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
           {/* Mobile Header */}
           <div className="md:hidden flex items-center justify-between h-16 px-5">
             <Link to="/" className="flex items-center gap-2 z-50">
-              <img src={logoSrc} alt={restaurantName} className="w-12 h-12 object-contain" />
+              {logoSrc ? (
+                <img src={logoSrc} alt={restaurantName} className="w-12 h-12 object-contain" />
+              ) : (
+                <div
+                  className="w-12 h-12 rounded-full border border-brand bg-elevated flex items-center justify-center"
+                  aria-label={restaurantName}
+                >
+                  <span className="font-display font-bold text-xl text-brand">
+                    {restaurantName ? restaurantName.charAt(0).toUpperCase() : '·'}
+                  </span>
+                </div>
+              )}
             </Link>
 
             {/* Hamburger / Close */}
@@ -173,12 +195,12 @@ export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
                       className="block py-3 group"
                     >
                       <span className={`text-3xl font-display font-bold tracking-wider transition-colors duration-300 ${
-                        isActive ? 'text-cream-400' : 'text-white group-hover:text-cream-300'
+                        isActive ? 'text-accent' : 'text-white group-hover:text-primary'
                       }`}>
                         {link.label}
                       </span>
                       {/* Animated underline */}
-                      <div className={`h-[1px] mt-1 bg-cream-400/40 ${
+                      <div className={`h-[1px] mt-1 bg-tint ${
                         isActive
                           ? (isOpen ? 'animate-menu-line' : 'w-0')
                           : 'w-0 group-hover:w-full transition-all duration-500'
@@ -195,10 +217,10 @@ export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
                       }}
                       className="block py-3 group"
                     >
-                      <span className="text-3xl font-display font-bold tracking-wider text-white group-hover:text-cream-300 transition-colors duration-300">
+                      <span className="text-3xl font-display font-bold tracking-wider text-white group-hover:text-primary transition-colors duration-300">
                         {link.label}
                       </span>
-                      <div className="h-[1px] mt-1 bg-cream-400/40 w-0 group-hover:w-full transition-all duration-500" />
+                      <div className="h-[1px] mt-1 bg-tint w-0 group-hover:w-full transition-all duration-500" />
                     </a>
                   )}
                 </div>
@@ -227,7 +249,7 @@ export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
               onClick={() => { setIsOpen(false); setTimeout(() => setLangPickerOpen(true), 300); }}
               aria-label={t('nav.langAria', { lang: activeLang })}
               aria-haspopup="dialog"
-              className="w-14 h-14 rounded-full border border-cream-400/30 flex items-center justify-center text-sm tracking-[0.15em] uppercase text-cream-300 font-semibold font-body hover:border-cream-400/60 hover:bg-cream-400/5 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-2 focus:ring-offset-black transition-all duration-300"
+              className="w-14 h-14 rounded-full border border-subtle flex items-center justify-center text-sm tracking-[0.15em] uppercase text-primary font-semibold font-body hover:border-subtle hover:bg-tint focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:ring-offset-black transition-all duration-300"
             >
               {activeLang}
             </button>
@@ -258,7 +280,7 @@ export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
         {/* Close button */}
         <button
           onClick={() => setLangPickerOpen(false)}
-          className="absolute top-5 right-5 md:top-8 md:right-8 z-10 w-12 h-12 flex items-center justify-center text-cream-400/60 hover:text-cream-200 transition-opacity duration-500"
+          className="absolute top-5 right-5 md:top-8 md:right-8 z-10 w-12 h-12 flex items-center justify-center text-secondary hover:text-primary transition-opacity duration-500"
           style={{ opacity: langPickerOpen ? 1 : 0 }}
           aria-label="Fermer"
         >
@@ -272,7 +294,7 @@ export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
           className="relative h-full flex flex-col items-center justify-center transition-opacity duration-500 ease-out"
           style={{ opacity: langPickerOpen ? 1 : 0, transitionDelay: langPickerOpen ? '100ms' : '0ms' }}
         >
-          <p className="text-cream-500 text-xs tracking-[0.35em] uppercase mb-10 font-body">
+          <p className="text-accent text-xs tracking-[0.35em] uppercase mb-10 font-body">
             {t('lang.picker')}
           </p>
 
@@ -287,8 +309,8 @@ export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
                     langPickerOpen ? 'animate-menu-reveal' : 'opacity-0'
                   } ${
                     isActive
-                      ? 'border-cream-400/50 bg-cream-400/10 text-cream-200'
-                      : 'border-cream-400/15 text-cream-400/60 hover:border-cream-400/40 hover:text-cream-300 hover:bg-cream-400/5'
+                      ? 'border-subtle bg-tint text-primary'
+                      : 'border-subtle text-secondary hover:border-subtle hover:text-primary hover:bg-tint'
                   }`}
                   style={{ animationDelay: `${index * 80 + 100}ms` }}
                 >
@@ -296,7 +318,7 @@ export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
                     {t(lang.nameKey)}
                   </span>
                   {isActive && (
-                    <span className="w-2 h-2 rounded-full bg-cream-400 shrink-0" />
+                    <span className="w-2 h-2 rounded-full bg-brand shrink-0" />
                   )}
                 </button>
               );

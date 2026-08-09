@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Navbar } from '../components/public/Navbar';
+import { PublicNav } from '../components/public/PublicNav';
 import { Footer } from '../components/public/Footer';
 import { ReservationModal } from '../components/public/ReservationModal';
 import { CTAButton } from '../components/public/CTAButton';
@@ -66,26 +66,26 @@ export default function GalleryPage() {
 
   return (
     <div
-      className="bg-coffee-950 text-white min-h-screen"
+      className="bg-page text-white min-h-screen"
       style={{ backgroundImage: zellijPattern, backgroundRepeat: 'repeat', backgroundSize: '320px 320px' }}
     >
-      <Navbar onReservationClick={() => setIsReservationModalOpen(true)} hideReservation={hideReservation} />
+      <PublicNav onReservationClick={() => setIsReservationModalOpen(true)} hideReservation={hideReservation} />
       {!hideReservation && <ReservationModal isOpen={isReservationModalOpen} onClose={() => setIsReservationModalOpen(false)} />}
 
       {/* Hero */}
       <section className="pt-24 md:pt-32 pb-12 md:pb-16 px-4 text-center">
         <ScrollReveal>
-          <p className="text-cream-500 text-xs tracking-[0.35em] uppercase mb-4 font-body">
+          <p className="text-accent text-xs tracking-[0.35em] uppercase mb-4 font-body">
             {t('gallery.eyebrow')}
           </p>
         </ScrollReveal>
         <ScrollReveal delay={100}>
-          <h1 className="text-3xl md:text-6xl font-display font-bold text-cream-100 mb-4 md:mb-6 tracking-wide">
+          <h1 className="text-3xl md:text-6xl font-display font-bold text-primary mb-4 md:mb-6 tracking-wide">
             {t('gallery.title')}
           </h1>
         </ScrollReveal>
         <ScrollReveal delay={200}>
-          <p className="text-cream-400/70 font-body text-base md:text-lg max-w-xl mx-auto leading-relaxed">
+          <p className="text-secondary font-body text-base md:text-lg max-w-xl mx-auto leading-relaxed">
             {t('gallery.desc', { restaurantName })}
           </p>
         </ScrollReveal>
