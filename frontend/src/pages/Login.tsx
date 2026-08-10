@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import toast from "react-hot-toast";
 import { PasswordToggle } from "../components/ui/PasswordToggle";
 import { Spinner } from "../components/ui/Spinner";
+import { SaasSEO } from "../components/SaasSEO";
 import { resolveLogoUrl } from "../lib/api";
 
 // Read the branding to show above the login form.
@@ -64,6 +65,10 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-coffee-950 flex items-center justify-center px-4 relative overflow-hidden">
+      <SaasSEO
+        page="auth"
+        title={`Connexion — ${branding.name}`}
+      />
       {/* Background subtle pattern */}
       <div className="absolute inset-0 opacity-[0.03]" style={{
         backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(227,204,173,0.5) 1px, transparent 0)',

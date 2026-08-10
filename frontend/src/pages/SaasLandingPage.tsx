@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
+import { SaasSEO } from '../components/SaasSEO';
 
 // ─── Live site preview inside a fake browser chrome.
 //     Iframe renders at fixed 1440x900 (desktop viewport) then scales down via CSS transform
@@ -176,6 +177,7 @@ export default function SaasLandingPage() {
 
   return (
     <div className={`min-h-screen font-body transition-colors duration-700 ease-in-out ${isDark ? 'bg-coffee-950 text-cream-100' : 'bg-white text-coffee-800'}`}>
+      <SaasSEO page="landing" />
 
       {/* ══════════════ NAVBAR ══════════════ */}
       <nav className={`fixed top-0 w-full z-50 transition-all duration-700 ease-in-out ${

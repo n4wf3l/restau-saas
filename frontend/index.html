@@ -2,10 +2,26 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#1a1410" />
+
+    <!-- Default SaaS meta — react-helmet-async overrides these on tenant pages (/r/:slug/*)
+         and on the marketing landing (/) via <SaasSEO /> / <TenantSEO />. -->
+    <title>NA Innovations — Solution complète pour restaurants</title>
+    <meta name="description" content="La plateforme sur-mesure pour restaurants : réservations en ligne, gestion de menu, site web professionnel. Développé au Maroc." />
+    <meta name="author" content="NA Innovations" />
+
     <link rel="icon" type="image/png" href="/logo.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RR Ice - Restaurant à Tanger</title>
-    <!-- Google Fonts - Elegant typography -->
+    <link rel="apple-touch-icon" href="/logo.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- Open Graph fallback (per-page overrides via Helmet) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="NA Innovations" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Lora:wght@400;500;600;700&family=Tajawal:wght@400;500;700;800&family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet" />
