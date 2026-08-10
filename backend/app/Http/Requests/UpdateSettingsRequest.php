@@ -36,6 +36,16 @@ class UpdateSettingsRequest extends FormRequest
             'restaurant_name'          => 'sometimes|string|max:100',
             'theme'                    => ['sometimes', 'string', Rule::in(RestaurantSetting::AVAILABLE_THEMES)],
             'layout'                   => ['sometimes', 'string', Rule::in(RestaurantSetting::AVAILABLE_LAYOUTS)],
+            // SEO
+            'meta_description'         => 'sometimes|nullable|string|max:300',
+            'meta_keywords'            => 'sometimes|nullable|string|max:500',
+            'og_image_url'             => 'sometimes|nullable|url|max:500',
+            'address'                  => 'sometimes|nullable|string|max:300',
+            'phone'                    => 'sometimes|nullable|string|max:40',
+            'cuisine_type'             => 'sometimes|nullable|string|max:100',
+            'price_range'              => ['sometimes', 'nullable', Rule::in(['€', '€€', '€€€', '€€€€'])],
+            'seo_checklist'            => 'sometimes|array',
+            'seo_checklist.*'          => ['string', Rule::in(RestaurantSetting::SEO_CHECKLIST_ITEMS)],
         ];
     }
 }

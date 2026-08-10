@@ -91,14 +91,14 @@ export async function getPublicTables(): Promise<PublicTable[]> {
 }
 
 // Public API - Create a reservation
-export async function createReservation(payload: ReservationPayload): Promise<{ message: string; reservation: Reservation }> {
+export async function createReservation(payload: ReservationPayload): Promise<{ message: string; cancellation_code?: string; reservation?: Reservation }> {
   await csrf(); // CSRF protection
   const response = await api.post("/api/public/reservations", payload);
   return response.data;
 }
 
 // Public API - Create an event reservation request
-export async function createEventReservation(payload: EventReservationPayload): Promise<{ message: string; reservation: Reservation }> {
+export async function createEventReservation(payload: EventReservationPayload): Promise<{ message: string; cancellation_code?: string; reservation?: Reservation }> {
   await csrf();
   const response = await api.post("/api/public/events", payload);
   return response.data;
@@ -216,6 +216,13 @@ export async function updateSettings(
   return response.data;
 }
 
+// SEO checklist — dedicated helper on top of updateSettings so the checklist
+// page doesn't have to reload the whole settings object just to toggle one item.
+export async function updateSeoChecklist(items: string[]): Promise<RestaurantSettings> {
+  const response = await api.put("/api/settings", { seo_checklist: items });
+  return response.data;
+}
+
 // Restore a no-show reservation
 export async function restoreReservation(id: number): Promise<{ message: string; reservation: Reservation }> {
   const response = await api.post(`/api/reservations/${id}/restore`);
@@ -276,6 +283,53 @@ export async function getPublicSiteImages(): Promise<SiteImagesGrouped> {
   return response.data;
 }
 
+// Analytics
+export interface AnalyticsSummary {
+  has_data: boolean;
+  message?: string;
+  headline?: {
+    total_this_month: number;
+    total_last_month: number;
+    pct_change: number | null;
+    avg_party_size: number;
+    confirmed_rate: number;
+  };
+  status_breakdown?: {
+    pending: number;
+    confirmed: number;
+    cancelled: number;
+    no_show: number;
+  };
+  by_day_of_week?: { label: string; count: number }[];
+  by_hour?: { label: string; count: number }[];
+  recent_activity?: {
+    id: number;
+    customer_name: string;
+    party_size: number;
+    arrival_time: string;
+    status: string;
+    is_event: boolean;
+    created_at: string;
+  }[];
+}
+
+export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
+  const response = await api.get("/api/analytics/summary");
+  return response.data;
+}
+
+// Public: customer self-serve reservation cancel
+export interface CancelReservationResponse {
+  message: string;
+  arrival_time?: string;
+  party_size?: number;
+}
+
+export async function cancelPublicReservation(code: string, email: string): Promise<CancelReservationResponse> {
+  const response = await api.post("/api/public/reservations/cancel", { code, email });
+  return response.data;
+}
+
 // Contact / Recruitment (public, rate limited)
 export async function submitContact(data: {
   name: string; email: string; phone?: string; subject: string; message: string;
@@ -314,25 +368,24 @@ export async function updateAdminRestaurant(id: number, payload: { status?: stri
   return response.data;
 }
 
-export async function updateAdminRestaurantModules(id: number, payload: { reservations_enabled?: boolean; menu_enabled?: boolean; website_enabled?: boolean }): Promise<Restaurant> {
+export async function updateAdminRestaurantModules(id: number, payload: {
+  reservations_enabled?: boolean;
+  menu_enabled?: boolean;
+  website_enabled?: boolean;
+  contact_enabled?: boolean;
+  gallery_enabled?: boolean;
+  events_enabled?: boolean;
+  cancellation_enabled?: boolean;
+  theme?: 'coffee' | 'noir' | 'sable' | null;
+  layout?: 'classic' | 'cinematic' | null;
+}): Promise<Restaurant> {
   const response = await api.put(`/api/admin/restaurants/${id}/modules`, payload);
   return response.data;
 }
 
-// Public settings (no auth required)
-export async function getPublicSettings(): Promise<{
-  reservations_enabled: boolean;
-  auto_optimize_tables: boolean;
-  service_duration_minutes: number;
-  opening_hours: import("./types").OpeningHours | null;
-  closure_dates: import("./types").ClosureDate[] | null;
-  menu_pdf_url: string | null;
-  menu_manual_visible: boolean;
-  menu_pdf_visible: boolean;
-  social_links: import("./types").SocialLinks | null;
-  restaurant_name: string;
-  logo_url: string | null;
-}> {
+// Public settings (no auth required) — includes module flags so the frontend
+// knows which nav items / routes / CTAs to hide.
+export async function getPublicSettings(): Promise<import("../contexts/PublicSettingsContext").PublicSettings> {
   const response = await api.get("/api/public/settings");
   return response.data;
 }

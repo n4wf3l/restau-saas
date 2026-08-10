@@ -6,7 +6,19 @@ import type { OpeningHours, ClosureDate, SocialLinks } from "../lib/types";
 export type ThemeName = 'coffee' | 'noir' | 'sable';
 export type LayoutName = 'classic' | 'cinematic';
 
+export interface PublicModuleFlags {
+  reservations_enabled: boolean;
+  menu_enabled: boolean;
+  website_enabled: boolean;
+  contact_enabled: boolean;
+  gallery_enabled: boolean;
+  events_enabled: boolean;
+  cancellation_enabled: boolean;
+}
+
 export interface PublicSettings {
+  restaurant_status: 'pending' | 'active' | 'suspended';
+  modules: PublicModuleFlags;
   reservations_enabled: boolean;
   auto_optimize_tables: boolean;
   service_duration_minutes: number;
@@ -20,6 +32,14 @@ export interface PublicSettings {
   logo_url: string | null;
   theme: ThemeName;
   layout: LayoutName;
+  // SEO
+  meta_description: string | null;
+  meta_keywords: string | null;
+  og_image_url: string | null;
+  address: string | null;
+  phone: string | null;
+  cuisine_type: string | null;
+  price_range: '€' | '€€' | '€€€' | '€€€€' | null;
 }
 
 interface PublicSettingsContextValue {

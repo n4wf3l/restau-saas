@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Outlet, useParams } from 'react-router-dom';
 import { PublicSettingsProvider, usePublicSettings } from '../contexts/PublicSettingsContext';
 import { SiteImagesProvider } from '../contexts/SiteImagesContext';
+import { TenantSEO } from './TenantSEO';
 
 /** Read initial theme synchronously from localStorage so first paint uses the right palette. */
 function readCachedTheme(slug: string): string {
@@ -52,6 +53,7 @@ export function RestaurantLayout() {
     <PublicSettingsProvider key={slug}>
       <SiteImagesProvider key={slug}>
         <ThemeApplier>
+          <TenantSEO />
           <Outlet />
         </ThemeApplier>
       </SiteImagesProvider>

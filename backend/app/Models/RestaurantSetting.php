@@ -27,6 +27,14 @@ class RestaurantSetting extends Model
         'logo_url',
         'theme',
         'layout',
+        'meta_description',
+        'meta_keywords',
+        'og_image_url',
+        'address',
+        'phone',
+        'cuisine_type',
+        'price_range',
+        'seo_checklist',
     ];
 
     public const AVAILABLE_THEMES = ['coffee', 'noir', 'sable'];
@@ -45,6 +53,30 @@ class RestaurantSetting extends Model
         'menu_manual_visible' => 'boolean',
         'menu_pdf_visible' => 'boolean',
         'social_links' => 'array',
+        'seo_checklist' => 'array',
+    ];
+
+    /**
+     * Off-platform SEO checklist items — keys the owner ticks manually to
+     * confirm they've done the external step. Kept as a whitelist here so
+     * unknown keys can't be persisted and so the UI + validator share the truth.
+     */
+    public const SEO_CHECKLIST_ITEMS = [
+        // Google
+        'gmb_created',        // Google Business Profile claimed
+        'gmb_verified',       // Postcard / phone verification done
+        'gmb_photos',         // At least 5 photos uploaded to GMB
+        'gmb_menu_linked',    // Menu link added on GMB
+        // Third-party listings
+        'tripadvisor_listed',
+        'thefork_listed',
+        'yelp_listed',
+        // Reviews
+        'review_ask_process', // A process exists to ask happy diners for reviews
+        'review_responses',   // Owner replies to reviews (positive AND negative)
+        // Content
+        'blog_posts',         // Recurring content published
+        'social_active',      // Active social media presence
     ];
 
     public function user(): BelongsTo
