@@ -38,12 +38,18 @@ function useLoginBranding(): { name: string; logoUrl: string | null; slug: strin
 const inputClass =
   "w-full bg-transparent border border-cream-400/30 rounded-none px-4 py-3.5 text-cream-100 text-sm font-body placeholder-cream-400/40 focus:outline-none focus:border-cream-400/60 transition-colors min-h-[48px]";
 
+interface DevTenantUser {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+}
 interface DevTenant {
   slug: string;
   name: string;
   status: string;
-  owner_email: string | null;
-  owner_name: string | null;
+  users: DevTenantUser[];
+  default_user: { id: number; email: string; role: string } | null;
 }
 
 export default function Login() {
@@ -53,6 +59,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [devTenants, setDevTenants] = useState<DevTenant[]>([]);
   const [devPickedSlug, setDevPickedSlug] = useState<string>("");
+  const [devPickedUserId, setDevPickedUserId] = useState<number>(0);
   const [devLoading, setDevLoading] = useState(false);
   const { login, refreshMe } = useAuth();
   const navigate = useNavigate();
@@ -91,13 +98,15 @@ export default function Login() {
     }
   };
 
-  const handleDevLoginAs = async (slug: string) => {
+  const handleDevLoginAs = async (slug: string, userId?: number) => {
     setDevLoading(true);
     try {
       await csrf();
-      await api.post("/api/dev/login-as-owner", { tenant: slug });
+      const body: { tenant: string; user_id?: number } = { tenant: slug };
+      if (userId) body.user_id = userId;
+      await api.post("/api/dev/login-as-owner", body);
       await refreshMe();
-      toast.success(`Connecté en tant que propriétaire de ${slug}`);
+      toast.success(`Connecté sur ${slug}`);
       navigate("/dashboard");
     } catch (err: any) {
       const status = err?.response?.status;
@@ -244,29 +253,54 @@ export default function Login() {
                 )}
               </button>
             ) : (
-              // Vanilla /login — let the dev pick a tenant from the seeded list
-              <div className="flex flex-col sm:flex-row gap-2">
-                <select
-                  value={devPickedSlug}
-                  onChange={(e) => setDevPickedSlug(e.target.value)}
-                  className="flex-1 bg-coffee-950 border border-amber-400/30 text-amber-100 text-sm font-body px-3 py-2 focus:outline-none focus:border-amber-400/60"
-                >
-                  {devTenants.length === 0 && <option value="">Aucun tenant trouvé</option>}
-                  {devTenants.map(t => (
-                    <option key={t.slug} value={t.slug}>
-                      {t.name} ({t.status}) — {t.owner_email ?? '—'}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={() => devPickedSlug && handleDevLoginAs(devPickedSlug)}
-                  disabled={devLoading || !devPickedSlug}
-                  className="px-4 py-2 bg-amber-400/10 border border-amber-400/40 text-amber-200 text-xs tracking-[0.15em] uppercase font-body font-semibold hover:bg-amber-400/20 active:bg-amber-400/25 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300 min-h-[40px] whitespace-nowrap"
-                >
-                  {devLoading ? <Spinner size="xs" className="text-current" /> : 'Se connecter'}
-                </button>
-              </div>
+              // Vanilla /login — pick a tenant + specific user (multiple users
+              // may share a tenant in dev: the real owner and platform admins).
+              // The dropdown shows every user with their role so the intent is
+              // explicit; the backend also refuses to silently pick an admin
+              // when no user_id is passed.
+              (() => {
+                const picked = devTenants.find(t => t.slug === devPickedSlug);
+                return (
+                  <div className="flex flex-col gap-2">
+                    <select
+                      value={devPickedSlug}
+                      onChange={(e) => { setDevPickedSlug(e.target.value); setDevPickedUserId(0); }}
+                      className="flex-1 bg-coffee-950 border border-amber-400/30 text-amber-100 text-sm font-body px-3 py-2 focus:outline-none focus:border-amber-400/60"
+                    >
+                      {devTenants.length === 0 && <option value="">Aucun tenant trouvé</option>}
+                      {devTenants.map(t => (
+                        <option key={t.slug} value={t.slug}>
+                          {t.name} ({t.status}) — {t.users.length} utilisateur{t.users.length > 1 ? 's' : ''}
+                        </option>
+                      ))}
+                    </select>
+                    {picked && picked.users.length > 0 && (
+                      <select
+                        value={devPickedUserId}
+                        onChange={(e) => setDevPickedUserId(Number(e.target.value))}
+                        className="flex-1 bg-coffee-950 border border-amber-400/30 text-amber-100 text-sm font-body px-3 py-2 focus:outline-none focus:border-amber-400/60"
+                      >
+                        <option value={0}>
+                          Par défaut ({picked.default_user?.email ?? '—'})
+                        </option>
+                        {picked.users.map(u => (
+                          <option key={u.id} value={u.id}>
+                            {u.email} — {u.role}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => devPickedSlug && handleDevLoginAs(devPickedSlug, devPickedUserId || undefined)}
+                      disabled={devLoading || !devPickedSlug}
+                      className="px-4 py-2 bg-amber-400/10 border border-amber-400/40 text-amber-200 text-xs tracking-[0.15em] uppercase font-body font-semibold hover:bg-amber-400/20 active:bg-amber-400/25 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300 min-h-[40px] whitespace-nowrap"
+                    >
+                      {devLoading ? <Spinner size="xs" className="text-current" /> : 'Se connecter'}
+                    </button>
+                  </div>
+                );
+              })()
             )}
           </div>
         )}

@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { GuestRoute } from "./components/GuestRoute";
+import { AdminOnlyRoute } from "./components/AdminOnlyRoute";
 import { DashboardLayout } from "./components/DashboardLayout";
 import { RestaurantLayout } from "./components/RestaurantLayout";
 import { AppToaster } from "./components/ui/Toast";
@@ -119,7 +120,7 @@ function App() {
                 <Route path="images" element={<SiteImagesPage />} />
                 <Route path="seo" element={<SeoChecklistPage />} />
                 <Route path="settings" element={<SettingsPage />} />
-                <Route path="admin" element={<AdminPage />} />
+                <Route path="admin" element={<AdminOnlyRoute><AdminPage /></AdminOnlyRoute>} />
               </Route>
 
               <Route path="*" element={<NotFound />} />
