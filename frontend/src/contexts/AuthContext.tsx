@@ -14,20 +14,35 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Local flag set once refreshMe returns a user, cleared on 401 or logout.
+// Purpose: avoid calling /api/user on boot for visitors who have never logged
+// in — that call always 401s for guests and pollutes the console. The flag
+// is not a security check (Laravel's HttpOnly session cookie is authoritative).
+const AUTH_HINT_KEY = "auth:hint";
+function readAuthHint(): boolean {
+  try { return localStorage.getItem(AUTH_HINT_KEY) === "1"; } catch { return false; }
+}
+function setAuthHint(v: boolean): void {
+  try { v ? localStorage.setItem(AUTH_HINT_KEY, "1") : localStorage.removeItem(AUTH_HINT_KEY); } catch { /* quota */ }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   const clearUser = useCallback(() => {
     setUser(null);
+    setAuthHint(false);
   }, []);
 
   const refreshMe = async () => {
     try {
       const { data } = await api.get<User>("/api/user");
       setUser(data);
+      setAuthHint(true);
     } catch {
       setUser(null);
+      setAuthHint(false);
     }
   };
 
@@ -65,7 +80,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setOnUnauthorized(clearUser);
-    refreshMe().finally(() => setLoading(false));
+    // Only hit /api/user on boot if we've seen a session before. Guests skip
+    // the call entirely so no 401 shows in DevTools on the public site.
+    if (readAuthHint()) {
+      refreshMe().finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
   }, [clearUser]);
 
   return (

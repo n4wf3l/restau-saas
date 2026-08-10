@@ -318,7 +318,9 @@ export default function Home() {
         </section>
       )}
 
-      {/* Video Ambiance Section */}
+      {/* Video Ambiance Section — semi-transparent black overlay lets the beach loop
+          show through. Was `bg-coffee-950/70` before the semantic-tokens refactor,
+          got flipped to fully-opaque `bg-page` which hid the video entirely. */}
       <section className="relative h-[250px] md:h-[500px] overflow-hidden">
         <video
           autoPlay
@@ -330,7 +332,7 @@ export default function Home() {
         >
           <source src="/eau.mp4" type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-page" />
+        <div className="absolute inset-0 bg-black/40 pointer-events-none" />
       </section>
 
       {/* Sticky Mobile CTA — always accessible */}
