@@ -53,7 +53,7 @@ class DevControllerTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_list_tenants_returns_owner_email_in_local(): void
+    public function test_list_tenants_returns_users_with_roles_in_local(): void
     {
         $this->app['env'] = 'local';
         $user = User::factory()->create();
@@ -61,7 +61,46 @@ class DevControllerTest extends TestCase
         $response = $this->getJson('/api/dev/tenants')->assertOk();
         $data = $response->json();
         $this->assertNotEmpty($data);
-        $this->assertEquals($user->restaurant->slug, $data[0]['slug']);
-        $this->assertEquals($user->email, $data[0]['owner_email']);
+        $row = collect($data)->firstWhere('slug', $user->restaurant->slug);
+        $this->assertNotNull($row);
+        $this->assertCount(1, $row['users']);
+        $this->assertEquals($user->email, $row['users'][0]['email']);
+        $this->assertEquals('user', $row['users'][0]['role']);
+        $this->assertEquals($user->id, $row['default_user']['id']);
+    }
+
+    public function test_login_as_owner_prefers_non_admin_user(): void
+    {
+        $this->app['env'] = 'local';
+        // Owner tenant (role=user)
+        $owner = User::factory()->create();
+        // Platform admin that also happens to share the same restaurant_id
+        // (dev artifact — a real bug we hit on 2026-08-10 when tinkering).
+        $admin = User::factory()->create(['role' => 'admin']);
+        $admin->update(['restaurant_id' => $owner->restaurant_id]);
+
+        $response = $this->postJson('/api/dev/login-as-owner', [
+            'tenant' => $owner->restaurant->slug,
+        ])->assertOk();
+
+        // The non-admin owner must be picked, not the admin.
+        $this->assertEquals($owner->id, $response->json('id'));
+        $this->assertAuthenticatedAs($owner);
+    }
+
+    public function test_login_as_owner_can_target_a_specific_user_id(): void
+    {
+        $this->app['env'] = 'local';
+        $owner = User::factory()->create();
+        $admin = User::factory()->create(['role' => 'admin']);
+        $admin->update(['restaurant_id' => $owner->restaurant_id]);
+
+        // Explicit override — dev wants to log in as the admin for whatever reason.
+        $this->postJson('/api/dev/login-as-owner', [
+            'tenant'  => $owner->restaurant->slug,
+            'user_id' => $admin->id,
+        ])->assertOk();
+
+        $this->assertAuthenticatedAs($admin);
     }
 }
