@@ -138,6 +138,15 @@ cd backend && php artisan test
 cd frontend && npx tsc --noEmit
 ```
 
+### Local dev shortcut — log in as any tenant owner
+
+When `APP_ENV=local` (backend) and the frontend is served by Vite (`npm run dev`), the Login page shows an amber **DEV** panel that lets you impersonate any tenant's owner in one click — no password needed. The button appears:
+
+- On `/r/:slug/login` → a single button "Se connecter en tant que propriétaire de {Name}"
+- On plain `/login` → a dropdown listing every registered tenant with their status + owner email, and a "Se connecter" button
+
+The endpoints backing this panel (`GET /api/dev/tenants`, `POST /api/dev/login-as-owner`) hard-fail with 404 when `APP_ENV != local`, and the button itself only renders when Vite's `import.meta.env.DEV` is true — so this never ships to prod.
+
 ---
 
 ## Project Structure
