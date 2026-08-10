@@ -32,11 +32,9 @@ function ThemeApplier({ children }: { children: React.ReactNode }) {
 export function RestaurantLayout() {
   const { slug } = useParams<{ slug: string }>();
 
-  // Remember the last visited tenant so global routes like /login can apply its branding.
-  // Also apply the cached theme synchronously to avoid a first-paint flash.
+  // Apply the cached theme synchronously to avoid a first-paint flash.
   useEffect(() => {
     if (!slug) return;
-    try { localStorage.setItem('lastTenant', slug); } catch { /* storage disabled */ }
     document.documentElement.dataset.theme = readCachedTheme(slug);
   }, [slug]);
 
