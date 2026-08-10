@@ -4,6 +4,12 @@ export interface RestaurantModules {
   reservations_enabled: boolean;
   menu_enabled: boolean;
   website_enabled: boolean;
+  contact_enabled: boolean;
+  gallery_enabled: boolean;
+  events_enabled: boolean;
+  cancellation_enabled: boolean;
+  theme: 'coffee' | 'noir' | 'sable' | null;
+  layout: 'classic' | 'cinematic' | null;
 }
 
 export interface Restaurant {
@@ -241,6 +247,15 @@ export interface RestaurantSettings {
   logo_url: string | null;
   theme: 'coffee' | 'noir' | 'sable';
   layout: 'classic' | 'cinematic';
+  // SEO
+  meta_description: string | null;
+  meta_keywords: string | null;
+  og_image_url: string | null;
+  address: string | null;
+  phone: string | null;
+  cuisine_type: string | null;
+  price_range: '€' | '€€' | '€€€' | '€€€€' | null;
+  seo_checklist: string[] | null;
   created_at: string;
   updated_at: string;
 }

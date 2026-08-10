@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { getSettings, updateSettings, uploadLogo, deleteLogo, resolveLogoUrl } from "../lib/api";
 import { useRefreshPublicSettings } from "../contexts/PublicSettingsContext";
+import { useAuth } from "../contexts/AuthContext";
 import type { RestaurantSettings, OpeningHours, DayHours, ClosureDate, SocialLinks, SocialLink } from "../lib/types";
 import toast from "react-hot-toast";
 import {
@@ -17,6 +18,8 @@ import {
   XMarkIcon,
   GlobeAltIcon,
   BuildingStorefrontIcon,
+  LockClosedIcon,
+  MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import { Spinner } from "../components/ui/Spinner";
 import { ToggleSwitch } from "../components/ui/ToggleSwitch";
@@ -180,6 +183,11 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
   const refreshPublicSettings = useRefreshPublicSettings();
+  const { user } = useAuth();
+  const themeLocked  = !!user?.restaurant?.modules?.theme;
+  const layoutLocked = !!user?.restaurant?.modules?.layout;
+  const lockedTheme  = user?.restaurant?.modules?.theme  ?? null;
+  const lockedLayout = user?.restaurant?.modules?.layout ?? null;
 
   const loadSettings = useCallback(async () => {
     try {
@@ -441,21 +449,32 @@ export default function SettingsPage() {
 
                 {/* Theme picker */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-900 dark:text-cream-50 mb-1.5">
-                    Thème visuel du site public
-                  </label>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-sm font-semibold text-gray-900 dark:text-cream-50">
+                      Thème visuel du site public
+                    </label>
+                    {themeLocked && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400">
+                        <LockClosedIcon className="w-3 h-3" />
+                        Verrouillé par la plateforme
+                      </span>
+                    )}
+                  </div>
+                  <div className={`grid grid-cols-3 gap-3 ${themeLocked ? 'opacity-60 pointer-events-none' : ''}`}>
                     {([
                       { key: 'coffee', name: 'Coffee', bg: '#2d201a', accent: '#d4b18a', font: '"Playfair Display", serif' },
                       { key: 'noir',   name: 'Noir',   bg: '#0a0a0a', accent: '#fbbf24', font: '"Cormorant Garamond", serif' },
                       { key: 'sable',  name: 'Sable',  bg: '#faf7f2', accent: '#c2410c', font: '"Fraunces", serif' },
                     ] as const).map(preset => {
-                      const isSelected = (settings.theme || 'coffee') === preset.key;
+                      // When locked, the selected marker follows the admin's choice, not the tenant's setting.
+                      const effective = themeLocked ? lockedTheme : (settings.theme || 'coffee');
+                      const isSelected = effective === preset.key;
                       return (
                         <button
                           key={preset.key}
                           type="button"
                           onClick={() => handleUpdate('theme', preset.key)}
+                          disabled={themeLocked}
                           className={`relative rounded-lg overflow-hidden border-2 transition-all text-left ${
                             isSelected
                               ? 'border-coffee-600 ring-2 ring-coffee-500/40'
@@ -490,16 +509,26 @@ export default function SettingsPage() {
                     })}
                   </div>
                   <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                    Change les couleurs et la typographie du site public (visible immédiatement).
+                    {themeLocked
+                      ? "Ce thème est imposé par la plateforme. Contactez le support pour changer."
+                      : "Change les couleurs et la typographie du site public (visible immédiatement)."}
                   </p>
                 </div>
 
                 {/* Layout picker — Classic vs Cinematic */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-900 dark:text-cream-50 mb-1.5">
-                    Layout du site public
-                  </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-sm font-semibold text-gray-900 dark:text-cream-50">
+                      Layout du site public
+                    </label>
+                    {layoutLocked && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400">
+                        <LockClosedIcon className="w-3 h-3" />
+                        Verrouillé par la plateforme
+                      </span>
+                    )}
+                  </div>
+                  <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${layoutLocked ? 'opacity-60 pointer-events-none' : ''}`}>
                     {([
                       {
                         key: 'classic',
@@ -533,12 +562,14 @@ export default function SettingsPage() {
                         ),
                       },
                     ] as const).map(preset => {
-                      const isSelected = (settings.layout || 'classic') === preset.key;
+                      const effective = layoutLocked ? lockedLayout : (settings.layout || 'classic');
+                      const isSelected = effective === preset.key;
                       return (
                         <button
                           key={preset.key}
                           type="button"
                           onClick={() => handleUpdate('layout', preset.key)}
+                          disabled={layoutLocked}
                           className={`relative rounded-lg overflow-hidden border-2 transition-all text-left p-4 ${
                             isSelected
                               ? 'border-coffee-600 ring-2 ring-coffee-500/40 bg-coffee-500/10 dark:bg-coffee-500/5'
@@ -566,7 +597,9 @@ export default function SettingsPage() {
                     })}
                   </div>
                   <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                    Le layout Cinematic est optimisé pour restaurants haut de gamme avec photographie forte.
+                    {layoutLocked
+                      ? "Ce layout est imposé par la plateforme. Contactez le support pour changer."
+                      : "Le layout Cinematic est optimisé pour restaurants haut de gamme avec photographie forte."}
                   </p>
                 </div>
               </div>
@@ -801,8 +834,125 @@ export default function SettingsPage() {
               </div>
             </SettingsSection>
 
+            {/* ─── Section: SEO ─── */}
+            <SettingsSection title="Référencement (SEO)" icon={MagnifyingGlassIcon} animIndex={6}>
+              <div className="py-4 space-y-5">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 dark:text-cream-50 mb-1.5">
+                    Description pour Google
+                  </label>
+                  <textarea
+                    value={settings.meta_description ?? ''}
+                    onChange={(e) => handleUpdate('meta_description', e.target.value)}
+                    maxLength={300}
+                    rows={2}
+                    placeholder="Ex : Restaurant halal à Tanger, viandes maturées, terrasse vue mer. Réservation en ligne."
+                    className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-surface-input-border rounded-lg bg-white dark:bg-surface-input text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:border-cream-500"
+                  />
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                    Ce texte apparaît sous le titre de votre site dans les résultats Google. Visez 150–160 caractères ({(settings.meta_description ?? '').length}/160).
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 dark:text-cream-50 mb-1.5">
+                    Mots-clés
+                  </label>
+                  <input
+                    type="text"
+                    value={settings.meta_keywords ?? ''}
+                    onChange={(e) => handleUpdate('meta_keywords', e.target.value)}
+                    maxLength={500}
+                    placeholder="restaurant tanger, halal, viande maturée, terrasse, réservation"
+                    className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-surface-input-border rounded-lg bg-white dark:bg-surface-input text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:border-cream-500"
+                  />
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                    Séparés par des virgules. Peu d'impact SEO en 2026, mais utile pour la cohérence.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 dark:text-cream-50 mb-1.5">
+                    Image de partage (Facebook, WhatsApp, etc.)
+                  </label>
+                  <input
+                    type="url"
+                    value={settings.og_image_url ?? ''}
+                    onChange={(e) => handleUpdate('og_image_url', e.target.value)}
+                    placeholder="https://... (par défaut : première photo de la galerie)"
+                    className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-surface-input-border rounded-lg bg-white dark:bg-surface-input text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:border-cream-500"
+                  />
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                    Image affichée quand quelqu'un partage votre site sur les réseaux sociaux. 1200×630 px idéalement.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-gray-100 dark:border-surface-border-light">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-900 dark:text-cream-50 mb-1.5">
+                      Adresse
+                    </label>
+                    <input
+                      type="text"
+                      value={settings.address ?? ''}
+                      onChange={(e) => handleUpdate('address', e.target.value)}
+                      maxLength={300}
+                      placeholder="Ghandouri, Tanger, Maroc"
+                      className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-surface-input-border rounded-lg bg-white dark:bg-surface-input text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:border-cream-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-900 dark:text-cream-50 mb-1.5">
+                      Téléphone
+                    </label>
+                    <input
+                      type="tel"
+                      value={settings.phone ?? ''}
+                      onChange={(e) => handleUpdate('phone', e.target.value)}
+                      maxLength={40}
+                      placeholder="+212 5 39 XX XX XX"
+                      className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-surface-input-border rounded-lg bg-white dark:bg-surface-input text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:border-cream-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-900 dark:text-cream-50 mb-1.5">
+                      Type de cuisine
+                    </label>
+                    <input
+                      type="text"
+                      value={settings.cuisine_type ?? ''}
+                      onChange={(e) => handleUpdate('cuisine_type', e.target.value)}
+                      maxLength={100}
+                      placeholder="Marocaine, Grill, Halal…"
+                      className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-surface-input-border rounded-lg bg-white dark:bg-surface-input text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:border-cream-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-900 dark:text-cream-50 mb-1.5">
+                      Gamme de prix
+                    </label>
+                    <select
+                      value={settings.price_range ?? ''}
+                      onChange={(e) => handleUpdate('price_range', (e.target.value || null) as RestaurantSettings['price_range'])}
+                      className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-surface-input-border rounded-lg bg-white dark:bg-surface-input text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cream-500/50 focus:border-cream-500"
+                    >
+                      <option value="">Non spécifié</option>
+                      <option value="€">€ — Économique</option>
+                      <option value="€€">€€ — Moyen</option>
+                      <option value="€€€">€€€ — Haut de gamme</option>
+                      <option value="€€€€">€€€€ — Luxe</option>
+                    </select>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-400 dark:text-gray-500 pt-1">
+                  Ces informations alimentent la fiche schema.org Restaurant qui aide Google à afficher votre restaurant dans le carrousel local.
+                  Une <a href="/dashboard/seo" className="underline text-cream-700 dark:text-cream-400">checklist SEO complète</a> vous guide pour les étapes hors-plateforme.
+                </p>
+              </div>
+            </SettingsSection>
+
             {/* ─── Section: Réseaux sociaux ─── */}
-            <SettingsSection title="Réseaux sociaux" icon={GlobeAltIcon} animIndex={6}>
+            <SettingsSection title="Réseaux sociaux" icon={GlobeAltIcon} animIndex={7}>
               <div className="py-4 space-y-3">
                 {SOCIAL_NETWORKS.map((net) => {
                   const link = getSocialLinks()[net.key];
