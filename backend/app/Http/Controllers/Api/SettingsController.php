@@ -82,6 +82,9 @@ class SettingsController extends Controller
                 'logo_url'                 => $settings?->logo_url,
                 'theme'                    => $theme,
                 'layout'                   => $layout,
+                // Tenant-controlled visual toggles (kept separate from modules
+                // because these are personalization, not billing/plan gates).
+                'show_moroccan_decorations' => (bool) ($settings?->show_moroccan_decorations ?? true),
                 // SEO — exposed on the public settings endpoint so TenantSEO and
                 // the future sitemap can render the same data the tenant edited.
                 'meta_description'         => $settings?->meta_description,

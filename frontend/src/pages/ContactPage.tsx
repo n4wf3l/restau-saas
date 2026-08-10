@@ -128,7 +128,9 @@ export default function ContactPage() {
       {!hideReservation && <ReservationModal isOpen={isReservationModalOpen} onClose={() => setIsReservationModalOpen(false)} />}
 
       {/* Decorative Morocco outline (with Sahara) — top-right, single instance, hidden on small screens.
-          Path generated from Natural Earth 50m data via frontend/scripts/generate-morocco-svg.mjs */}
+          Path generated from Natural Earth 50m data via frontend/scripts/generate-morocco-svg.mjs.
+          Tenant can turn this off from SettingsPage → Décorations marocaines. */}
+      {(publicSettings?.show_moroccan_decorations ?? true) && (
       <div
         className="pointer-events-none absolute top-24 right-4 md:top-28 md:right-8 hidden sm:block z-0"
         aria-hidden="true"
@@ -152,6 +154,7 @@ export default function ContactPage() {
           <circle cx="67.77" cy="1.10" r="0.9" fill="#d4b18a" fillOpacity="0.9" />
         </svg>
       </div>
+      )}
 
       {/* Hero */}
       <section className="relative z-10 pt-32 pb-16 px-4 text-center">

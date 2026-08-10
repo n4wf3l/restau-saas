@@ -602,6 +602,17 @@ export default function SettingsPage() {
                       : "Le layout Cinematic est optimisé pour restaurants haut de gamme avec photographie forte."}
                   </p>
                 </div>
+
+                {/* Décorations marocaines toggle */}
+                <div className="pt-2 border-t border-gray-100 dark:border-surface-border-light">
+                  <ToggleRow
+                    icon={GlobeAltIcon}
+                    label="Décorations marocaines"
+                    description="Affiche des éléments décoratifs à thème marocain sur le site public (contour du Maroc sur la page Contact). Désactivez pour un rendu neutre."
+                    enabled={settings.show_moroccan_decorations ?? true}
+                    onChange={(v) => handleUpdate('show_moroccan_decorations', v)}
+                  />
+                </div>
               </div>
             </SettingsSection>
 

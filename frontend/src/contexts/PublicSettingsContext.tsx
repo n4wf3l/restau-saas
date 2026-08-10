@@ -32,6 +32,7 @@ export interface PublicSettings {
   logo_url: string | null;
   theme: ThemeName;
   layout: LayoutName;
+  show_moroccan_decorations: boolean;
   // SEO
   meta_description: string | null;
   meta_keywords: string | null;
