@@ -8,15 +8,18 @@ import { SaasSEO } from "../components/SaasSEO";
 import { api, csrf, resolveLogoUrl } from "../lib/api";
 
 // Read the branding to show above the login form.
-// Priority: URL path /r/:slug/login > ?tenant=slug query > localStorage lastTenant > SaaS default.
-// Data source: the publicSettings:${slug} cache that PublicSettingsContext keeps warm.
+// Priority: URL path /r/:slug/login > ?tenant=slug query > SaaS default.
+// Deliberately NO localStorage fallback — the plain /login is the SaaS-level
+// admin entry (NA Innovations). It must never inherit a tenant name from a
+// previously visited public site, otherwise anyone landing on /login sees
+// the last-visited restaurant's branding, which is semantically wrong and
+// looks like a bug. Tenants that want their own branding on the login screen
+// should be linked from their own footer to /r/:slug/login.
 function useLoginBranding(): { name: string; logoUrl: string | null; slug: string | null } {
   const [params] = useSearchParams();
   const { slug: pathSlug } = useParams<{ slug: string }>();
   return useMemo(() => {
-    const slug = pathSlug || params.get('tenant') || (() => {
-      try { return localStorage.getItem('lastTenant'); } catch { return null; }
-    })();
+    const slug = pathSlug || params.get('tenant');
     if (!slug) return { name: 'NA Innovations', logoUrl: null, slug: null };
     let name = 'Restaurant';
     let logoUrl: string | null = null;

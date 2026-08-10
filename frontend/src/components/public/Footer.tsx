@@ -229,7 +229,10 @@ export function Footer({ onReservationClick, hideReservation }: FooterProps) {
                 {t('footer.cancelReservation')}
               </Link>
             )}
-            <Link to="/login" className="text-tertiary hover:text-secondary font-body text-xs tracking-wide transition-colors">
+            {/* Tenant-scoped admin login so the owner stays inside their own
+                restaurant's branding on the login screen. /login (no slug)
+                is reserved for the SaaS-level entry. */}
+            <Link to={`${basePath}/login`} className="text-tertiary hover:text-secondary font-body text-xs tracking-wide transition-colors">
               {t('footer.admin')}
             </Link>
           </div>
