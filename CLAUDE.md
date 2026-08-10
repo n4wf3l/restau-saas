@@ -110,6 +110,14 @@ The UI groups by that tuple. Do **not** invent a "reservation group id" column �
 
 ---
 
+## 9b. Local dev shortcut
+
+`DevController` exposes `GET /api/dev/tenants` + `POST /api/dev/login-as-owner` that back an amber "DEV" panel on the Login page. Both endpoints hard-check `app()->environment('local')` and 404 otherwise. The frontend button is additionally gated behind `import.meta.env.DEV`.
+
+**Never add another route to this file without the same double gate.** Never bypass it "temporarily to debug staging" — spin up a local instance instead.
+
+---
+
 ## 10. Payments
 
 There is intentionally **no Stripe / payment integration**. Onboarding is manual (superadmin validation flow). If you're asked to add a payment gate, confirm with the user first — this decision was made deliberately.

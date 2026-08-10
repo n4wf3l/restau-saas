@@ -43,6 +43,12 @@ Route::middleware(['tenant', 'restaurant.active'])->group(function () {
         ->middleware(['throttle:3,1', 'feature:contact']);
 });
 
+// ─── Dev-only helpers (guarded per-endpoint inside DevController on
+// app()->environment('local'), so registering the routes here is safe.
+// Requires the frontend to have already hit /sanctum/csrf-cookie once). ───
+Route::get('/dev/tenants', [\App\Http\Controllers\Api\DevController::class, 'listTenants']);
+Route::post('/dev/login-as-owner', [\App\Http\Controllers\Api\DevController::class, 'loginAsOwner']);
+
 // ─── Auth user route — tenant via authenticated user ───
 // Intentionally NOT gated by restaurant.active — the frontend needs to read
 // user.restaurant.status to know whether to show the "pending validation"
