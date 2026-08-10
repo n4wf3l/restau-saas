@@ -58,6 +58,7 @@ class SiteImageController extends Controller
 
     public function update(UpdateSiteImageRequest $request, SiteImage $siteImage)
     {
+        $this->authorizeSameTenant($siteImage);
         $siteImage->update($request->validated());
         Cache::forget("public_site_images:{$this->tc()->id()}");
         return response()->json($siteImage);
@@ -65,10 +66,22 @@ class SiteImageController extends Controller
 
     public function destroy(SiteImage $siteImage)
     {
+        $this->authorizeSameTenant($siteImage);
         $this->deleteStorageFile($siteImage->image_url, 'site-images/');
         $siteImage->delete();
         Cache::forget("public_site_images:{$this->tc()->id()}");
         return response()->json(['message' => 'Image supprimée']);
+    }
+
+    /**
+     * Ensure the image belongs to the current tenant. Returns 404 to avoid
+     * leaking existence of other tenants' images.
+     */
+    private function authorizeSameTenant(SiteImage $image): void
+    {
+        if ($image->restaurant_id !== $this->tc()->id()) {
+            abort(404);
+        }
     }
 
     public function reorder(Request $request)

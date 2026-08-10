@@ -60,6 +60,8 @@ class MenuItemController extends Controller
 
     public function update(UpdateMenuItemRequest $request, MenuItem $menuItem)
     {
+        $this->authorizeSameTenant($menuItem);
+
         $validated = $request->validated();
 
         if ($request->hasFile('image')) {
@@ -77,10 +79,23 @@ class MenuItemController extends Controller
 
     public function destroy(Request $request, MenuItem $menuItem)
     {
+        $this->authorizeSameTenant($menuItem);
+
         $this->deleteStorageFile($menuItem->image_url, 'menu-images/');
         $menuItem->delete();
         Cache::forget("public_menu_items:{$this->tc()->id()}");
 
         return response()->json(['message' => 'Menu item deleted']);
+    }
+
+    /**
+     * Ensure the resource belongs to the current tenant. Returns 404 (not 403)
+     * so existence of items outside the tenant is never leaked.
+     */
+    private function authorizeSameTenant(MenuItem $item): void
+    {
+        if ($item->restaurant_id !== $this->tc()->id()) {
+            abort(404);
+        }
     }
 }

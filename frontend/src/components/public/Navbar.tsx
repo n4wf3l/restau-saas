@@ -26,13 +26,14 @@ export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
   const location = useLocation();
   const basePath = useRestaurantBasePath();
   const activeLang = (LANGUAGES.find(l => l.code === i18n.language)?.label) ?? 'EN';
+  const ps = usePublicSettings();
+  const mods = ps?.modules;
   const navLinks: NavLink[] = [
     { label: t('nav.home'), to: basePath },
-    { label: t('nav.gallery'), to: `${basePath}/gallery` },
-    { label: t('nav.menu'), to: `${basePath}/menu` },
-    { label: t('nav.contact'), to: `${basePath}/contact` },
+    ...(mods?.gallery_enabled !== false ? [{ label: t('nav.gallery'), to: `${basePath}/gallery` } as NavLink] : []),
+    ...(mods?.menu_enabled    !== false ? [{ label: t('nav.menu'),    to: `${basePath}/menu` }    as NavLink] : []),
+    ...(mods?.contact_enabled !== false ? [{ label: t('nav.contact'), to: `${basePath}/contact` } as NavLink] : []),
   ];
-  const ps = usePublicSettings();
   const restaurantName = ps?.restaurant_name ?? '';
   const logoSrc = resolveLogoUrl(ps?.logo_url);
 

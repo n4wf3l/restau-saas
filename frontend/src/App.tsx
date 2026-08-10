@@ -7,24 +7,29 @@ import { GuestRoute } from "./components/GuestRoute";
 import { DashboardLayout } from "./components/DashboardLayout";
 import { RestaurantLayout } from "./components/RestaurantLayout";
 import { AppToaster } from "./components/ui/Toast";
+import { ModuleGate } from "./components/public/ModuleGate";
 import "./App.css";
 
 // Lazy-loaded pages (code splitting)
 const SaasLandingPage = lazy(() => import("./pages/SaasLandingPage"));
 const HomeSwitch = lazy(() => import("./pages/HomeSwitch"));
+const EmbedReservation = lazy(() => import("./pages/EmbedReservation"));
 const GalleryPage = lazy(() => import("./pages/GalleryPage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
 const PublicReservation = lazy(() => import("./pages/PublicReservation"));
+const CancelReservation = lazy(() => import("./pages/CancelReservation"));
 const PublicMenuPage = lazy(() => import("./pages/PublicMenuPage"));
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
 const TermsPage = lazy(() => import("./pages/TermsPage"));
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
+const DashboardIndex = lazy(() => import("./pages/DashboardIndex"));
 const MenuPage = lazy(() => import("./pages/MenuPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const SiteImagesPage = lazy(() => import("./pages/SiteImagesPage"));
+const SeoChecklistPage = lazy(() => import("./pages/SeoChecklistPage"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
+const AnalyticsPage = lazy(() => import("./pages/AnalyticsPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function PageLoader() {
@@ -76,13 +81,17 @@ function App() {
               {/* SaaS landing page */}
               <Route path="/" element={<SaasLandingPage />} />
 
+              {/* Embed route — chrome-free reservation flow served in the widget iframe */}
+              <Route path="/embed/reserve" element={<EmbedReservation />} />
+
               {/* Restaurant public site — /r/:slug/* */}
               <Route path="/r/:slug" element={<RestaurantLayout />}>
                 <Route index element={<HomeSwitch />} />
-                <Route path="gallery" element={<GalleryPage />} />
-                <Route path="contact" element={<ContactPage />} />
-                <Route path="reservation" element={<PublicReservation />} />
-                <Route path="menu" element={<PublicMenuPage />} />
+                <Route path="gallery" element={<ModuleGate feature="gallery_enabled"><GalleryPage /></ModuleGate>} />
+                <Route path="contact" element={<ModuleGate feature="contact_enabled"><ContactPage /></ModuleGate>} />
+                <Route path="reservation" element={<ModuleGate feature="reservations_enabled"><PublicReservation /></ModuleGate>} />
+                <Route path="cancel" element={<ModuleGate feature="cancellation_enabled"><CancelReservation /></ModuleGate>} />
+                <Route path="menu" element={<ModuleGate feature="menu_enabled"><PublicMenuPage /></ModuleGate>} />
                 <Route path="privacy" element={<PrivacyPage />} />
                 <Route path="terms" element={<TermsPage />} />
               </Route>
@@ -104,9 +113,11 @@ function App() {
                   </ProtectedRoute>
                 }
               >
-                <Route index element={<Dashboard />} />
+                <Route index element={<DashboardIndex />} />
+                <Route path="analytics" element={<AnalyticsPage />} />
                 <Route path="menu" element={<MenuPage />} />
                 <Route path="images" element={<SiteImagesPage />} />
+                <Route path="seo" element={<SeoChecklistPage />} />
                 <Route path="settings" element={<SettingsPage />} />
                 <Route path="admin" element={<AdminPage />} />
               </Route>

@@ -31,11 +31,12 @@ export function CinematicNav({ onReservationClick, hideReservation }: CinematicN
     return () => { document.body.style.overflow = ''; };
   }, [menuOpen]);
 
+  const mods = ps?.modules;
   const navLinks = [
     { label: t('nav.home'),    to: basePath },
-    { label: t('nav.gallery'), to: `${basePath}/gallery` },
-    { label: t('nav.menu'),    to: `${basePath}/menu` },
-    { label: t('nav.contact'), to: `${basePath}/contact` },
+    ...(mods?.gallery_enabled !== false ? [{ label: t('nav.gallery'), to: `${basePath}/gallery` }] : []),
+    ...(mods?.menu_enabled    !== false ? [{ label: t('nav.menu'),    to: `${basePath}/menu` }]    : []),
+    ...(mods?.contact_enabled !== false ? [{ label: t('nav.contact'), to: `${basePath}/contact` }] : []),
   ];
 
   return (

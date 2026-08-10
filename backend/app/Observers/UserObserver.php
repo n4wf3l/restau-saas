@@ -46,9 +46,19 @@ class UserObserver
             'restaurant_id' => $restaurant->id,
         ]);
 
-        // Bootstrap modules (all enabled by default)
+        // New tenants land with everything OFF and status=pending. Superadmin
+        // reviews the signup in /dashboard/admin, ticks the modules they're
+        // paying for, then flips status to 'active' — that unlocks the
+        // dashboard and triggers the activation email.
         RestaurantModule::create([
-            'restaurant_id' => $restaurant->id,
+            'restaurant_id'        => $restaurant->id,
+            'reservations_enabled' => false,
+            'menu_enabled'         => false,
+            'website_enabled'      => false,
+            'contact_enabled'      => false,
+            'gallery_enabled'      => false,
+            'events_enabled'       => false,
+            'cancellation_enabled' => false,
         ]);
     }
 
