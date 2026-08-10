@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SaaS marketing sitemap. Lists only pages that make sense to index publicly.
+  Auth pages (/login, /register) are noindex via <meta> and intentionally
+  omitted. Each restaurant's own sitemap lives at /api/public/sitemap?tenant=<slug>
+  and is discovered via the <link rel="sitemap"> tag emitted by TenantSEO.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>

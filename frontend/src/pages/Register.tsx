@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import toast from "react-hot-toast";
 import { PasswordToggle } from "../components/ui/PasswordToggle";
 import { Spinner } from "../components/ui/Spinner";
+import { SaasSEO } from "../components/SaasSEO";
 
 const inputClass =
   "w-full bg-transparent border border-cream-400/30 rounded-none px-4 py-3.5 text-cream-100 text-sm font-body placeholder-cream-400/40 focus:outline-none focus:border-cream-400/60 transition-colors min-h-[48px]";
@@ -81,6 +82,7 @@ export default function Register() {
 
   return (
     <div className="min-h-screen bg-coffee-950 flex items-center justify-center px-4 py-12 relative overflow-hidden">
+      <SaasSEO page="auth" title="Créer un compte — NA Innovations" description="Ouvrez votre compte pour digitaliser la gestion de votre restaurant." />
       {/* Background subtle pattern */}
       <div className="absolute inset-0 opacity-[0.03]" style={{
         backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(227,204,173,0.5) 1px, transparent 0)',

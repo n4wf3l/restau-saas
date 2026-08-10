@@ -1,2 +1,3 @@
+# API backend — no HTML pages worth indexing.
 User-agent: *
-Disallow:
+Disallow: /

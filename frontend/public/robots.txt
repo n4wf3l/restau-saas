@@ -1,0 +1,11 @@
+# SaaS + tenant sites — allow indexing of marketing landing and tenant public pages.
+# Disallow authenticated / API-only routes so Google doesn't waste crawl budget on them.
+
+User-agent: *
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /embed/
+Disallow: /api/
+Allow: /
+
+Sitemap: /sitemap.xml
