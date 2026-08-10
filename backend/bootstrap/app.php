@@ -19,10 +19,12 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
-            'verified'    => \App\Http\Middleware\EnsureEmailIsVerified::class,
-            'tenant'      => \App\Http\Middleware\ResolveTenant::class,
-            'auth.tenant' => \App\Http\Middleware\ResolveAuthTenant::class,
-            'admin'       => \App\Http\Middleware\RequireAdmin::class,
+            'verified'         => \App\Http\Middleware\EnsureEmailIsVerified::class,
+            'tenant'           => \App\Http\Middleware\ResolveTenant::class,
+            'auth.tenant'      => \App\Http\Middleware\ResolveAuthTenant::class,
+            'admin'            => \App\Http\Middleware\RequireAdmin::class,
+            'restaurant.active' => \App\Http\Middleware\EnsureRestaurantActive::class,
+            'feature'          => \App\Http\Middleware\EnsureModule::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

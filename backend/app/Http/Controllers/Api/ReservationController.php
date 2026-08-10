@@ -165,6 +165,8 @@ class ReservationController extends Controller
 
     public function update(UpdateReservationRequest $request, Reservation $reservation)
     {
+        $this->authorizeSameTenant($reservation);
+
         $validated = $request->validated();
         $oldStatus = $reservation->status;
 
@@ -236,6 +238,8 @@ class ReservationController extends Controller
 
     public function destroy(Reservation $reservation)
     {
+        $this->authorizeSameTenant($reservation);
+
         Reservation::withTrashed()
             ->where('customer_email', $reservation->customer_email)
             ->where('arrival_time', $reservation->arrival_time)
@@ -243,5 +247,25 @@ class ReservationController extends Controller
             ->forceDelete();
 
         return response()->json(['message' => 'Réservation supprimée']);
+    }
+
+    /**
+     * Ensure the reservation belongs to the current tenant.
+     * Regular reservations are scoped through their floor_plan_item's floor_plan_id.
+     * Event reservations (no floor_plan_item_id) can't be scoped this way — a
+     * dedicated restaurant_id column on reservations would fix that properly.
+     */
+    private function authorizeSameTenant(Reservation $reservation): void
+    {
+        $floorPlan = $this->tc()->require()->floorPlan;
+        if (!$floorPlan) abort(404);
+
+        if ($reservation->floor_plan_item_id) {
+            $item = $reservation->floorPlanItem;
+            if (!$item || $item->floor_plan_id !== $floorPlan->id) {
+                abort(404);
+            }
+        }
+        // Event reservations pass through — see comment above.
     }
 }

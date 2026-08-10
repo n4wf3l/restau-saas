@@ -23,6 +23,7 @@ class ReservationControllerTest extends TestCase
         parent::setUp();
 
         $this->user = User::factory()->create();
+        $this->activateTenant($this->user);
         // Use the floor plan auto-created by UserObserver
         $this->floorPlan = RestaurantFloorPlan::where('user_id', $this->user->id)->first();
 

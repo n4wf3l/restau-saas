@@ -24,6 +24,7 @@ class PublicTableControllerTest extends TestCase
         parent::setUp();
 
         $this->user = User::factory()->create();
+        $this->activateTenant($this->user);
 
         // Use the floor plan and settings auto-created by UserObserver
         $this->floorPlan = RestaurantFloorPlan::where('user_id', $this->user->id)->first();
@@ -77,7 +78,7 @@ class PublicTableControllerTest extends TestCase
     public function test_check_availability_returns_available_tables(): void
     {
         $response = $this->postJson('/api/public/check-availability', [
-            'date' => '2026-03-15',
+            'date' => now()->addDays(2)->toDateString(),
             'time' => '19:00',
             'party_size' => 2,
         ]);
@@ -96,14 +97,14 @@ class PublicTableControllerTest extends TestCase
                 'floor_plan_item_id' => $chairId,
                 'customer_name' => 'Existing',
                 'customer_email' => 'existing@test.com',
-                'arrival_time' => '2026-03-15 19:00:00',
+                'arrival_time' => now()->addDays(2)->setTime(19, 0)->toDateTimeString(),
                 'party_size' => 4,
                 'status' => 'confirmed',
             ]);
         }
 
         $response = $this->postJson('/api/public/check-availability', [
-            'date' => '2026-03-15',
+            'date' => now()->addDays(2)->toDateString(),
             'time' => '19:30', // Overlaps with 19:00 + 90min service
             'party_size' => 2,
         ]);
@@ -121,7 +122,7 @@ class PublicTableControllerTest extends TestCase
                 'floor_plan_item_id' => $chairId,
                 'customer_name' => 'Early',
                 'customer_email' => 'early@test.com',
-                'arrival_time' => '2026-03-15 17:00:00',
+                'arrival_time' => now()->addDays(2)->setTime(17, 0)->toDateTimeString(),
                 'party_size' => 4,
                 'status' => 'confirmed',
             ]);
@@ -129,7 +130,7 @@ class PublicTableControllerTest extends TestCase
 
         // 17:00 + 105 min = 18:45, so 19:00 should be free
         $response = $this->postJson('/api/public/check-availability', [
-            'date' => '2026-03-15',
+            'date' => now()->addDays(2)->toDateString(),
             'time' => '19:00',
             'party_size' => 2,
         ]);
@@ -195,7 +196,7 @@ class PublicTableControllerTest extends TestCase
         $settings->update(['reservations_enabled' => false]);
 
         $response = $this->postJson('/api/public/check-availability', [
-            'date' => '2026-03-15',
+            'date' => now()->addDays(2)->toDateString(),
             'time' => '19:00',
             'party_size' => 2,
         ]);
@@ -209,7 +210,7 @@ class PublicTableControllerTest extends TestCase
             'customer_name' => 'Public User',
             'customer_email' => 'public@example.com',
             'customer_phone' => '0601020304',
-            'arrival_time' => '2026-03-15 19:00:00',
+            'arrival_time' => now()->addDays(2)->setTime(19, 0)->toDateTimeString(),
             'party_size' => 2,
             'table_id' => $this->table->id,
         ]);
@@ -235,14 +236,14 @@ class PublicTableControllerTest extends TestCase
                 'floor_plan_item_id' => $chairId,
                 'customer_name' => 'Cancelled',
                 'customer_email' => 'cancelled@test.com',
-                'arrival_time' => '2026-03-15 19:00:00',
+                'arrival_time' => now()->addDays(2)->setTime(19, 0)->toDateTimeString(),
                 'party_size' => 4,
                 'status' => 'cancelled',
             ]);
         }
 
         $response = $this->postJson('/api/public/check-availability', [
-            'date' => '2026-03-15',
+            'date' => now()->addDays(2)->toDateString(),
             'time' => '19:00',
             'party_size' => 2,
         ]);

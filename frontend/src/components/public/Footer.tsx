@@ -224,6 +224,11 @@ export function Footer({ onReservationClick, hideReservation }: FooterProps) {
             <Link to={`${basePath}/terms`} className="text-tertiary hover:text-secondary font-body text-xs tracking-wide transition-colors">
               {t('footer.terms')}
             </Link>
+            {!hideReservation && publicSettings?.modules?.cancellation_enabled !== false && (
+              <Link to={`${basePath}/cancel`} className="text-tertiary hover:text-secondary font-body text-xs tracking-wide transition-colors">
+                {t('footer.cancelReservation')}
+              </Link>
+            )}
             <Link to="/login" className="text-tertiary hover:text-secondary font-body text-xs tracking-wide transition-colors">
               {t('footer.admin')}
             </Link>

@@ -3,6 +3,7 @@ import { Outlet, useLocation, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { FloorPlanEditor } from "./floorplan/FloorPlanEditor";
+import { OnboardingWizard } from "./dashboard/OnboardingWizard";
 import { api, API_BASE_URL } from "../lib/api";
 import type { FloorPlan } from "../lib/types";
 import toast from "react-hot-toast";
@@ -26,6 +27,7 @@ import {
   ExclamationTriangleIcon,
   ShieldCheckIcon,
   ClockIcon,
+  MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 
 interface NavItem {
@@ -35,14 +37,17 @@ interface NavItem {
   exact?: boolean;
   soon?: boolean;
   adminOnly?: boolean;
+  /** Module flag on restaurant.modules that must be true to show this item */
+  requiresModule?: 'reservations_enabled' | 'menu_enabled' | 'website_enabled';
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { path: "/dashboard", label: "Réservations", icon: CalendarIcon, exact: true },
-  { path: "/dashboard/menu", label: "Carte", icon: BookOpenIcon },
-  { path: "/dashboard/images", label: "Images", icon: PhotoIcon },
+  { path: "/dashboard", label: "Réservations", icon: CalendarIcon, exact: true, requiresModule: 'reservations_enabled' },
+  { path: "/dashboard/menu", label: "Carte", icon: BookOpenIcon, requiresModule: 'menu_enabled' },
+  { path: "/dashboard/images", label: "Images", icon: PhotoIcon, requiresModule: 'website_enabled' },
   { path: "/dashboard/clients", label: "Clients", icon: UsersIcon, soon: true },
-  { path: "/dashboard/analytics", label: "Statistiques", icon: ChartBarIcon, soon: true },
+  { path: "/dashboard/analytics", label: "Statistiques", icon: ChartBarIcon, requiresModule: 'reservations_enabled' },
+  { path: "/dashboard/seo", label: "SEO", icon: MagnifyingGlassIcon, requiresModule: 'website_enabled' },
   { path: "/dashboard/settings", label: "Paramètres", icon: Cog6ToothIcon },
   { path: "/dashboard/admin", label: "Admin", icon: ShieldCheckIcon, adminOnly: true },
 ];
@@ -212,7 +217,16 @@ export function DashboardLayout() {
 
         {/* ─── Navigation ─── */}
         <nav className="flex-1 px-3 py-5 space-y-1 overflow-y-auto" aria-label="Navigation principale">
-          {NAV_ITEMS.filter(item => !item.adminOnly || isAdmin).map((item) => {
+          {NAV_ITEMS.filter(item => {
+            if (item.adminOnly && !isAdmin) return false;
+            // Superadmin sees every nav item regardless of module state
+            if (isAdmin) return true;
+            if (item.requiresModule) {
+              const enabled = (restaurant?.modules as Record<string, boolean> | undefined)?.[item.requiresModule];
+              return enabled !== false;
+            }
+            return true;
+          }).map((item) => {
             const Icon = item.icon;
             const active = isActive(item);
 
@@ -385,6 +399,9 @@ export function DashboardLayout() {
           )}
         </div>
       </div>
+
+      {/* First-time setup wizard — auto-shows for fresh tenants, dismissible */}
+      <OnboardingWizard />
 
       {/* ─── Floor Plan Modal ─── */}
       {showFloorPlanModal && floorPlan && (

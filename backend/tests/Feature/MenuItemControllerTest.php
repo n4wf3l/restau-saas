@@ -19,12 +19,14 @@ class MenuItemControllerTest extends TestCase
     {
         parent::setUp();
         $this->user = User::factory()->create();
+        $this->activateTenant($this->user);
     }
 
     public function test_index_returns_user_menu_items(): void
     {
         MenuItem::create([
             'user_id' => $this->user->id,
+            'restaurant_id' => $this->user->restaurant_id,
             'name' => 'Tiramisu',
             'price' => 8.50,
             'category' => 'Desserts',
@@ -40,13 +42,22 @@ class MenuItemControllerTest extends TestCase
         $this->assertEquals('Tiramisu', $data[0]['name']);
     }
 
-    public function test_index_returns_all_items_regardless_of_creator(): void
+    public function test_index_isolates_menu_items_across_tenants(): void
     {
+        // Item belonging to a different tenant
         $otherUser = User::factory()->create();
         MenuItem::create([
             'user_id' => $otherUser->id,
+            'restaurant_id' => $otherUser->restaurant_id,
             'name' => 'Pizza',
             'price' => 12.00,
+        ]);
+        // Item belonging to the current tenant
+        MenuItem::create([
+            'user_id' => $this->user->id,
+            'restaurant_id' => $this->user->restaurant_id,
+            'name' => 'Tiramisu',
+            'price' => 8.50,
         ]);
 
         $response = $this->actingAs($this->user)->getJson('/api/menu-items');
@@ -54,7 +65,7 @@ class MenuItemControllerTest extends TestCase
         $response->assertOk();
         $data = $response->json();
         $this->assertCount(1, $data);
-        $this->assertEquals('Pizza', $data[0]['name']);
+        $this->assertEquals('Tiramisu', $data[0]['name']);
     }
 
     public function test_store_creates_menu_item(): void
@@ -114,6 +125,7 @@ class MenuItemControllerTest extends TestCase
     {
         $item = MenuItem::create([
             'user_id' => $this->user->id,
+            'restaurant_id' => $this->user->restaurant_id,
             'name' => 'Old Name',
             'price' => 10.00,
         ]);
@@ -131,27 +143,29 @@ class MenuItemControllerTest extends TestCase
         ]);
     }
 
-    public function test_update_allows_any_admin_to_edit(): void
+    public function test_update_is_blocked_across_tenants(): void
     {
         $otherUser = User::factory()->create();
         $item = MenuItem::create([
             'user_id' => $otherUser->id,
-            'name' => 'Shared Item',
+            'restaurant_id' => $otherUser->restaurant_id,
+            'name' => 'Other-tenant Item',
             'price' => 10.00,
         ]);
 
         $response = $this->actingAs($this->user)->putJson("/api/menu-items/{$item->id}", [
-            'name' => 'Updated by other admin',
+            'name' => 'Should not update',
         ]);
 
-        $response->assertOk();
-        $this->assertDatabaseHas('menu_items', ['id' => $item->id, 'name' => 'Updated by other admin']);
+        $response->assertStatus(404);
+        $this->assertDatabaseHas('menu_items', ['id' => $item->id, 'name' => 'Other-tenant Item']);
     }
 
     public function test_destroy_deletes_menu_item(): void
     {
         $item = MenuItem::create([
             'user_id' => $this->user->id,
+            'restaurant_id' => $this->user->restaurant_id,
             'name' => 'To Delete',
             'price' => 5.00,
         ]);
@@ -163,31 +177,34 @@ class MenuItemControllerTest extends TestCase
         $this->assertDatabaseMissing('menu_items', ['id' => $item->id]);
     }
 
-    public function test_destroy_allows_any_admin_to_delete(): void
+    public function test_destroy_is_blocked_across_tenants(): void
     {
         $otherUser = User::factory()->create();
         $item = MenuItem::create([
             'user_id' => $otherUser->id,
-            'name' => 'Shared Item',
+            'restaurant_id' => $otherUser->restaurant_id,
+            'name' => 'Other-tenant Item',
             'price' => 10.00,
         ]);
 
         $response = $this->actingAs($this->user)->deleteJson("/api/menu-items/{$item->id}");
 
-        $response->assertOk();
-        $this->assertDatabaseMissing('menu_items', ['id' => $item->id]);
+        $response->assertStatus(404);
+        $this->assertDatabaseHas('menu_items', ['id' => $item->id]);
     }
 
     public function test_public_index_returns_available_items_only(): void
     {
         MenuItem::create([
             'user_id' => $this->user->id,
+            'restaurant_id' => $this->user->restaurant_id,
             'name' => 'Available',
             'price' => 10.00,
             'is_available' => true,
         ]);
         MenuItem::create([
             'user_id' => $this->user->id,
+            'restaurant_id' => $this->user->restaurant_id,
             'name' => 'Unavailable',
             'price' => 10.00,
             'is_available' => false,

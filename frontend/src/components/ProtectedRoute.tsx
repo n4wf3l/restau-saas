@@ -1,6 +1,9 @@
+import { lazy, Suspense } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Spinner } from "./ui/Spinner";
+
+const PendingValidationPage = lazy(() => import("../pages/PendingValidationPage"));
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -15,6 +18,17 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Platform admins bypass the tenant-status gate so they can moderate other
+  // restaurants regardless of their own restaurant status.
+  const status = user.restaurant?.status;
+  if (user.role !== 'admin' && status && status !== 'active') {
+    return (
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Spinner /></div>}>
+        <PendingValidationPage />
+      </Suspense>
+    );
   }
 
   return <>{children}</>;
