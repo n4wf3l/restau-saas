@@ -103,4 +103,56 @@ class DevControllerTest extends TestCase
 
         $this->assertAuthenticatedAs($admin);
     }
+
+    // ─── list admins + login-as-user (SaaS-level /login dev shortcut) ─────
+
+    public function test_list_admins_returns_404_outside_local_env(): void
+    {
+        $this->app['env'] = 'production';
+        $this->getJson('/api/dev/admins')->assertStatus(404);
+    }
+
+    public function test_list_admins_returns_only_admin_users_in_local(): void
+    {
+        $this->app['env'] = 'local';
+        User::factory()->create();                       // role=user
+        $a1 = User::factory()->create(['role' => 'admin']);
+        $a2 = User::factory()->create(['role' => 'admin']);
+
+        $response = $this->getJson('/api/dev/admins')->assertOk();
+        $ids = collect($response->json())->pluck('id')->all();
+
+        $this->assertContains($a1->id, $ids);
+        $this->assertContains($a2->id, $ids);
+        $this->assertCount(2, $ids);
+    }
+
+    public function test_login_as_user_returns_404_outside_local_env(): void
+    {
+        $this->app['env'] = 'staging';
+        $user = User::factory()->create();
+        $this->postJson('/api/dev/login-as-user', ['user_id' => $user->id])
+            ->assertStatus(404);
+        $this->assertGuest();
+    }
+
+    public function test_login_as_user_logs_in_any_user_by_id_in_local(): void
+    {
+        $this->app['env'] = 'local';
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->postJson('/api/dev/login-as-user', ['user_id' => $admin->id])
+            ->assertOk()
+            ->assertJsonPath('id', $admin->id);
+
+        $this->assertAuthenticatedAs($admin);
+    }
+
+    public function test_login_as_user_rejects_unknown_id(): void
+    {
+        $this->app['env'] = 'local';
+        $this->postJson('/api/dev/login-as-user', ['user_id' => 999999])
+            ->assertStatus(404);
+        $this->assertGuest();
+    }
 }

@@ -47,7 +47,9 @@ Route::middleware(['tenant', 'restaurant.active'])->group(function () {
 // app()->environment('local'), so registering the routes here is safe.
 // Requires the frontend to have already hit /sanctum/csrf-cookie once). ───
 Route::get('/dev/tenants', [\App\Http\Controllers\Api\DevController::class, 'listTenants']);
+Route::get('/dev/admins',  [\App\Http\Controllers\Api\DevController::class, 'listAdmins']);
 Route::post('/dev/login-as-owner', [\App\Http\Controllers\Api\DevController::class, 'loginAsOwner']);
+Route::post('/dev/login-as-user',  [\App\Http\Controllers\Api\DevController::class, 'loginAsUser']);
 
 // ─── Auth user route — tenant via authenticated user ───
 // Intentionally NOT gated by restaurant.active — the frontend needs to read

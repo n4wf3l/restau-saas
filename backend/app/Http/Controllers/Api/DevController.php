@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Restaurant;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -67,6 +68,53 @@ class DevController extends Controller
         $owner->load(['restaurant.modules', 'restaurant.settings:id,restaurant_id,restaurant_name,logo_url']);
 
         return response()->json($owner);
+    }
+
+    /**
+     * List every platform superadmin (role=admin). Used by the /login dev
+     * banner — the SaaS-level login is for approving tenant signups, so it
+     * makes sense to only surface admin users there.
+     */
+    public function listAdmins()
+    {
+        if (!app()->environment('local')) {
+            abort(404);
+        }
+
+        return response()->json(
+            User::where('role', 'admin')
+                ->orderBy('email')
+                ->get(['id', 'name', 'email'])
+        );
+    }
+
+    /**
+     * Log in as any specific user by id. Generic counterpart to
+     * loginAsOwner (which is tenant-scoped and prefers a non-admin).
+     * Body: { user_id }
+     */
+    public function loginAsUser(Request $request)
+    {
+        if (!app()->environment('local')) {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'user_id' => 'required|integer',
+        ]);
+
+        $user = User::find($validated['user_id']);
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 404);
+        }
+
+        Auth::login($user);
+        if ($request->hasSession()) {
+            $request->session()->regenerate();
+        }
+
+        $user->load(['restaurant.modules', 'restaurant.settings:id,restaurant_id,restaurant_name,logo_url']);
+        return response()->json($user);
     }
 
     /**
