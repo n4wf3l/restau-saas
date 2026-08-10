@@ -27,6 +27,7 @@ class RestaurantSetting extends Model
         'logo_url',
         'theme',
         'layout',
+        'show_moroccan_decorations',
         'meta_description',
         'meta_keywords',
         'og_image_url',
@@ -54,6 +55,7 @@ class RestaurantSetting extends Model
         'menu_pdf_visible' => 'boolean',
         'social_links' => 'array',
         'seo_checklist' => 'array',
+        'show_moroccan_decorations' => 'boolean',
     ];
 
     /**

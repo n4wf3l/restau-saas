@@ -247,6 +247,7 @@ export interface RestaurantSettings {
   logo_url: string | null;
   theme: 'coffee' | 'noir' | 'sable';
   layout: 'classic' | 'cinematic';
+  show_moroccan_decorations: boolean;
   // SEO
   meta_description: string | null;
   meta_keywords: string | null;

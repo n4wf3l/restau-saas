@@ -56,12 +56,13 @@ Sidebar items are hidden when the corresponding module is off.
 - **Images** — hero, restaurant photos, gallery, menu preview categories with drag-reorder
 - **Analytics** — headline KPIs, status breakdown, day-of-week and hour histograms, recent activity
 - **SEO checklist** — 5 categories (Sur votre site auto-tracked, Google Business, Third-party listings, Reviews, Content) with progress bar and next-action prompt
-- **Settings** — restaurant name, logo, hours, closure dates, social links, theme, layout, SEO meta (description/keywords/og), address/phone/cuisine/price range
+- **Settings** — restaurant name, logo, hours, closure dates, social links, theme, layout, Moroccan decorations toggle, SEO meta (description/keywords/og), address/phone/cuisine/price range
 - **Superadmin (role=admin)** — moderate pending signups, toggle 7 modules per tenant (reservations / menu / website / contact / gallery / events / cancellation), impose theme+layout, activate/suspend, receive-side email on `pending → active`
 
 ### Public website features (per tenant)
 - **Two selectable layouts** — Classic (sections stack) or Cinematic (immersive scroll, GSAP pinning, vignette)
 - **Three themes** — coffee, noir, sable (CSS variables + Tailwind semantic tokens)
+- **Moroccan decoration toggle** — tenant-controlled visual layer (Morocco country outline on the Contact page). ON by default, off for tenants that prefer a neutral rendering.
 - **Full trilingual** — FR / EN / AR with proper RTL flip and Tajawal Arabic font
 - **Reserve widget** — embeddable via `public/widget.js` in any external site
 - **PWA-installable** for the SaaS brand

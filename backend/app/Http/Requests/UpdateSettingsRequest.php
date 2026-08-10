@@ -36,6 +36,7 @@ class UpdateSettingsRequest extends FormRequest
             'restaurant_name'          => 'sometimes|string|max:100',
             'theme'                    => ['sometimes', 'string', Rule::in(RestaurantSetting::AVAILABLE_THEMES)],
             'layout'                   => ['sometimes', 'string', Rule::in(RestaurantSetting::AVAILABLE_LAYOUTS)],
+            'show_moroccan_decorations' => 'sometimes|boolean',
             // SEO
             'meta_description'         => 'sometimes|nullable|string|max:300',
             'meta_keywords'            => 'sometimes|nullable|string|max:500',
