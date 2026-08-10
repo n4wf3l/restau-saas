@@ -4,7 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { FloorPlanEditor } from "./floorplan/FloorPlanEditor";
 import { OnboardingWizard } from "./dashboard/OnboardingWizard";
-import { api, API_BASE_URL } from "../lib/api";
+import { api, resolveLogoUrl } from "../lib/api";
 import type { FloorPlan } from "../lib/types";
 import toast from "react-hot-toast";
 import { Spinner } from "./ui/Spinner";
@@ -58,10 +58,12 @@ export function DashboardLayout() {
   const restaurant = user?.restaurant;
   const restaurantName = restaurant?.name ?? 'Mon Restaurant';
   const restaurantSlug = restaurant?.slug;
-  const logoUrl = restaurant?.settings?.logo_url;
-  const logoSrc = logoUrl
-    ? (logoUrl.startsWith('http') ? logoUrl : `${API_BASE_URL}${logoUrl}`)
-    : null;
+  // Delegate URL resolution to the shared helper so `/logo.png` (frontend
+  // static, from the single-tenant era) resolves against the frontend origin,
+  // and `/storage/…` uploads resolve against the backend. The previous inline
+  // concat blindly prefixed the API base and 404'd on `/logo.png`.
+  const logoSrc = resolveLogoUrl(restaurant?.settings?.logo_url);
+  const [logoBroken, setLogoBroken] = useState(false);
   const logoInitial = restaurantName.charAt(0).toUpperCase();
   const isAdmin = user?.role === 'admin';
   const isPending = restaurant?.status === 'pending';
@@ -153,8 +155,13 @@ export function DashboardLayout() {
           {sidebarOpen ? (
             <>
               <Link to="/dashboard" className="flex items-center gap-2.5">
-                {logoSrc ? (
-                  <img src={logoSrc} alt={restaurantName} className="w-8 h-8 object-contain" />
+                {logoSrc && !logoBroken ? (
+                  <img
+                    src={logoSrc}
+                    alt={restaurantName}
+                    onError={() => setLogoBroken(true)}
+                    className="w-8 h-8 object-contain"
+                  />
                 ) : (
                   <div className="w-8 h-8 bg-gradient-to-br from-coffee-400 to-coffee-600 rounded-lg flex items-center justify-center flex-shrink-0">
                     <span className="text-white font-display font-bold text-sm">{logoInitial}</span>

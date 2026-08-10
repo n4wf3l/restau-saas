@@ -138,6 +138,11 @@ export default {
           from: { opacity: '0', transform: 'translateY(18px) scale(0.97)' },
           to: { opacity: '1', transform: 'translateY(0) scale(1)' },
         },
+        topProgress: {
+          '0%':   { transform: 'scaleX(0)' },
+          '60%':  { transform: 'scaleX(0.85)' },
+          '100%': { transform: 'scaleX(0.98)' },
+        },
       },
       animation: {
         'spin': 'spin 1s linear infinite',
@@ -155,6 +160,7 @@ export default {
         'dropdown-reveal': 'dropdownReveal 0.15s cubic-bezier(0.16,1,0.3,1)',
         'content-reveal': 'contentReveal 0.4s cubic-bezier(0.16,1,0.3,1) forwards',
         'stagger-item': 'staggerItem 0.45s cubic-bezier(0.16,1,0.3,1) both',
+        'top-progress': 'topProgress 2.5s cubic-bezier(0.1,0.6,0.3,1) forwards',
       },
     },
   },

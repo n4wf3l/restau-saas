@@ -23,17 +23,51 @@ import {
 } from "@heroicons/react/24/outline";
 import { Spinner } from "../components/ui/Spinner";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { TopProgressBar } from "../components/ui/TopProgressBar";
+import { useAuth } from "../contexts/AuthContext";
 
 type TabType = "pending" | "confirmed" | "all" | "cancelled" | "events" | "no_show";
 
 const AUTO_REFRESH_MS = 30_000;
 
+// Stale-while-revalidate cache. Keeps reservations for the current tenant in
+// localStorage so a refresh renders instantly from cache, then the network
+// fetch quietly replaces the data. First-ever visit falls back to the classic
+// spinner — every subsequent load is cache-hit + background refresh.
+const CACHE_TTL_MS = 5 * 60_000; // 5 min soft freshness (older cache still shown)
+function reservationsCacheKey(rid: number | null | undefined): string | null {
+  return rid ? `dashboard:reservations:${rid}` : null;
+}
+function readReservationsCache(rid: number | null | undefined): Reservation[] | null {
+  const key = reservationsCacheKey(rid);
+  if (!key) return null;
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { at: number; data: Reservation[] };
+    return Array.isArray(parsed.data) ? parsed.data : null;
+  } catch { return null; }
+}
+function writeReservationsCache(rid: number | null | undefined, data: Reservation[]): void {
+  const key = reservationsCacheKey(rid);
+  if (!key) return;
+  try {
+    localStorage.setItem(key, JSON.stringify({ at: Date.now(), data }));
+  } catch { /* quota — ignore */ }
+}
+
 export default function Dashboard() {
   const { } = useOutletContext<{ floorPlan: FloorPlan | null }>();
-  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const { user } = useAuth();
+  const rid = user?.restaurant_id ?? null;
+  // Hydrate synchronously from cache so the first paint after a refresh shows
+  // the previous reservations. `loading` starts true only when there's no
+  // cache — otherwise we skip straight to content + background refresh.
+  const [reservations, setReservations] = useState<Reservation[]>(() => readReservationsCache(rid) ?? []);
   const [activeTab, setActiveTab] = useState<TabType>("pending");
   const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(() => readReservationsCache(rid) === null);
+  const [refreshing, setRefreshing] = useState(false);
   const [settings, setSettings] = useState<RestaurantSettings | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [dateFilter, setDateFilter] = useState<"all" | "today" | "tomorrow" | "week" | "custom">("all");
@@ -61,15 +95,23 @@ export default function Dashboard() {
   });
 
   const loadReservations = useCallback(async () => {
+    setRefreshing(true);
     try {
       const data = await getReservations(true);
       setReservations(data);
+      writeReservationsCache(rid, data);
     } catch {
-      toast.error("Erreur lors du chargement");
+      // A background refresh failure while cached data is on screen shouldn't
+      // shout at the user; only toast on the initial load (no cache existed).
+      setReservations(prev => {
+        if (prev.length === 0) toast.error("Erreur lors du chargement");
+        return prev;
+      });
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  }, []);
+  }, [rid]);
 
   const loadSettings = useCallback(async () => {
     try {
@@ -370,6 +412,10 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col h-full">
+      {/* Background refresh indicator — top-of-viewport progress bar shown
+          during any in-flight reservations fetch. First-ever visit (no cache)
+          still falls back to the centered spinner below. */}
+      <TopProgressBar visible={refreshing} />
       {/* ─── Header ─── */}
       <div className="px-6 pt-6 pb-5 flex-shrink-0">
         <div className="flex items-center justify-between mb-6">
