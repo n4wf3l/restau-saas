@@ -454,8 +454,11 @@ class PublicTableController extends Controller
             ], 422);
         }
 
+        // One code shared across all rows of this booking (party of N = N rows, 1 code).
+        $cancellationCode = Reservation::generateCancellationCode();
+
         try {
-            $reservations = DB::transaction(function () use ($validated, $availableChairIds, $initialStatus) {
+            $reservations = DB::transaction(function () use ($validated, $availableChairIds, $initialStatus, $cancellationCode) {
                 $created = [];
                 for ($i = 0; $i < $validated['party_size']; $i++) {
                     $created[] = Reservation::create([
@@ -467,6 +470,7 @@ class PublicTableController extends Controller
                         'party_size' => $validated['party_size'],
                         'notes' => $validated['notes'] ?? null,
                         'status' => $initialStatus,
+                        'cancellation_code' => $cancellationCode,
                     ]);
                 }
                 return $created;
@@ -487,6 +491,7 @@ class PublicTableController extends Controller
             'message' => 'Réservation créée avec succès',
             'table_name' => $tableName,
             'seats_reserved' => $validated['party_size'],
+            'cancellation_code' => $cancellationCode,
             'reservations' => $reservations,
         ], 201);
     }
@@ -559,6 +564,7 @@ class PublicTableController extends Controller
             'is_event' => true,
             'event_details' => $validated['event_details'],
             'status' => $settings->auto_confirm ? 'confirmed' : 'pending',
+            'cancellation_code' => Reservation::generateCancellationCode(),
         ]);
 
         ReservationMailService::sendByStatus($reservation, 'Événement');
@@ -566,6 +572,82 @@ class PublicTableController extends Controller
         return response()->json([
             'message' => 'Demande d\'événement enregistrée. Le restaurant vous contactera pour confirmer.',
             'reservation' => $reservation,
+            'cancellation_code' => $reservation->cancellation_code,
         ], 201);
+    }
+
+    /**
+     * Customer self-serve cancellation via cancellation code + email match.
+     * Cancels every row of the booking group (party of N = N rows) in one call.
+     * Requires both code AND email to prevent someone with a leaked code from
+     * cancelling a reservation they don't own.
+     */
+    public function cancel(Request $request)
+    {
+        $validated = $request->validate([
+            'code'  => 'required|string|size:8',
+            'email' => 'required|email',
+        ]);
+
+        $tenant = $this->tc()->require();
+        $code   = strtoupper(trim($validated['code']));
+        $email  = strtolower(trim($validated['email']));
+
+        // Look up the booking. Match code + email, and scope to this tenant's floor plan
+        // (or events with no floor_plan_item) so a code from one tenant can't cancel
+        // another tenant's reservation even if codes ever collided.
+        $floorPlanId = $tenant->floorPlan?->id;
+
+        $rows = Reservation::where('cancellation_code', $code)
+            ->whereRaw('LOWER(customer_email) = ?', [$email])
+            ->where(function ($q) use ($floorPlanId) {
+                $q->whereHas('floorPlanItem', fn($sub) => $sub->where('floor_plan_id', $floorPlanId))
+                  ->orWhere(fn($sub) => $sub->where('is_event', true)->whereNull('floor_plan_item_id'));
+            })
+            ->get();
+
+        if ($rows->isEmpty()) {
+            return response()->json([
+                'error' => 'Aucune réservation trouvée pour ce code et cet email.',
+            ], 404);
+        }
+
+        // If the whole booking is already cancelled, tell the user gracefully
+        if ($rows->every(fn($r) => $r->status === 'cancelled')) {
+            return response()->json([
+                'error'    => 'Cette réservation est déjà annulée.',
+                'status'   => 'cancelled',
+            ], 409);
+        }
+
+        // If arrival is already past by more than 1 hour, refuse (no point cancelling)
+        $arrival = $rows->first()->arrival_time;
+        if ($arrival->copy()->addHour()->isPast()) {
+            return response()->json([
+                'error' => 'Cette réservation est passée et ne peut plus être annulée.',
+            ], 422);
+        }
+
+        // Cancel every row in the group
+        DB::transaction(function () use ($rows) {
+            foreach ($rows as $r) {
+                if ($r->status !== 'cancelled') {
+                    $r->update(['status' => 'cancelled']);
+                }
+            }
+        });
+
+        // Send cancellation confirmation email (best-effort — don't block the response)
+        try {
+            ReservationMailService::sendCancelled($rows->first());
+        } catch (\Throwable $e) {
+            \Log::warning('Cancellation email failed', ['code' => $code, 'err' => $e->getMessage()]);
+        }
+
+        return response()->json([
+            'message'      => 'Votre réservation a bien été annulée.',
+            'arrival_time' => $arrival->toIso8601String(),
+            'party_size'   => $rows->first()->party_size,
+        ]);
     }
 }
