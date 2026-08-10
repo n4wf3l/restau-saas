@@ -18,6 +18,7 @@ class ReservationConfirmed extends Mailable implements ShouldQueue
         public Reservation $reservation,
         public string $tableName,
         public string $restaurantName = 'Mon Restaurant',
+        public ?string $cancelUrl = null,
     ) {}
 
     public function envelope(): Envelope

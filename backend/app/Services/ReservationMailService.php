@@ -26,8 +26,9 @@ class ReservationMailService
         if (!static::isEnabled()) return;
 
         $name = static::restaurantName();
+        $cancelUrl = static::cancelUrl($reservation);
         Mail::to($reservation->customer_email)
-            ->queue(new ReservationConfirmed($reservation, $tableName, $name));
+            ->queue(new ReservationConfirmed($reservation, $tableName, $name, $cancelUrl));
     }
 
     public static function sendPending(Reservation $reservation, string $tableName): void
@@ -35,8 +36,9 @@ class ReservationMailService
         if (!static::isEnabled()) return;
 
         $name = static::restaurantName();
+        $cancelUrl = static::cancelUrl($reservation);
         Mail::to($reservation->customer_email)
-            ->queue(new ReservationPending($reservation, $tableName, $name));
+            ->queue(new ReservationPending($reservation, $tableName, $name, $cancelUrl));
     }
 
     public static function sendCancelled(Reservation $reservation): void
@@ -66,5 +68,20 @@ class ReservationMailService
 
         $settings = RestaurantSetting::where('restaurant_id', $rid)->first();
         return $settings?->restaurant_name ?? 'Mon Restaurant';
+    }
+
+    /**
+     * Build the public self-serve cancel URL for a reservation.
+     * Uses FRONTEND_URL env var so admin can point to their prod frontend,
+     * falling back to APP_URL (Laravel default) then localhost dev URL.
+     */
+    private static function cancelUrl(Reservation $reservation): ?string
+    {
+        $tc = app(TenantContext::class);
+        $slug = $tc->get()?->slug;
+        if (!$slug || !$reservation->cancellation_code) return null;
+
+        $base = rtrim(env('FRONTEND_URL', config('app.url') ?: 'http://localhost:5174'), '/');
+        return "{$base}/r/{$slug}/cancel?code={$reservation->cancellation_code}";
     }
 }

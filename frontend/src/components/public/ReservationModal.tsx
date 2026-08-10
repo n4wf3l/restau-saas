@@ -59,13 +59,15 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
   const [loading, setLoading] = useState(false);
   const [showTableList, setShowTableList] = useState(false);
   const [previewTableId, setPreviewTableId] = useState<number | null>(null);
-  
+  const [submittedCode, setSubmittedCode] = useState<string | null>(null);
+
   const { availability, checking, checkAvailability } = useAvailabilityCheck();
 
   // Reset step when modal opens/closes
   useEffect(() => {
     if (isOpen) {
       setCurrentStep(1);
+      setSubmittedCode(null);
     }
   }, [isOpen]);
 
@@ -242,23 +244,9 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
           event_details: formData.eventDetails || '',
         };
 
-        await createEventReservation(eventPayload);
+        const eventResp = await createEventReservation(eventPayload);
         toast.success(t('reservation.successEvent'), { duration: 5000 });
-        onClose();
-
-        setCurrentStep(1);
-        setFormData({
-          date: new Date().toISOString().split('T')[0],
-          time: '19:00',
-          partySize: 2,
-          placementMode: 'auto',
-          selectedTableId: null,
-          customerName: '',
-          customerEmail: '',
-          customerPhone: '',
-          occasion: [],
-          specialNotes: '',
-        });
+        setSubmittedCode(eventResp.cancellation_code ?? null);
         return;
       }
 
@@ -294,24 +282,9 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
         ].filter(Boolean).join(' | '),
       };
 
-      await createReservation(payload);
+      const resp = await createReservation(payload);
       toast.success(t('reservation.success'));
-      onClose();
-      
-      // Reset form
-      setCurrentStep(1);
-      setFormData({
-        date: new Date().toISOString().split('T')[0],
-        time: '19:00',
-        partySize: 2,
-        placementMode: 'auto',
-        selectedTableId: null,
-        customerName: '',
-        customerEmail: '',
-        customerPhone: '',
-        occasion: [],
-        specialNotes: '',
-      });
+      setSubmittedCode(resp.cancellation_code ?? null);
     } catch (error: any) {
       if (error.response?.status === 429) {
         toast.error(t('reservation.errorTooMany'));
@@ -378,6 +351,18 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
           </button>
         </div>
 
+        {submittedCode !== null ? (
+          <ReservationSuccessView
+            code={submittedCode}
+            email={formData.customerEmail}
+            date={formData.date}
+            time={formData.time}
+            partySize={formData.partySize}
+            isEvent={formData.placementMode === 'event'}
+            onClose={onClose}
+          />
+        ) : (
+          <>
         {/* Progress Stepper */}
         <div className="px-6 pt-6">
           <div className="flex items-center justify-between mb-8 border-b border-subtle pb-4">
@@ -956,7 +941,87 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
             </section>
           )}
         </form>
+          </>
+        )}
       </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────
+// COMPOSANT: Success view (post-submit) — shows the code
+// ─────────────────────────────────────────────────────────
+interface ReservationSuccessViewProps {
+  code: string;
+  email: string;
+  date: string;
+  time: string;
+  partySize: number;
+  isEvent: boolean;
+  onClose: () => void;
+}
+
+function ReservationSuccessView({ code, email, date, time, partySize, isEvent, onClose }: ReservationSuccessViewProps) {
+  const { t } = useTranslation();
+  const [copied, setCopied] = useState(false);
+
+  const copyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard unavailable — noop */
+    }
+  };
+
+  const prettyDate = new Date(`${date}T${time}`).toLocaleString('fr-FR', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  });
+
+  return (
+    <div className="px-6 pb-8 pt-4 text-center animate-fadeIn">
+      <div className="w-16 h-16 mx-auto mb-4 rounded-full border border-brand flex items-center justify-center">
+        <CheckCircleIcon className="w-9 h-9 text-brand" />
+      </div>
+      <h3 className="text-xl md:text-2xl font-display font-bold text-primary mb-2">
+        {isEvent ? t('reservation.successEvent') : t('reservation.success')}
+      </h3>
+      <p className="text-secondary text-sm font-body mb-6">
+        {prettyDate} · {partySize} {partySize > 1 ? 'personnes' : 'personne'}
+      </p>
+
+      {code && (
+        <div className="border border-subtle rounded-lg p-5 mb-5 text-left">
+          <p className="text-accent text-[11px] tracking-[0.25em] uppercase font-body text-center mb-2">
+            Code d'annulation
+          </p>
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <span className="font-mono text-2xl tracking-[0.4em] text-primary bg-tint px-4 py-2 rounded border border-dashed border-subtle">
+              {code}
+            </span>
+            <button
+              type="button"
+              onClick={copyCode}
+              className="text-xs px-3 py-2 border border-subtle rounded text-secondary hover:text-primary hover:border-strong transition"
+            >
+              {copied ? 'Copié ✓' : 'Copier'}
+            </button>
+          </div>
+          <p className="text-tertiary text-xs font-body text-center leading-relaxed">
+            Conservez ce code : il vous permet d'annuler votre réservation depuis notre page « Annuler ».
+            Un email récapitulatif a été envoyé à <strong className="text-primary">{email}</strong>.
+          </p>
+        </div>
+      )}
+
+      <button
+        type="button"
+        onClick={onClose}
+        className="w-full py-3.5 border border-strong text-accent text-sm tracking-[0.15em] uppercase font-body hover:bg-tint transition-colors"
+      >
+        Fermer
+      </button>
     </div>
   );
 }

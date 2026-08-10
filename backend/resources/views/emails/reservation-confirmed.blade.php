@@ -51,7 +51,38 @@
         </tr>
     </table>
 
-    <p style="margin: 0; font-size: 13px; color: #8a7d6f; text-align: center; line-height: 1.5;">
+    <p style="margin: 0 0 24px; font-size: 13px; color: #8a7d6f; text-align: center; line-height: 1.5;">
         Merci d'arriver à l'heure afin de profiter pleinement de votre expérience.
     </p>
+
+    @if($reservation->cancellation_code)
+    {{-- Cancellation section --}}
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-top: 1px solid #e8ddd0; margin-top: 8px;">
+        <tr>
+            <td style="padding: 20px 24px 0;">
+                <p style="margin: 0 0 8px; font-size: 12px; color: #8a7d6f; letter-spacing: 0.5px; text-transform: uppercase; text-align: center;">
+                    Empêchement ?
+                </p>
+                <p style="margin: 0 0 14px; font-size: 13px; color: #6b5e50; text-align: center; line-height: 1.5;">
+                    Votre code de réservation :
+                </p>
+                <p style="margin: 0 0 18px; text-align: center;">
+                    <span style="display: inline-block; font-family: 'Courier New', monospace; font-size: 20px; font-weight: 700; letter-spacing: 4px; color: #1a1410; background-color: #faf7f4; padding: 10px 18px; border-radius: 6px; border: 1px dashed #d4c4b0;">
+                        {{ $reservation->cancellation_code }}
+                    </span>
+                </p>
+                @if($cancelUrl)
+                <p style="margin: 0 0 6px; text-align: center;">
+                    <a href="{{ $cancelUrl }}" style="display: inline-block; font-size: 13px; color: #8f6a4f; text-decoration: underline; padding: 6px 12px;">
+                        Annuler ma réservation en ligne
+                    </a>
+                </p>
+                @endif
+                <p style="margin: 0; font-size: 11px; color: #a8998a; text-align: center; line-height: 1.5;">
+                    Notez ce code — il vous permet d'annuler votre réservation sur notre site à tout moment.
+                </p>
+            </td>
+        </tr>
+    </table>
+    @endif
 @endsection
