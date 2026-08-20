@@ -331,7 +331,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-stretch md:items-center justify-center p-0 md:p-4 overflow-y-auto transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+      className={`fixed inset-0 z-50 flex items-stretch md:items-center justify-center p-0 md:p-4 overflow-x-hidden overflow-y-auto transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
         visible ? 'bg-black/75' : 'bg-black/0'
       }`}
       onClick={onClose}
@@ -434,7 +434,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                     value={formData.date}
                     onChange={(e) => updateField('date', e.target.value)}
                     min={new Date().toISOString().split('T')[0]}
-                    className="w-full px-4 py-3 bg-transparent border border-subtle rounded-lg text-primary text-left focus:ring-1 focus:ring-brand transition cursor-pointer appearance-none"
+                    className="block w-full min-w-0 max-w-full box-border px-4 py-3 bg-transparent border border-subtle rounded-lg text-primary text-left focus:ring-1 focus:ring-brand transition cursor-pointer appearance-none"
                     style={{ colorScheme: 'dark', WebkitAppearance: 'none' }}
                     required
                   />
