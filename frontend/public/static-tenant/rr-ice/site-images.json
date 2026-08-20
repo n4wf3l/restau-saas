@@ -23,37 +23,37 @@
         {
             "id": 4,
             "image_url": "/rr-ice11.png",
-            "alt": "Restaurant 1",
+            "alt": "Salon intérieur avec le mur signature RR Ice",
             "sort_order": 0
         },
         {
             "id": 5,
             "image_url": "/rr-ice13.png",
-            "alt": "Restaurant 2",
+            "alt": "Terrasse ombragée face à la baie de Tanger",
             "sort_order": 1
         },
         {
             "id": 6,
             "image_url": "/rr-ice7.png",
-            "alt": "Restaurant 3",
+            "alt": "Café glacé signature en terrasse",
             "sort_order": 2
         },
         {
             "id": 7,
             "image_url": "/rr-ice8.png",
-            "alt": "Restaurant 4",
+            "alt": "Enseigne RR Ice illuminée au coucher du soleil",
             "sort_order": 3
         },
         {
             "id": 8,
             "image_url": "/rr-ice9.png",
-            "alt": "Restaurant 5",
+            "alt": "Vue extérieure du restaurant en bord de mer",
             "sort_order": 4
         },
         {
             "id": 9,
             "image_url": "/rr-ice10.png",
-            "alt": "Restaurant 6",
+            "alt": "Terrasse au crépuscule avec pergola éclairée",
             "sort_order": 5
         }
     ],
