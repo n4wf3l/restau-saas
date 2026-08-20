@@ -97,12 +97,6 @@
     ],
     "gallery": [
         {
-            "id": 16,
-            "image_url": "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?auto=format&fit=crop&w=1200&q=80",
-            "alt": "Ambiance du restaurant",
-            "sort_order": 0
-        },
-        {
             "id": 17,
             "image_url": "/rr-ice12.png",
             "alt": "Entrée du restaurant",
