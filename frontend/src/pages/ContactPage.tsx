@@ -175,8 +175,8 @@ export default function ContactPage() {
         </ScrollReveal>
       </section>
 
-      {/* Content */}
-      <section className="relative z-10 px-4 pb-24">
+      {/* Info + Hours + Map */}
+      <section className="relative z-10 px-4 pb-20">
         <div className="max-w-4xl mx-auto">
           {/* Info Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
@@ -246,7 +246,7 @@ export default function ContactPage() {
           </div>
 
           {/* Hours + Google Maps */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Opening Hours */}
             <ScrollReveal>
               <div className="border border-subtle p-8 h-full">
@@ -295,6 +295,12 @@ export default function ContactPage() {
             </ScrollReveal>
           </div>
 
+        </div>
+      </section>
+
+      {/* Forms — visually broken off with a subtle tint band + top hairline */}
+      <section className="relative z-10 bg-tint border-t border-subtle px-4 py-20 md:py-24">
+        <div className="max-w-4xl mx-auto">
           {/* Tabs */}
           <ScrollReveal>
             <div role="tablist" aria-label={t('contact.tabs.contact')} className="flex justify-center gap-2 mb-12">
