@@ -284,7 +284,7 @@ export default function Home() {
             <ScrollReveal>
               <div className="relative overflow-hidden h-56 md:h-[550px]">
                 <img
-                  src="/rr-ice18.png"
+                  src={`${import.meta.env.BASE_URL}rr-ice18.png`}
                   alt=""
                   className="absolute inset-0 w-full h-full object-cover"
                 />
@@ -330,7 +330,7 @@ export default function Home() {
           preload="none"
           className="absolute inset-0 w-full h-full object-cover"
         >
-          <source src="/eau.mp4" type="video/mp4" />
+          <source src={`${import.meta.env.BASE_URL}eau.mp4`} type="video/mp4" />
         </video>
         <div className="absolute inset-0 bg-black/40 pointer-events-none" />
       </section>

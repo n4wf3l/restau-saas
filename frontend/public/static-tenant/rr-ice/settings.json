@@ -1,0 +1,94 @@
+{
+    "restaurant_status": "active",
+    "modules": {
+        "reservations_enabled": true,
+        "menu_enabled": true,
+        "website_enabled": true,
+        "contact_enabled": true,
+        "gallery_enabled": true,
+        "events_enabled": true,
+        "cancellation_enabled": true
+    },
+    "reservations_enabled": true,
+    "auto_optimize_tables": false,
+    "service_duration_minutes": 90,
+    "opening_hours": {
+        "monday": {
+            "open": "06:00",
+            "close": "23:00",
+            "closed": false
+        },
+        "tuesday": {
+            "open": "11:00",
+            "close": "23:00",
+            "closed": false
+        },
+        "wednesday": {
+            "open": "04:00",
+            "close": "23:00",
+            "closed": false
+        },
+        "thursday": {
+            "open": "11:00",
+            "close": "23:00",
+            "closed": false
+        },
+        "friday": {
+            "open": "11:00",
+            "close": "23:00",
+            "closed": false
+        },
+        "saturday": {
+            "open": "11:00",
+            "close": "23:00",
+            "closed": false
+        },
+        "sunday": {
+            "open": "11:00",
+            "close": "23:00",
+            "closed": false
+        }
+    },
+    "closure_dates": null,
+    "menu_pdf_url": "/static-tenant/rr-ice/media/menu-pdfs/A2OdwTirFthRBZWplSHz1KTWi5qmreEr1ljnMAIO.pdf",
+    "menu_manual_visible": true,
+    "menu_pdf_visible": true,
+    "social_links": {
+        "facebook": {
+            "enabled": true,
+            "url": "https://www.facebook.com/RrIceTanger/"
+        },
+        "instagram": {
+            "enabled": true,
+            "url": "https://www.instagram.com/rrice_cafe_restaurant/"
+        },
+        "tiktok": {
+            "enabled": false,
+            "url": null
+        },
+        "youtube": {
+            "enabled": false,
+            "url": null
+        },
+        "snapchat": {
+            "enabled": false,
+            "url": null
+        },
+        "linkedin": {
+            "enabled": false,
+            "url": null
+        }
+    },
+    "restaurant_name": "RR Ice",
+    "logo_url": "/logo.png",
+    "theme": "coffee",
+    "layout": "classic",
+    "show_moroccan_decorations": true,
+    "meta_description": null,
+    "meta_keywords": null,
+    "og_image_url": null,
+    "address": null,
+    "phone": null,
+    "cuisine_type": null,
+    "price_range": null
+}

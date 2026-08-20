@@ -350,6 +350,7 @@ All tenant tables carry a `restaurant_id` FK for row-level isolation.
 5. **SQLite constraints** — no `ALTER TABLE MODIFY COLUMN`, no `ENUM`; use controller-level validation and `Schema::hasColumn()` guards in migrations.
 6. **Never hardcode a restaurant name** in a component, template, or meta tag. Read from `usePublicSettings()` on tenant routes, from a URL slug otherwise, or use the SaaS brand `NA Innovations`.
 7. **First-paint defaults in `index.html`** carry the SaaS brand; Helmet overrides at runtime with tenant data.
+8. **CI (`.github/workflows/`) publishes a static single-tenant vitrine only** — no backend, no SaaS console. Interactive backend features (réservations, contact, admin) are hidden or redirected in that build. See `CLAUDE.md` §10b.
 
 ---
 
@@ -359,6 +360,26 @@ All tenant tables carry a `restaurant_id` FK for row-level isolation.
 - **Layouts**: `classic` (sections stack, admin sees carousels + previews) or `cinematic` (GSAP scroll storytelling with vignette).
 - **Type**: `Playfair Display` (display), `Lora` (body), `Cormorant Garamond` (noir), `Fraunces` (sable), `Tajawal` (Arabic).
 - **Cards / inputs**: `bg-white dark:bg-[#1c1a17]`, `shadow-card dark:shadow-dark-card`, `border border-gray-200 dark:border-gray-600 rounded-lg`.
+
+---
+
+## GitHub Pages vitrine
+
+A static, single-tenant frontend build (currently RR Ice) is published to GitHub Pages via `.github/workflows/deploy-vitrine.yml`. **No backend is deployed** — the site reads frozen JSON from `frontend/public/static-tenant/<slug>/` and stubs every mutation with a toast (see `CLAUDE.md` §10b).
+
+**Refreshing the frozen data (dev workflow):**
+
+```bash
+cd backend
+php artisan tenant:export-static rr-ice
+git add frontend/public/static-tenant/rr-ice
+git commit -m "chore(vitrine): refresh rr-ice static bundle"
+git push
+```
+
+The workflow triggers on every push to `main` touching `frontend/**` or the workflow itself. Deployed URL: `https://<user>.github.io/restau-saas/`.
+
+To change the tenant, edit `TENANT_SLUG` in the workflow and re-run the artisan command for the new slug.
 
 ---
 
