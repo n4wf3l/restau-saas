@@ -434,8 +434,8 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                     value={formData.date}
                     onChange={(e) => updateField('date', e.target.value)}
                     min={new Date().toISOString().split('T')[0]}
-                    className="w-full px-4 py-3 bg-transparent border border-subtle rounded-lg text-primary focus:ring-1 focus:ring-brand transition cursor-pointer"
-                    style={{ colorScheme: 'dark' }}
+                    className="w-full px-4 py-3 bg-transparent border border-subtle rounded-lg text-primary text-left focus:ring-1 focus:ring-brand transition cursor-pointer appearance-none"
+                    style={{ colorScheme: 'dark', WebkitAppearance: 'none' }}
                     required
                   />
                 </div>
