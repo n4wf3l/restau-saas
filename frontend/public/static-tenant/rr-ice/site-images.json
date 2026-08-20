@@ -143,6 +143,42 @@
             "image_url": "/rr-ice4.png",
             "alt": "Terrasse",
             "sort_order": 8
+        },
+        {
+            "id": 101,
+            "image_url": "/rr-ice14.png",
+            "alt": "Plat 1",
+            "sort_order": 9
+        },
+        {
+            "id": 102,
+            "image_url": "/rr-ice15.png",
+            "alt": "Plat 2",
+            "sort_order": 10
+        },
+        {
+            "id": 103,
+            "image_url": "/rr-ice16.png",
+            "alt": "Plat 3",
+            "sort_order": 11
+        },
+        {
+            "id": 104,
+            "image_url": "/rr-ice17.png",
+            "alt": "Plat 4",
+            "sort_order": 12
+        },
+        {
+            "id": 105,
+            "image_url": "/rr-ice19.png",
+            "alt": "Plat 5",
+            "sort_order": 13
+        },
+        {
+            "id": 106,
+            "image_url": "/rr-ice20.png",
+            "alt": "Plat 6",
+            "sort_order": 14
         }
     ]
 }
