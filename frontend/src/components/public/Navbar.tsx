@@ -125,13 +125,13 @@ export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
             </div>
 
             <div className="flex-1 flex justify-center items-center gap-6 px-8">
-              {/* Language Trigger — Desktop */}
+              {/* Language Trigger — Desktop (text-only, aligned with nav links) */}
               <button
                 onClick={() => setLangPickerOpen(true)}
                 aria-label={t('nav.langAria', { lang: activeLang })}
                 aria-haspopup="dialog"
                 aria-expanded={langPickerOpen}
-                className="w-9 h-9 rounded-full border border-subtle flex items-center justify-center text-[11px] tracking-[0.15em] uppercase text-primary font-semibold hover:border-subtle hover:bg-tint focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:ring-offset-black transition-all duration-300"
+                className="text-white hover:text-primary transition-colors text-sm font-medium tracking-[0.25em] uppercase focus:outline-none focus-visible:text-primary"
               >
                 {activeLang}
               </button>
