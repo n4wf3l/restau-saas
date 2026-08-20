@@ -88,6 +88,10 @@ const en = {
       phone: { label: 'Phone' },
       whatsapp: { label: 'WhatsApp' },
       email: { label: 'Email' },
+      birthday: {
+        label: 'Birthdays & private events',
+        note: 'For any birthday or private event booking, please call us directly.',
+      },
       hours: {
         title: 'Opening hours',
         loading: '(loading)',
@@ -331,6 +335,10 @@ const fr = {
       phone: { label: 'Téléphone' },
       whatsapp: { label: 'WhatsApp' },
       email: { label: 'Email' },
+      birthday: {
+        label: 'Anniversaires & événements privés',
+        note: 'Pour toute réservation d\'anniversaire ou d\'événement privé, appelez-nous directement.',
+      },
       hours: {
         title: 'Horaires d\'ouverture',
         loading: '(chargement)',
@@ -574,6 +582,10 @@ const ar = {
       phone: { label: 'الهاتف' },
       whatsapp: { label: 'واتساب' },
       email: { label: 'البريد الإلكتروني' },
+      birthday: {
+        label: 'أعياد الميلاد والمناسبات الخاصة',
+        note: 'لأي حجز عيد ميلاد أو مناسبة خاصة، يرجى الاتصال بنا مباشرة.',
+      },
       hours: {
         title: 'ساعات العمل',
         loading: '(جاري التحميل)',

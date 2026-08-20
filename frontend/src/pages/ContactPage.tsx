@@ -246,6 +246,30 @@ export default function ContactPage() {
             </ScrollReveal>
           </div>
 
+          {/* Birthday & private events callout — full-width banner under the info cards,
+              mirrors the phone note shown inside the reservation modal for the same use case. */}
+          <ScrollReveal>
+            <div className="mb-16 border border-subtle bg-tint p-6 md:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 shrink-0 flex items-center justify-center border border-subtle rounded-full">
+                  <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 1 0 9.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1 1 14.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-accent text-xs tracking-[0.25em] uppercase mb-1 font-body">{t('contact.birthday.label')}</p>
+                  <p className="text-secondary font-body text-sm leading-relaxed">{t('contact.birthday.note')}</p>
+                </div>
+              </div>
+              <a
+                href="tel:+212688927586"
+                className="shrink-0 inline-flex items-center justify-center px-5 py-3 border border-subtle text-primary font-body text-sm tracking-[0.15em] uppercase hover:bg-page transition-colors min-h-[48px]"
+              >
+                06 88 92 75 86
+              </a>
+            </div>
+          </ScrollReveal>
+
           {/* Hours + Google Maps */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Opening Hours */}
