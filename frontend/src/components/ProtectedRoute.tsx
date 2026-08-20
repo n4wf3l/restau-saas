@@ -1,7 +1,8 @@
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Spinner } from "./ui/Spinner";
+import { lazyWithReload as lazy } from "../lib/lazyWithReload";
 
 const PendingValidationPage = lazy(() => import("../pages/PendingValidationPage"));
 

@@ -1,5 +1,6 @@
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
 import { usePublicSettings } from '../contexts/PublicSettingsContext';
+import { lazyWithReload as lazy } from '../lib/lazyWithReload';
 
 /**
  * Chooses which Home variant to render based on the tenant's `layout` setting.

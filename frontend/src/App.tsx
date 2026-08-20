@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, useLocation, Link, Navigate } from "react-router-dom";
-import { lazy, Suspense, useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { STATIC_TENANT } from "./lib/api";
+import { lazyWithReload as lazy } from "./lib/lazyWithReload";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
