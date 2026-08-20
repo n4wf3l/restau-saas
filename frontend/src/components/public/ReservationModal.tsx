@@ -337,7 +337,7 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
       onClick={onClose}
     >
       <div
-        className={`bg-page shadow-2xl w-full max-w-2xl md:max-w-3xl min-h-[100dvh] md:min-h-0 md:max-h-[95vh] my-0 md:my-8 rounded-none md:rounded-xl border-0 md:border md:border-subtle overflow-y-auto transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        className={`bg-page shadow-2xl w-full max-w-2xl md:max-w-3xl min-h-[100dvh] md:min-h-0 md:max-h-[95vh] my-0 md:my-8 rounded-none md:rounded-xl border-0 md:border md:border-subtle overflow-x-hidden overflow-y-auto transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           visible ? 'opacity-100 md:scale-100 md:translate-y-0' : 'opacity-0 md:scale-95 md:translate-y-6'
         }`}
         onClick={(e) => e.stopPropagation()}
