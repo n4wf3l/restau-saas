@@ -253,21 +253,13 @@ export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
             })}
           </nav>
 
-          {/* CTA Button */}
-          {!hideReservation && (
-            <div
-              className={`opacity-0 ${isOpen ? 'animate-menu-reveal' : ''} mb-10`}
-              style={{ animationDelay: `${navLinks.length * 80 + 100}ms` }}
-            >
-              <CTAButton onClick={() => { onReservationClick(); setIsOpen(false); }} className="px-16 py-5 text-sm">
-                {t('nav.reserve')}
-              </CTAButton>
-            </div>
-          )}
+          {/* Réserver intentionally omitted here — a sticky <MobileReserveCTA>
+              is pinned to the bottom of every tenant public page, so surfacing
+              it again in the fullscreen menu would be a redundant duplicate. */}
 
           {/* Language Trigger — Mobile */}
           <div
-            className={`opacity-0 ${isOpen ? 'animate-menu-reveal' : ''}`}
+            className={`opacity-0 ${isOpen ? 'animate-menu-reveal' : ''} mt-4`}
             style={{ animationDelay: `${navLinks.length * 80 + 200}ms` }}
           >
             <button

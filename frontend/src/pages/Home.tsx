@@ -4,6 +4,7 @@ import { Navbar } from '../components/public/Navbar';
 import { ReservationModal } from '../components/public/ReservationModal';
 import { Footer } from '../components/public/Footer';
 import { CTAButton } from '../components/public/CTAButton';
+import { MobileReserveCTA } from '../components/public/MobileReserveCTA';
 import { usePublicSettings } from '../contexts/PublicSettingsContext';
 import { useSiteImages } from '../contexts/SiteImagesContext';
 import { useRestaurantBasePath } from '../hooks/useRestaurantBasePath';
@@ -335,23 +336,13 @@ export default function Home() {
         <div className="absolute inset-0 bg-black/40 pointer-events-none" />
       </section>
 
-      {/* Sticky Mobile CTA — always accessible */}
-      {!hideReservation && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 p-3 bg-gradient-to-t from-black via-black/95 to-transparent">
-          <button
-            onClick={() => setIsReservationModalOpen(true)}
-            className="w-full py-4 bg-brand text-page font-body font-bold text-sm tracking-[0.15em] uppercase hover:bg-brand-hover active:bg-brand-hover transition-colors"
-          >
-            {t('home.reservation.mobileButton')}
-          </button>
-        </div>
-      )}
+      <MobileReserveCTA onReservationClick={() => setIsReservationModalOpen(true)} hideReservation={hideReservation} />
 
       {/* Scroll to top */}
       <button
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         aria-label={t('common.scrollTop')}
-        className={`fixed bottom-20 md:bottom-8 right-5 z-40 w-11 h-11 rounded-full border border-subtle bg-page backdrop-blur-md flex items-center justify-center text-secondary hover:text-primary hover:border-subtle hover:bg-page active:scale-90 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        className={`fixed bottom-8 right-5 z-40 w-11 h-11 rounded-full border border-subtle bg-page backdrop-blur-md hidden md:flex items-center justify-center text-secondary hover:text-primary hover:border-subtle hover:bg-page active:scale-90 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
         }`}
       >

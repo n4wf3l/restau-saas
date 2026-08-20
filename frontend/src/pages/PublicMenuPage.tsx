@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { PublicNav } from '../components/public/PublicNav';
 import { Footer } from '../components/public/Footer';
 import { ReservationModal } from '../components/public/ReservationModal';
+import { MobileReserveCTA } from '../components/public/MobileReserveCTA';
 import { getPublicMenuItems, API_BASE_URL } from '../lib/api';
 import { usePublicSettings } from '../contexts/PublicSettingsContext';
 import type { MenuItem } from '../lib/types';
@@ -187,12 +188,16 @@ export default function PublicMenuPage() {
   }, [activeCategory]);
 
   // ─── Smooth Scroll ───
+  // Offset accounts for the fixed navbar (~80px desktop / ~64px mobile) AND, on
+  // mobile, the sticky category-chips bar (~64px) — otherwise the category
+  // heading lands behind the overlay and only the dishes are visible.
   const scrollToCategory = useCallback((category: string) => {
     const el = sectionRefs.current.get(category);
     if (el) {
       setActiveCategory(category);
       isScrollingRef.current = true;
-      const y = el.getBoundingClientRect().top + window.scrollY - 100;
+      const offset = window.innerWidth >= 768 ? 120 : 160;
+      const y = el.getBoundingClientRect().top + window.scrollY - offset;
       window.scrollTo({ top: y, behavior: 'smooth' });
       setTimeout(() => { isScrollingRef.current = false; }, 800);
     }
@@ -419,6 +424,7 @@ export default function PublicMenuPage() {
       </div>
       </>)}
 
+      <MobileReserveCTA onReservationClick={() => setIsReservationModalOpen(true)} />
       <Footer onReservationClick={() => setIsReservationModalOpen(true)} />
 
       {/* Detail Drawer */}

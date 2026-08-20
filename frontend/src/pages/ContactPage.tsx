@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { PublicNav } from '../components/public/PublicNav';
 import { Footer } from '../components/public/Footer';
 import { ReservationModal } from '../components/public/ReservationModal';
+import { MobileReserveCTA } from '../components/public/MobileReserveCTA';
 import { CTAButton } from '../components/public/CTAButton';
 import { usePublicSettings } from '../contexts/PublicSettingsContext';
 import { submitContact, submitRecruitment } from '../lib/api';
@@ -487,6 +488,7 @@ export default function ContactPage() {
         </div>
       </section>
 
+      <MobileReserveCTA onReservationClick={() => setIsReservationModalOpen(true)} hideReservation={hideReservation} />
       <Footer onReservationClick={() => setIsReservationModalOpen(true)} hideReservation={hideReservation} />
     </div>
   );
