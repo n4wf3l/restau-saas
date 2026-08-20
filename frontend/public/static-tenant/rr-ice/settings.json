@@ -14,38 +14,38 @@
     "service_duration_minutes": 90,
     "opening_hours": {
         "monday": {
-            "open": "06:00",
-            "close": "23:00",
+            "open": "07:00",
+            "close": "01:00",
             "closed": false
         },
         "tuesday": {
-            "open": "11:00",
-            "close": "23:00",
+            "open": "07:00",
+            "close": "01:00",
             "closed": false
         },
         "wednesday": {
-            "open": "04:00",
-            "close": "23:00",
+            "open": "07:00",
+            "close": "01:00",
             "closed": false
         },
         "thursday": {
-            "open": "11:00",
-            "close": "23:00",
+            "open": "07:00",
+            "close": "01:00",
             "closed": false
         },
         "friday": {
-            "open": "11:00",
-            "close": "23:00",
+            "open": "07:00",
+            "close": "01:00",
             "closed": false
         },
         "saturday": {
-            "open": "11:00",
-            "close": "23:00",
+            "open": "07:00",
+            "close": "01:00",
             "closed": false
         },
         "sunday": {
-            "open": "11:00",
-            "close": "23:00",
+            "open": "07:00",
+            "close": "01:00",
             "closed": false
         }
     },
