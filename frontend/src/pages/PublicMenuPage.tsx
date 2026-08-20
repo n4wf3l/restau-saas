@@ -319,7 +319,14 @@ export default function PublicMenuPage() {
 
       {/* Mobile Category Chips */}
       <div className="md:hidden sticky top-16 z-30 bg-page backdrop-blur-sm border-b border-subtle px-4 py-3">
-        <div ref={chipContainerRef} className="flex gap-2 overflow-x-auto scrollbar-hide">
+        <div
+          ref={chipContainerRef}
+          className="flex gap-2 overflow-x-auto scrollbar-hide"
+          style={{
+            WebkitMaskImage: 'linear-gradient(to right, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%)',
+            maskImage: 'linear-gradient(to right, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%)',
+          }}
+        >
           {filteredCategories.map(cat => (
             <button
               key={cat}
