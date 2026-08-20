@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { CTAButton } from './CTAButton';
@@ -52,6 +52,26 @@ export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
     setIsOpen(false);
   }, [location.pathname]);
 
+  // Hide on scroll down, show on scroll up (always visible near the top,
+  // and forced visible whenever a fullscreen overlay is open so it doesn't
+  // pop back in mid-animation).
+  const [visible, setVisible] = useState(true);
+  const lastScrollY = useRef(0);
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY;
+      const delta = y - lastScrollY.current;
+      if (y <= 50) {
+        setVisible(true);
+      } else if (Math.abs(delta) > 8) {
+        setVisible(delta < 0);
+      }
+      lastScrollY.current = y;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   const renderDesktopLink = (link: NavLink) => {
     const cls = 'text-white hover:text-primary transition-colors text-sm font-medium tracking-[0.25em] uppercase';
     if (link.to) {
@@ -75,7 +95,11 @@ export function Navbar({ onReservationClick, hideReservation }: NavbarProps) {
 
   return (
     <>
-      <nav className="fixed top-0 w-full backdrop-blur-sm z-50">
+      <nav
+        className={`fixed top-0 w-full backdrop-blur-sm z-50 transition-transform duration-300 ease-in-out ${
+          visible || isOpen || langPickerOpen ? 'translate-y-0' : '-translate-y-full'
+        }`}
+      >
         <div className="max-w-full mx-auto">
           {/* Desktop Layout */}
           <div className="hidden md:flex items-center h-20">
