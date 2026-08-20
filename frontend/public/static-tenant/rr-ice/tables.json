@@ -1,0 +1,42 @@
+[
+    {
+        "id": 1230,
+        "name": "Table Entrance",
+        "floor": "Étage 1",
+        "total_seats": 2,
+        "available_seats": 2,
+        "is_available": true,
+        "chair_ids": [
+            1223,
+            1224
+        ]
+    },
+    {
+        "id": 1232,
+        "name": "Table Big",
+        "floor": "Étage 1",
+        "total_seats": 4,
+        "available_seats": 4,
+        "is_available": true,
+        "chair_ids": [
+            1225,
+            1226,
+            1240,
+            1241
+        ]
+    },
+    {
+        "id": 1266,
+        "name": "Table VIP 2",
+        "floor": "Étage 1",
+        "total_seats": 4,
+        "available_seats": 4,
+        "is_available": true,
+        "chair_ids": [
+            1262,
+            1263,
+            1270,
+            1271
+        ]
+    }
+]

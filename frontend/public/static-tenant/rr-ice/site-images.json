@@ -1,0 +1,148 @@
+{
+    "hero": [
+        {
+            "id": 1,
+            "image_url": "/rr-ice2.webp",
+            "alt": "Hero 1",
+            "sort_order": 0
+        },
+        {
+            "id": 2,
+            "image_url": "/rr-ice3.webp",
+            "alt": "Hero 2",
+            "sort_order": 1
+        },
+        {
+            "id": 3,
+            "image_url": "/rr-ice4.webp",
+            "alt": "Hero 3",
+            "sort_order": 2
+        }
+    ],
+    "restaurant": [
+        {
+            "id": 4,
+            "image_url": "/rr-ice11.png",
+            "alt": "Restaurant 1",
+            "sort_order": 0
+        },
+        {
+            "id": 5,
+            "image_url": "/rr-ice13.png",
+            "alt": "Restaurant 2",
+            "sort_order": 1
+        },
+        {
+            "id": 6,
+            "image_url": "/rr-ice7.png",
+            "alt": "Restaurant 3",
+            "sort_order": 2
+        },
+        {
+            "id": 7,
+            "image_url": "/rr-ice8.png",
+            "alt": "Restaurant 4",
+            "sort_order": 3
+        },
+        {
+            "id": 8,
+            "image_url": "/rr-ice9.png",
+            "alt": "Restaurant 5",
+            "sort_order": 4
+        },
+        {
+            "id": 9,
+            "image_url": "/rr-ice10.png",
+            "alt": "Restaurant 6",
+            "sort_order": 5
+        }
+    ],
+    "carte": [
+        {
+            "id": 10,
+            "image_url": "/rr-ice14.png",
+            "alt": "Plat 1",
+            "sort_order": 0
+        },
+        {
+            "id": 11,
+            "image_url": "/rr-ice15.png",
+            "alt": "Plat 2",
+            "sort_order": 1
+        },
+        {
+            "id": 12,
+            "image_url": "/rr-ice16.png",
+            "alt": "Plat 3",
+            "sort_order": 2
+        },
+        {
+            "id": 13,
+            "image_url": "/rr-ice17.png",
+            "alt": "Plat 4",
+            "sort_order": 3
+        },
+        {
+            "id": 14,
+            "image_url": "/rr-ice19.png",
+            "alt": "Plat 5",
+            "sort_order": 4
+        },
+        {
+            "id": 15,
+            "image_url": "/rr-ice20.png",
+            "alt": "Plat 6",
+            "sort_order": 5
+        }
+    ],
+    "gallery": [
+        {
+            "id": 16,
+            "image_url": "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?auto=format&fit=crop&w=1200&q=80",
+            "alt": "Ambiance du restaurant",
+            "sort_order": 0
+        },
+        {
+            "id": 17,
+            "image_url": "/rr-ice12.png",
+            "alt": "Entrée du restaurant",
+            "sort_order": 1
+        },
+        {
+            "id": 19,
+            "image_url": "https://images.unsplash.com/photo-1567521464027-f127ff144326?auto=format&fit=crop&w=1200&q=80",
+            "alt": "Cocktails signature",
+            "sort_order": 3
+        },
+        {
+            "id": 20,
+            "image_url": "/rr-ice9.png",
+            "alt": "Terrasse au coucher de soleil",
+            "sort_order": 4
+        },
+        {
+            "id": 21,
+            "image_url": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=1200&q=80",
+            "alt": "Desserts maisonnette",
+            "sort_order": 5
+        },
+        {
+            "id": 22,
+            "image_url": "/rr-ice2.png",
+            "alt": "Vue extérieure",
+            "sort_order": 6
+        },
+        {
+            "id": 23,
+            "image_url": "/rr-ice3.png",
+            "alt": "Ambiance soirée",
+            "sort_order": 7
+        },
+        {
+            "id": 24,
+            "image_url": "/rr-ice4.png",
+            "alt": "Terrasse",
+            "sort_order": 8
+        }
+    ]
+}

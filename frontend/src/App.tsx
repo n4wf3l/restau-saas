@@ -1,5 +1,6 @@
-import { BrowserRouter, Routes, Route, useLocation, Link } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Link, Navigate } from "react-router-dom";
 import { lazy, Suspense, useEffect } from "react";
+import { STATIC_TENANT } from "./lib/api";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -69,7 +70,40 @@ function AdminFloatingButton() {
   );
 }
 
+function StaticApp() {
+  // Vitrine build (see CLAUDE.md §10b): only tenant public routes are shipped.
+  // Router basename matches Vite's base URL so GH Pages sub-path works.
+  const basename = import.meta.env.BASE_URL.replace(/\/$/, '') || '/';
+  const tenantHome = `/r/${STATIC_TENANT}`;
+
+  return (
+    <BrowserRouter basename={basename}>
+      <ThemeProvider>
+        <ScrollToTop />
+        <AppToaster />
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/r/:slug" element={<RestaurantLayout />}>
+              <Route index element={<HomeSwitch />} />
+              <Route path="gallery" element={<ModuleGate feature="gallery_enabled"><GalleryPage /></ModuleGate>} />
+              <Route path="contact" element={<ModuleGate feature="contact_enabled"><ContactPage /></ModuleGate>} />
+              <Route path="reservation" element={<ModuleGate feature="reservations_enabled"><PublicReservation /></ModuleGate>} />
+              <Route path="cancel" element={<ModuleGate feature="cancellation_enabled"><CancelReservation /></ModuleGate>} />
+              <Route path="menu" element={<ModuleGate feature="menu_enabled"><PublicMenuPage /></ModuleGate>} />
+              <Route path="privacy" element={<PrivacyPage />} />
+              <Route path="terms" element={<TermsPage />} />
+            </Route>
+            <Route path="*" element={<Navigate to={tenantHome} replace />} />
+          </Routes>
+        </Suspense>
+      </ThemeProvider>
+    </BrowserRouter>
+  );
+}
+
 function App() {
+  if (STATIC_TENANT) return <StaticApp />;
+
   return (
     <BrowserRouter>
       <ThemeProvider>

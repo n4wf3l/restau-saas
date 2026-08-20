@@ -124,6 +124,18 @@ There is intentionally **no Stripe / payment integration**. Onboarding is manual
 
 ---
 
+## 10b. GitHub Actions — vitrine statique uniquement
+
+Any workflow under `.github/workflows/` in this repo exists **only to publish a static, single-tenant "vitrine" build of the frontend** to GitHub Pages (e.g. RR Ice as a showcase site). It is **not** a deploy of the SaaS.
+
+Rules that follow:
+- **No backend is deployed via CI.** Laravel + SQLite live on a real host, not on GH Pages.
+- The static build reads **frozen tenant data** (settings, menu, images, logo) baked into `frontend/public/static-tenant/<slug>/` — not the live API. Interactive backend features (réservations, contact form, cancel-by-code, admin) must be either hidden or redirected to the live domain in that build.
+- Only the routes under `/r/<slug>/*` for the chosen tenant are shipped. The SaaS landing (`/`), `/login`, `/register`, `/dashboard` are excluded from the static build.
+- **Never** add a workflow that deploys `backend/`, exposes secrets, or runs against a real database. If someone asks for real hosting, that's out of scope for this repo's CI — confirm with the user first.
+
+---
+
 ## 11. Frontend patterns
 
 - **Dashboard cards**: `bg-white dark:bg-[#1c1a17]` with `shadow-card dark:shadow-dark-card`.
@@ -156,4 +168,4 @@ Follow the pattern already visible in `git log --oneline`:
 
 ---
 
-_Last updated: 2026-08-10 — extend this file whenever a rule changes._
+_Last updated: 2026-08-20 — extend this file whenever a rule changes._

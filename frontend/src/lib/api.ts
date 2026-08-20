@@ -1,18 +1,28 @@
 import axios from "axios";
+import toast from "react-hot-toast";
 import type { Reservation, PublicTable, ReservationPayload, EventReservationPayload, MenuItem, MenuItemPayload, RestaurantSettings, SiteImage, SiteImagesGrouped, Restaurant } from "./types";
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL || window.location.origin;
+
+// Static "vitrine" mode — set at build time by GH Actions (see .github/workflows/deploy-vitrine.yml
+// and CLAUDE.md §10b). When set, /api/public/* GETs are served from frozen JSON under
+// `${BASE_URL}static-tenant/<slug>/*.json` and all mutations are stubbed with a friendly toast.
+export const STATIC_TENANT: string | null = (import.meta.env.VITE_STATIC_TENANT as string) || null;
+const STATIC_BASE = import.meta.env.BASE_URL.replace(/\/$/, ''); // '' in dev, '/restau-saas' in prod build
 
 /**
  * Resolves a stored logo/image URL to a usable src.
  * - Absolute URL (http/https) → passthrough
  * - Backend-uploaded asset (starts with /storage) → prefix with API_BASE_URL
- * - Anything else (e.g. /logo.png) → treated as a frontend static asset → passthrough
+ * - Already-prefixed static asset (starts with STATIC_BASE/) → passthrough (idempotent)
+ * - Any other absolute path (e.g. /logo.png) → prefix with Vite BASE_URL for sub-path hosting
  */
 export function resolveLogoUrl(url: string | null | undefined): string | null {
   if (!url) return null;
   if (url.startsWith('http')) return url;
   if (url.startsWith('/storage')) return `${API_BASE_URL}${url}`;
+  if (STATIC_BASE && url.startsWith(`${STATIC_BASE}/`)) return url;
+  if (url.startsWith('/')) return `${STATIC_BASE}${url}`;
   return url;
 }
 
@@ -36,6 +46,30 @@ export const api = axios.create({
 
 // Intercepteur pour ajouter le token XSRF et le tenant slug
 api.interceptors.request.use((config) => {
+  // Static vitrine mode — rewrite public GETs to frozen JSON, stub everything else
+  if (STATIC_TENANT) {
+    const url = config.url ?? '';
+    const method = (config.method ?? 'get').toLowerCase();
+
+    if (method === 'get' && url.includes('/api/public/')) {
+      const endpoint = url.replace(/^.*\/api\/public\//, '').replace(/\?.*$/, '');
+      config.url = `${STATIC_BASE}/static-tenant/${STATIC_TENANT}/${endpoint}.json`;
+      config.baseURL = window.location.origin;
+      config.params = undefined;
+      config.withCredentials = false;
+      return config;
+    }
+
+    // /sanctum/csrf-cookie — no-op in static mode
+    if (url.includes('/sanctum/csrf-cookie')) {
+      throw new axios.Cancel('static-mode: csrf skipped');
+    }
+
+    // Any other backend call — reject with a friendly toast
+    toast('Site vitrine — cette action nécessite le vrai site.', { icon: 'ℹ️' });
+    return Promise.reject(new axios.Cancel('static-mode: backend disabled'));
+  }
+
   // XSRF token from cookies
   const token = document.cookie
     .split("; ")
@@ -62,8 +96,34 @@ export function setOnUnauthorized(callback: () => void) {
   onUnauthorized = callback;
 }
 
+// In static-mode, deep-prefix every absolute path in the JSON with the Vite BASE_URL,
+// so image_url values like "/rr-ice2.webp" work under the GH Pages sub-path even when
+// the component renders them directly without going through resolveLogoUrl.
+function prefixStaticBase<T>(node: T): T {
+  if (Array.isArray(node)) return node.map(prefixStaticBase) as unknown as T;
+  if (node && typeof node === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(node)) out[k] = prefixStaticBase(v);
+    return out as T;
+  }
+  if (
+    typeof node === 'string' &&
+    node.startsWith('/') &&
+    !node.startsWith('//') &&
+    !node.startsWith(`${STATIC_BASE}/`)
+  ) {
+    return `${STATIC_BASE}${node}` as unknown as T;
+  }
+  return node;
+}
+
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (STATIC_TENANT && STATIC_BASE && response.data) {
+      response.data = prefixStaticBase(response.data);
+    }
+    return response;
+  },
   (error) => {
     if (
       error.response?.status === 401 &&
@@ -78,7 +138,8 @@ api.interceptors.response.use(
 );
 
 export async function csrf() {
-  // obligatoire avant login/register (CSRF cookie)
+  // obligatoire avant login/register (CSRF cookie) — skipped in static vitrine mode
+  if (STATIC_TENANT) return;
   await api.get("/sanctum/csrf-cookie");
 }
 
