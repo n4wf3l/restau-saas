@@ -15,37 +15,37 @@
     "opening_hours": {
         "monday": {
             "open": "07:00",
-            "close": "01:00",
+            "close": "02:00",
             "closed": false
         },
         "tuesday": {
             "open": "07:00",
-            "close": "01:00",
+            "close": "02:00",
             "closed": false
         },
         "wednesday": {
             "open": "07:00",
-            "close": "01:00",
+            "close": "02:00",
             "closed": false
         },
         "thursday": {
             "open": "07:00",
-            "close": "01:00",
+            "close": "02:00",
             "closed": false
         },
         "friday": {
             "open": "07:00",
-            "close": "01:00",
+            "close": "02:00",
             "closed": false
         },
         "saturday": {
             "open": "07:00",
-            "close": "01:00",
+            "close": "02:00",
             "closed": false
         },
         "sunday": {
             "open": "07:00",
-            "close": "01:00",
+            "close": "02:00",
             "closed": false
         }
     },

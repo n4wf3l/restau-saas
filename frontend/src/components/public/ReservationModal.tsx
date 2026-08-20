@@ -811,6 +811,17 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
                 })}
               </div>
 
+              {/* Birthday-specific handoff note — RR Ice organises birthdays over the phone
+                  rather than through the standard reservation flow. */}
+              {formData.occasion?.includes('birthday') && (
+                <div className="mb-4 p-3 border border-subtle rounded-lg bg-tint">
+                  <p className="text-sm text-primary font-body flex items-start gap-2">
+                    <GiftIcon className="w-4 h-4 text-accent shrink-0 mt-0.5" aria-hidden="true" />
+                    <span>{t('reservation.step4.birthdayNote')}</span>
+                  </p>
+                </div>
+              )}
+
               {/* Notes */}
               <div>
                 <label className="block text-sm font-medium text-primary mb-2">
