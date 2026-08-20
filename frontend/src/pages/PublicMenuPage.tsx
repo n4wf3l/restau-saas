@@ -317,16 +317,23 @@ export default function PublicMenuPage() {
         </div>
       </ScrollReveal>
 
-      {/* Mobile Category Chips */}
+      {/* Mobile Category Chips — gradient overlays on both edges (mask-image is
+          flaky on iOS Safari when combined with overflow-x-auto, so we use two
+          real overlay divs that always paint symmetrically). */}
       <div className="md:hidden sticky top-16 z-30 bg-page backdrop-blur-sm border-b border-subtle px-4 py-3">
-        <div
-          ref={chipContainerRef}
-          className="flex gap-2 overflow-x-auto scrollbar-hide"
-          style={{
-            WebkitMaskImage: 'linear-gradient(to right, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%)',
-            maskImage: 'linear-gradient(to right, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%)',
-          }}
-        >
+        <div className="relative">
+          <div
+            className="pointer-events-none absolute left-0 top-0 bottom-0 w-10 z-10 bg-gradient-to-r from-page to-transparent"
+            aria-hidden="true"
+          />
+          <div
+            className="pointer-events-none absolute right-0 top-0 bottom-0 w-10 z-10 bg-gradient-to-l from-page to-transparent"
+            aria-hidden="true"
+          />
+          <div
+            ref={chipContainerRef}
+            className="flex gap-2 overflow-x-auto scrollbar-hide"
+          >
           {filteredCategories.map(cat => (
             <button
               key={cat}
@@ -341,6 +348,7 @@ export default function PublicMenuPage() {
               {cat}
             </button>
           ))}
+          </div>
         </div>
       </div>
 

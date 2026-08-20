@@ -363,9 +363,34 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
           />
         ) : (
           <>
-        {/* Progress Stepper */}
+        {/* Progress Stepper — compact "Étape N / 5 · Label" + dot bar on mobile,
+            full horizontal label list on desktop. Mobile-first: five text labels
+            crammed onto a phone read as broken UI. */}
         <div className="px-6 pt-6">
-          <div className="flex items-center justify-between mb-8 border-b border-subtle pb-4">
+          {/* Mobile: current-step summary + dots */}
+          <div className="md:hidden mb-6 border-b border-subtle pb-4">
+            <div className="flex items-baseline justify-between mb-3">
+              <span className="text-xs tracking-[0.2em] uppercase text-tertiary font-body">
+                {currentStep} / {steps.length}
+              </span>
+              <span className="text-base font-display font-semibold text-primary">
+                {steps[currentStep - 1].label}
+              </span>
+            </div>
+            <div className="flex gap-1.5">
+              {steps.map((step) => (
+                <div
+                  key={step.number}
+                  className={`h-0.5 flex-1 rounded-full transition-colors ${
+                    step.number <= currentStep ? 'bg-brand' : 'bg-tint'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Desktop: full horizontal labels */}
+          <div className="hidden md:flex items-center justify-between mb-8 border-b border-subtle pb-4">
             {steps.map((step, index) => (
               <div key={step.number} className="flex items-center flex-1">
                 <div className="flex flex-col items-center gap-1 flex-1">
@@ -385,8 +410,8 @@ export function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
           </div>
         </div>
 
-        {/* Form Content */}
-        <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-6">
+        {/* Form Content — pb accounts for the iOS home indicator on fullscreen mobile */}
+        <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-6" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
           
           {/* ═══════════════════════════════════════════════════ */}
           {/* STEP 1: VOTRE CRÉNEAU */}
