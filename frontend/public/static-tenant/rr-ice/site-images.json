@@ -61,37 +61,37 @@
         {
             "id": 10,
             "image_url": "/rr-ice14.png",
-            "alt": "Plat 1",
+            "alt": "Risotto crémeux au parmesan et roquette",
             "sort_order": 0
         },
         {
             "id": 11,
             "image_url": "/rr-ice15.png",
-            "alt": "Plat 2",
+            "alt": "Cappuccino saupoudré de cacao et croissant frais",
             "sort_order": 1
         },
         {
             "id": 12,
             "image_url": "/rr-ice16.png",
-            "alt": "Plat 3",
+            "alt": "Pavé de saumon grillé, légumes rôtis et frites",
             "sort_order": 2
         },
         {
             "id": 13,
             "image_url": "/rr-ice17.png",
-            "alt": "Plat 4",
+            "alt": "Émincé de poulet sauté aux légumes croquants",
             "sort_order": 3
         },
         {
             "id": 14,
             "image_url": "/rr-ice19.png",
-            "alt": "Plat 5",
+            "alt": "Tagliatelles crémeuses aux crevettes",
             "sort_order": 4
         },
         {
             "id": 15,
             "image_url": "/rr-ice20.png",
-            "alt": "Plat 6",
+            "alt": "Crêpe aux fruits rouges nappée de chocolat",
             "sort_order": 5
         }
     ],
@@ -147,37 +147,37 @@
         {
             "id": 101,
             "image_url": "/rr-ice14.png",
-            "alt": "Plat 1",
+            "alt": "Risotto crémeux au parmesan et roquette",
             "sort_order": 9
         },
         {
             "id": 102,
             "image_url": "/rr-ice15.png",
-            "alt": "Plat 2",
+            "alt": "Cappuccino saupoudré de cacao et croissant frais",
             "sort_order": 10
         },
         {
             "id": 103,
             "image_url": "/rr-ice16.png",
-            "alt": "Plat 3",
+            "alt": "Pavé de saumon grillé, légumes rôtis et frites",
             "sort_order": 11
         },
         {
             "id": 104,
             "image_url": "/rr-ice17.png",
-            "alt": "Plat 4",
+            "alt": "Émincé de poulet sauté aux légumes croquants",
             "sort_order": 12
         },
         {
             "id": 105,
             "image_url": "/rr-ice19.png",
-            "alt": "Plat 5",
+            "alt": "Tagliatelles crémeuses aux crevettes",
             "sort_order": 13
         },
         {
             "id": 106,
             "image_url": "/rr-ice20.png",
-            "alt": "Plat 6",
+            "alt": "Crêpe aux fruits rouges nappée de chocolat",
             "sort_order": 14
         }
     ]
